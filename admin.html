@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Admin - Cronograma Oficina</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+<style>
+html,body{
+  margin:0;
+  background:radial-gradient(circle at top,#0a0a0a,#000);
+  font-family:'Orbitron',Arial,sans-serif;
+  color:#00e5ff;
+}
+
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 26px;
+  background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
+  box-shadow:0 0 20px rgba(0,0,0,.45);
+}
+
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  font-size:1.7rem;
+  font-weight:800;
+  letter-spacing:2px;
+  color:#000;
+  text-transform:uppercase;
+}
+
+.header-left img{
+  height:90px;
+  filter:drop-shadow(0 0 12px rgba(0,0,0,.6));
+}
+
+.container{
+  padding:16px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.panel{
+  background:rgba(0,0,0,.78);
+  border-radius:18px;
+  padding:14px;
+  border:2px solid rgba(0,229,255,.22);
+  box-shadow:0 0 26px rgba(0,229,255,.25);
+}
+
+.full{grid-column:1/3}
+
+h2{
+  margin:0 0 10px 0;
+  text-align:center;
+  color:#ff3d00;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  font-size:1.1rem;
+}
+
+/* ===== FORM ===== */
+label{display:block;margin-top:10px;font-size:.85rem}
+input,select,button{
+  width:100%;
+  padding:10px;
+  border-radius:12px;
+  border:none;
+  font-family:'Orbitron',Arial,sans-serif;
+  margin-top:6px;
+}
+input,select{
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  border:1px solid rgba(0,229,255,.25);
+}
+button{
+  margin-top:12px;
+  font-weight:900;
+  cursor:pointer;
+}
+.btn-green{background:linear-gradient(90deg,#00c853,#64dd17);color:#000}
+.btn-yellow{background:linear-gradient(90deg,#ffea00,#f9a825);color:#000}
+.btn-red{background:linear-gradient(90deg,#b71c1c,#ff1744);color:#fff}
+
+/* ===== TABLE ===== */
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:.85rem;
+}
+th,td{
+  padding:8px;
+  border-bottom:1px solid rgba(0,229,255,.2);
+}
+th{
+  color:#fff;
+  text-transform:uppercase;
+  font-size:.75rem;
+}
+
+.badge{
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:.7rem;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.todo{background:#ff1744;color:#fff}
+.doing{background:#ffea00;color:#000}
+.pending{background:#2979ff;color:#000}
+.done{background:#00c853;color:#000}
+
+.actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+/* ===== MODAL ===== */
+.modal-bg{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.modal{
+  background:#000;
+  padding:16px;
+  border-radius:18px;
+  border:2px solid rgba(0,229,255,.35);
+  width:320px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="logo_tmg_clean.png">
+    Admin Oficina
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ===== NOVA TAREFA ===== -->
+<div class="panel">
+<h2>Nova Tarefa</h2>
+
+<label>Nome da tarefa</label>
+<input id="taskName">
+
+<label>Responsáveis (separar por vírgula)</label>
+<input id="taskPeople">
+
+<label>Status</label>
+<select id="taskStatus">
+  <option value="todo">A Fazer</option>
+  <option value="doing">Em Andamento</option>
+  <option value="pending">Aguardando Aprovação</option>
+  <option value="done">Concluída</option>
+</select>
+
+<label>Prioridade</label>
+<select id="taskPriority">
+  <option value="high">Alta</option>
+  <option value="med" selected>Média</option>
+  <option value="low">Baixa</option>
+</select>
+
+<button class="btn-green" onclick="addTask()">Adicionar</button>
+</div>
+
+<!-- ===== EQUIPE ===== -->
+<div class="panel">
+<h2>Equipe</h2>
+
+<label>Nome do membro</label>
+<input id="personName">
+
+<button class="btn-green" onclick="addPerson()">Cadastrar</button>
+<div id="peopleList"></div>
+</div>
+
+<!-- ===== LISTA TAREFAS ===== -->
+<div class="panel full">
+<h2>Tarefas</h2>
+<table>
+<thead>
+<tr>
+<th>Tarefa</th>
+<th>Responsáveis</th>
+<th>Status</th>
+<th>Prior.</th>
+<th style="text-align:right;">Ações</th>
+</tr>
+</thead>
+<tbody id="taskTable"></tbody>
+</table>
+</div>
+
+</div>
+
+<!-- ===== MODAL REABRIR ===== -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2>Reabrir tarefa</h2>
+    <button class="btn-red" onclick="reopen('todo')">A Fazer</button>
+    <button class="btn-yellow" onclick="reopen('doing')">Em Andamento</button>
+  </div>
+</div>
+
+<script>
+/* ===== FIREBASE CONFIG ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+  authDomain: "tmg-painel.firebaseapp.com",
+  databaseURL: "https://tmg-painel-default-rtdb.firebaseio.com",
+  projectId: "tmg-painel",
+  storageBucket: "tmg-painel.firebasestorage.app",
+  messagingSenderId: "877912378151",
+  appId: "1:877912378151:web:88af3a4f8f551acd603702",
+  measurementId: "G-EK39245W6K"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+/* ===== HELPERS ===== */
+function statusLabel(s){
+  if(s==="todo") return "A Fazer";
+  if(s==="doing") return "Em Andamento";
+  if(s==="pending") return "Aguardando Aprovação";
+  if(s==="done") return "Concluída";
+  return s;
+}
+function priorityLabel(p){
+  if(p==="high") return "Alta";
+  if(p==="med") return "Média";
+  if(p==="low") return "Baixa";
+  return p;
+}
+
+/* ===== ADD TASK ===== */
+function addTask(){
+  const name=taskName.value.trim();
+  if(!name)return alert("Informe o nome");
+  const people=taskPeople.value.split(",").map(p=>p.trim()).filter(Boolean);
+  db.ref("tasks").push({
+    name,
+    people,
+    status:taskStatus.value,
+    priority:taskPriority.value,
+    created:Date.now()
+  });
+  taskName.value=taskPeople.value="";
+}
+
+/* ===== PEOPLE ===== */
+function addPerson(){
+  const name=personName.value.trim();
+  if(!name)return;
+  db.ref("people").push({name});
+  personName.value="";
+}
+db.ref("people").on("value",snap=>{
+  const div=document.getElementById("peopleList");
+  div.innerHTML="";
+  Object.values(snap.val()||{}).forEach(p=>{
+    div.innerHTML+=`<p>${p.name}</p>`;
+  });
+});
+
+/* ===== TASKS ===== */
+let reopenId=null;
+
+db.ref("tasks").on("value",snap=>{
+  const tbody=document.getElementById("taskTable");
+  tbody.innerHTML="";
+  Object.entries(snap.val()||{}).forEach(([id,t])=>{
+    tbody.innerHTML+=`
+      <tr>
+        <td>${t.name}</td>
+        <td>${(t.people||[]).join(", ")}</td>
+        <td><span class="badge ${t.status}">${statusLabel(t.status)}</span></td>
+        <td>${priorityLabel(t.priority)}</td>
+        <td>
+          <div class="actions">
+            ${t.status==="pending"
+              ? `<button class="btn-green" onclick="approve('${id}')">Aprovar</button>
+                 <button class="btn-red" onclick="openReopen('${id}')">Reabrir</button>`
+              : ""}
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+});
+
+function approve(id){
+  db.ref("tasks/"+id).update({
+    status:"done",
+    approvedAt:Date.now()
+  });
+}
+function openReopen(id){
+  reopenId=id;
+  modal.style.display="flex";
+}
+function reopen(status){
+  db.ref("tasks/"+reopenId).update({status});
+  modal.style.display="none";
+}
+</script>
+
+</body>
+</html>
