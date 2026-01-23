@@ -217,7 +217,7 @@ h2{
 </div>
 
 <script>
-/* ===== FIREBASE CONFIG (COLE A SUA) ===== */
+/* ===== FIREBASE CONFIG ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
   authDomain: "tmg-painel.firebaseapp.com",
@@ -239,10 +239,20 @@ setInterval(()=>{
     " • "+d.toLocaleDateString("pt-BR");
 },1000);
 
+/* ===== STATUS LABEL ===== */
+function statusLabel(s){
+  if(s==="todo") return "A Fazer";
+  if(s==="doing") return "Em Andamento";
+  if(s==="pending") return "Aguardando Aprovação";
+  if(s==="done") return "Concluída";
+  return s;
+}
+
 /* ===== TASKS ===== */
 db.ref("tasks").on("value",snap=>{
   const data=snap.val()||{};
   const groups={};
+
   Object.values(data).forEach(t=>{
     (t.people||["Sem Responsável"]).forEach(p=>{
       if(!groups[p])groups[p]=[];
@@ -259,13 +269,13 @@ db.ref("tasks").on("value",snap=>{
     card.innerHTML=`<div class="group-title">${person}</div>`;
 
     groups[person].forEach(t=>{
-      const row=document.createElement("div");
       const status=t.status||"todo";
+      const row=document.createElement("div");
       row.className="task "+(status==="pending"?"pending-glow":"");
       row.innerHTML=`
         <div class="task-name">${t.name}</div>
-        <div class="badge ${status}">${status}</div>
-        <div class="badge p-${t.priority||"low"}">${t.priority||"low"}</div>
+        <div class="badge ${status}">${statusLabel(status)}</div>
+        <div class="badge p-${t.priority||"low"}">${(t.priority||"baixa").toUpperCase()}</div>
       `;
       card.appendChild(row);
     });
@@ -283,7 +293,6 @@ db.ref("dates").on("value",snap=>{
     li.innerHTML=`
       <strong>${d.title}</strong><br>
       ${d.date}
-      <div class="countdown"></div>
     `;
     ul.appendChild(li);
   });
