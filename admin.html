@@ -12,222 +12,218 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <style>
-html,body{
-  margin:0;
-  background:radial-gradient(circle at top,#0a0a0a,#000);
-  font-family:'Orbitron',Arial,sans-serif;
-  color:#00e5ff;
-}
+html,body{margin:0;background:radial-gradient(circle at top,#0a0a0a,#000);font-family:'Orbitron',Arial,sans-serif;color:#00e5ff;}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 26px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);box-shadow:0 0 20px rgba(0,0,0,.45);}
+.header-left{display:flex;align-items:center;gap:16px;font-size:1.7rem;font-weight:800;letter-spacing:2px;color:#000;text-transform:uppercase;}
+.header-left img{height:90px;background:none;padding:0;border:none;filter:drop-shadow(0 0 12px rgba(0,0,0,.6));}
 
-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:14px 26px;
-  background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
-  box-shadow:0 0 20px rgba(0,0,0,.45);
-}
-
-.header-left{
-  display:flex;
-  align-items:center;
-  gap:16px;
-  font-size:1.7rem;
-  font-weight:800;
-  letter-spacing:2px;
-  color:#000;
-  text-transform:uppercase;
-}
-
-.header-left img{
-  height:90px;
-  filter:drop-shadow(0 0 12px rgba(0,0,0,.6));
-}
-
-.container{
-  padding:16px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-}
-
-.panel{
-  background:rgba(0,0,0,.78);
-  border-radius:18px;
-  padding:14px;
-  border:2px solid rgba(0,229,255,.22);
-  box-shadow:0 0 26px rgba(0,229,255,.25);
-}
-
+.container{padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.panel{background:rgba(0,0,0,.78);border-radius:18px;padding:14px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.25);overflow:hidden;}
 .full{grid-column:1/3}
+h2{margin:0 0 10px 0;text-align:center;color:#ff3d00;text-transform:uppercase;letter-spacing:2px;font-size:1.1rem;}
 
-h2{
-  margin:0 0 10px 0;
-  text-align:center;
-  color:#ff3d00;
-  text-transform:uppercase;
-  letter-spacing:2px;
-  font-size:1.1rem;
-}
-
-/* ===== FORM ===== */
-label{display:block;margin-top:10px;font-size:.85rem}
-input,select,button{
-  width:100%;
-  padding:10px;
-  border-radius:12px;
-  border:none;
-  font-family:'Orbitron',Arial,sans-serif;
-  margin-top:6px;
-}
-input,select{
-  background:rgba(255,255,255,.08);
-  color:#fff;
-  border:1px solid rgba(0,229,255,.25);
-}
-button{
-  margin-top:12px;
-  font-weight:900;
-  cursor:pointer;
-}
+label{display:block;margin-top:10px;font-size:.85rem;color:rgba(255,255,255,.85);letter-spacing:1px}
+input,select,button{width:100%;padding:10px;border-radius:12px;border:none;font-family:'Orbitron',Arial,sans-serif;margin-top:6px;box-sizing:border-box;}
+input,select{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(0,229,255,.25);outline:none;}
+button{margin-top:12px;font-weight:900;cursor:pointer;letter-spacing:1px;}
 .btn-green{background:linear-gradient(90deg,#00c853,#64dd17);color:#000}
 .btn-yellow{background:linear-gradient(90deg,#ffea00,#f9a825);color:#000}
 .btn-red{background:linear-gradient(90deg,#b71c1c,#ff1744);color:#fff}
+.btn-muted{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.15)}
+.hint{margin-top:8px;color:rgba(255,255,255,.65);font-size:.8rem;line-height:1.35}
 
-/* ===== TABLE ===== */
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:.85rem;
-}
-th,td{
-  padding:8px;
-  border-bottom:1px solid rgba(0,229,255,.2);
-}
-th{
-  color:#fff;
-  text-transform:uppercase;
-  font-size:.75rem;
-}
+table{width:100%;border-collapse:collapse;font-size:.85rem;}
+th,td{padding:10px 8px;border-bottom:1px solid rgba(0,229,255,.2);vertical-align:top;}
+th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;background:rgba(255,0,0,.12);}
 
-.badge{
-  padding:5px 10px;
-  border-radius:999px;
-  font-size:.7rem;
-  font-weight:900;
-  text-transform:uppercase;
-}
+.actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+.action-btn{width:auto;padding:10px 12px;border-radius:12px;border:none;font-family:'Orbitron',Arial,sans-serif;font-weight:900;cursor:pointer;white-space:nowrap;}
+
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
 .todo{background:#ff1744;color:#fff}
 .doing{background:#ffea00;color:#000}
-.pending{background:#2979ff;color:#000}
+.pending{background:#00e5ff;color:#000}
 .done{background:#00c853;color:#000}
 
-.actions{
-  display:flex;
-  gap:6px;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-}
+.p-high{background:#ff1744;color:#fff}
+.p-med{background:#ffea00;color:#000}
+.p-low{background:#64ffda;color:#000}
 
-/* ===== MODAL ===== */
-.modal-bg{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.75);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-.modal{
-  background:#000;
-  padding:16px;
-  border-radius:18px;
-  border:2px solid rgba(0,229,255,.35);
-  width:320px;
-}
+/* ===== PEOPLE LIST ===== */
+.people-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px;max-height:320px;overflow:auto;padding-right:6px;}
+.person-card{border:1px solid rgba(0,229,255,.18);border-radius:14px;padding:10px;background:rgba(255,255,255,.03);}
+.person-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.person-name{color:#fff;font-weight:900;letter-spacing:1px;text-transform:uppercase;font-size:.95rem;}
+.person-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+.small-link{color:rgba(255,255,255,.75);font-size:.78rem;word-break:break-all;margin-top:6px;}
+.qr-wrap{margin-top:10px;display:none;gap:10px;align-items:center;flex-wrap:wrap;}
+.qr-box{background:#fff;padding:10px;border-radius:12px;}
+.qr-note{color:rgba(255,255,255,.75);font-size:.78rem;line-height:1.35;max-width:360px;}
+
+/* ===== MODALS ===== */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;padding:18px;z-index:999;}
+.modal{background:rgba(0,0,0,.9);padding:16px;border-radius:18px;border:2px solid rgba(0,229,255,.35);width:100%;max-width:560px;box-shadow:0 0 26px rgba(0,229,255,.22);}
+.modal h3{margin:0 0 10px 0;text-align:center;color:#ff3d00;letter-spacing:2px;text-transform:uppercase;}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.modal-actions .full{grid-column:1/-1}
 </style>
 </head>
 
 <body>
-
 <header>
   <div class="header-left">
-    <img src="logo_tmg_clean.png">
+    <img src="logo_tmg_clean.png" alt="TMG">
     Admin Oficina
   </div>
 </header>
 
 <div class="container">
 
-<!-- ===== NOVA TAREFA ===== -->
-<div class="panel">
-<h2>Nova Tarefa</h2>
+  <!-- NOVA TAREFA -->
+  <div class="panel">
+    <h2>Nova Tarefa</h2>
 
-<label>Nome da tarefa</label>
-<input id="taskName">
+    <label>Nome</label>
+    <input id="taskName" placeholder="Ex: Revisar suspensão dianteira">
 
-<label>Responsáveis (separar por vírgula)</label>
-<input id="taskPeople">
+    <label>Responsáveis (separar por vírgula)</label>
+    <input id="taskPeople" placeholder="Ex: Davi, João">
 
-<label>Status</label>
-<select id="taskStatus">
-  <option value="todo">A Fazer</option>
-  <option value="doing">Em Andamento</option>
-  <option value="pending">Aguardando Aprovação</option>
-  <option value="done">Concluída</option>
-</select>
+    <label>Status</label>
+    <select id="taskStatus">
+      <option value="todo">A Fazer</option>
+      <option value="doing">Em Andamento</option>
+      <option value="pending">Aguardando aprovação</option>
+      <option value="done">Concluída</option>
+    </select>
 
-<label>Prioridade</label>
-<select id="taskPriority">
-  <option value="high">Alta</option>
-  <option value="med" selected>Média</option>
-  <option value="low">Baixa</option>
-</select>
+    <label>Prioridade</label>
+    <select id="taskPriority">
+      <option value="high">Alta</option>
+      <option value="med" selected>Média</option>
+      <option value="low">Baixa</option>
+    </select>
 
-<button class="btn-green" onclick="addTask()">Adicionar</button>
+    <button class="btn-green" onclick="addTask()">Adicionar</button>
+    <div class="hint">Dica: use os nomes cadastrados em “Equipe” para bater certinho no celular.</div>
+  </div>
+
+  <!-- DATAS IMPORTANTES -->
+  <div class="panel">
+    <h2>Datas Importantes</h2>
+
+    <label>Título</label>
+    <input id="dateTitle" placeholder="Ex: 1ª Etapa Curvelo">
+
+    <label>Data</label>
+    <input id="dateValue" type="date">
+
+    <button class="btn-green" onclick="addDate()">Adicionar Data</button>
+
+    <div class="hint">Você pode editar/remover na lista abaixo.</div>
+
+    <div style="margin-top:12px; max-height:320px; overflow:auto; padding-right:6px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Data</th>
+            <th style="text-align:right;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="datesTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- EQUIPE -->
+  <div class="panel">
+    <h2>Equipe</h2>
+
+    <label>Nome do membro</label>
+    <input id="personName" placeholder="Ex: Davi">
+
+    <button class="btn-green" onclick="addPerson()">Cadastrar</button>
+
+    <div class="hint">
+      O celular vai mostrar uma lista com esses nomes (sem digitar).<br>
+      Você também pode gerar QR Code individual para abrir direto.
+    </div>
+
+    <div class="people-grid" id="peopleList"></div>
+  </div>
+
+  <!-- LISTA DE TAREFAS -->
+  <div class="panel full">
+    <h2>Tarefas</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:34%;">Tarefa</th>
+          <th style="width:20%;">Responsáveis</th>
+          <th style="width:12%;">Status</th>
+          <th style="width:10%;">Prior.</th>
+          <th style="width:24%; text-align:right;">Ações</th>
+        </tr>
+      </thead>
+      <tbody id="taskTable"></tbody>
+    </table>
+  </div>
+
 </div>
 
-<!-- ===== EQUIPE ===== -->
-<div class="panel">
-<h2>Equipe</h2>
-
-<label>Nome do membro</label>
-<input id="personName">
-
-<button class="btn-green" onclick="addPerson()">Cadastrar</button>
-<div id="peopleList"></div>
-</div>
-
-<!-- ===== LISTA TAREFAS ===== -->
-<div class="panel full">
-<h2>Tarefas</h2>
-<table>
-<thead>
-<tr>
-<th>Tarefa</th>
-<th>Responsáveis</th>
-<th>Status</th>
-<th>Prior.</th>
-<th style="text-align:right;">Ações</th>
-</tr>
-</thead>
-<tbody id="taskTable"></tbody>
-</table>
-</div>
-
-</div>
-
-<!-- ===== MODAL REABRIR ===== -->
-<div class="modal-bg" id="modal">
+<!-- MODAL: REABRIR -->
+<div class="modal-bg" id="reopenModal">
   <div class="modal">
-    <h2>Reabrir tarefa</h2>
-    <button class="btn-red" onclick="reopen('todo')">A Fazer</button>
-    <button class="btn-yellow" onclick="reopen('doing')">Em Andamento</button>
+    <h3>Reabrir tarefa</h3>
+    <div class="hint" style="margin-top:0;">Para qual status a tarefa deve voltar?</div>
+
+    <div class="modal-actions">
+      <button class="btn-red" onclick="reopenTo('todo')">A Fazer</button>
+      <button class="btn-yellow" onclick="reopenTo('doing')">Em Andamento</button>
+      <button class="btn-muted full" onclick="closeReopen()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR TAREFA -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <h3>Editar tarefa</h3>
+
+    <input type="hidden" id="editId">
+
+    <label>Nome</label>
+    <input id="editName">
+
+    <label>Responsáveis (vírgula)</label>
+    <input id="editPeople">
+
+    <label>Status</label>
+    <select id="editStatus">
+      <option value="todo">A Fazer</option>
+      <option value="doing">Em Andamento</option>
+      <option value="pending">Aguardando aprovação</option>
+      <option value="done">Concluída</option>
+    </select>
+
+    <label>Prioridade</label>
+    <select id="editPriority">
+      <option value="high">Alta</option>
+      <option value="med">Média</option>
+      <option value="low">Baixa</option>
+    </select>
+
+    <div class="modal-actions">
+      <button class="btn-green" onclick="saveEdit()">Salvar</button>
+      <button class="btn-muted" onclick="closeEdit()">Cancelar</button>
+      <button class="btn-red full" onclick="deleteTaskFromModal()">Excluir tarefa</button>
+    </div>
   </div>
 </div>
 
 <script>
-/* ===== FIREBASE CONFIG ===== */
+/* ===== COLE SEU FIREBASE CONFIG ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
   authDomain: "tmg-painel.firebaseapp.com",
@@ -239,94 +235,296 @@ const firebaseConfig = {
   measurementId: "G-EK39245W6K"
 };
 firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+const db = firebase.database();
 
-/* ===== HELPERS ===== */
+/* ===== Helpers ===== */
+function safeText(s){return String(s||"").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function parsePeople(text){
+  const parts=(text||"").split(",").map(s=>s.trim()).filter(Boolean);
+  const seen=new Set(); const out=[];
+  for(const p of parts){const k=p.toLowerCase(); if(!seen.has(k)){seen.add(k); out.push(p);}}
+  return out;
+}
 function statusLabel(s){
   if(s==="todo") return "A Fazer";
   if(s==="doing") return "Em Andamento";
-  if(s==="pending") return "Aguardando Aprovação";
+  if(s==="pending") return "Aguardando aprovação";
   if(s==="done") return "Concluída";
-  return s;
+  return s||"";
 }
 function priorityLabel(p){
   if(p==="high") return "Alta";
   if(p==="med") return "Média";
-  if(p==="low") return "Baixa";
-  return p;
+  return "Baixa";
+}
+function priorityClass(p){
+  if(p==="high") return "p-high";
+  if(p==="med") return "p-med";
+  return "p-low";
+}
+function equipeBaseUrl(){
+  const url=new URL(window.location.href);
+  url.pathname=url.pathname.replace(/admin\.html$/i,"equipe.html");
+  url.search=""; url.hash="";
+  return url.toString();
 }
 
-/* ===== ADD TASK ===== */
+/* ===== TAREFAS ===== */
 function addTask(){
-  const name=taskName.value.trim();
-  if(!name)return alert("Informe o nome");
-  const people=taskPeople.value.split(",").map(p=>p.trim()).filter(Boolean);
-  db.ref("tasks").push({
-    name,
-    people,
-    status:taskStatus.value,
-    priority:taskPriority.value,
-    created:Date.now()
-  });
-  taskName.value=taskPeople.value="";
+  const name=document.getElementById("taskName").value.trim();
+  if(!name) return alert("Preencha o nome da tarefa.");
+
+  const people=parsePeople(document.getElementById("taskPeople").value);
+  if(!people.length) return alert("Informe pelo menos 1 responsável.");
+
+  const status=document.getElementById("taskStatus").value;
+  const priority=document.getElementById("taskPriority").value;
+  const now=Date.now();
+
+  const payload={name, people, status, priority, created:now, updatedAt:now};
+  if(status==="done") payload.approvedAt=now;
+
+  db.ref("tasks").push(payload);
+
+  document.getElementById("taskName").value="";
+  document.getElementById("taskPeople").value="";
+  document.getElementById("taskStatus").value="todo";
+  document.getElementById("taskPriority").value="med";
 }
 
-/* ===== PEOPLE ===== */
-function addPerson(){
-  const name=personName.value.trim();
-  if(!name)return;
-  db.ref("people").push({name});
-  personName.value="";
-}
-db.ref("people").on("value",snap=>{
-  const div=document.getElementById("peopleList");
-  div.innerHTML="";
-  Object.values(snap.val()||{}).forEach(p=>{
-    div.innerHTML+=`<p>${p.name}</p>`;
-  });
-});
-
-/* ===== TASKS ===== */
+const taskCache={};
 let reopenId=null;
 
-db.ref("tasks").on("value",snap=>{
+function approve(id){
+  const now=Date.now();
+  db.ref("tasks/"+id).update({status:"done", approvedAt:now, updatedAt:now});
+}
+
+function openReopen(id){
+  reopenId=id;
+  document.getElementById("reopenModal").style.display="flex";
+}
+function closeReopen(){
+  document.getElementById("reopenModal").style.display="none";
+  reopenId=null;
+}
+function reopenTo(status){
+  if(!reopenId) return;
+  const now=Date.now();
+  const update={status, updatedAt:now};
+  if(status!=="done") update.approvedAt=null;
+  db.ref("tasks/"+reopenId).update(update);
+  closeReopen();
+}
+
+/* Editar */
+function openEdit(id){
+  const t=taskCache[id]; if(!t) return;
+  document.getElementById("editId").value=id;
+  document.getElementById("editName").value=t.name||"";
+  document.getElementById("editPeople").value=(t.people||[]).join(", ");
+  document.getElementById("editStatus").value=t.status||"todo";
+  document.getElementById("editPriority").value=t.priority||"low";
+  document.getElementById("editModal").style.display="flex";
+}
+function closeEdit(){ document.getElementById("editModal").style.display="none"; }
+function saveEdit(){
+  const id=document.getElementById("editId").value; if(!id) return;
+  const name=document.getElementById("editName").value.trim();
+  if(!name) return alert("Nome obrigatório.");
+  const people=parsePeople(document.getElementById("editPeople").value);
+  if(!people.length) return alert("Informe pelo menos 1 responsável.");
+  const status=document.getElementById("editStatus").value;
+  const priority=document.getElementById("editPriority").value;
+  const now=Date.now();
+  const update={name, people, status, priority, updatedAt:now};
+  if(status==="done") update.approvedAt=now; else update.approvedAt=null;
+  db.ref("tasks/"+id).update(update);
+  closeEdit();
+}
+function deleteTask(id){
+  if(!confirm("Excluir esta tarefa?")) return;
+  db.ref("tasks/"+id).remove();
+}
+function deleteTaskFromModal(){
+  const id=document.getElementById("editId").value;
+  closeEdit();
+  if(id) deleteTask(id);
+}
+
+db.ref("tasks").on("value", snap=>{
   const tbody=document.getElementById("taskTable");
   tbody.innerHTML="";
-  Object.entries(snap.val()||{}).forEach(([id,t])=>{
-    tbody.innerHTML+=`
-      <tr>
-        <td>${t.name}</td>
-        <td>${(t.people||[]).join(", ")}</td>
-        <td><span class="badge ${t.status}">${statusLabel(t.status)}</span></td>
-        <td>${priorityLabel(t.priority)}</td>
-        <td>
-          <div class="actions">
-            ${t.status==="pending"
-              ? `<button class="btn-green" onclick="approve('${id}')">Aprovar</button>
-                 <button class="btn-red" onclick="openReopen('${id}')">Reabrir</button>`
-              : ""}
-          </div>
-        </td>
-      </tr>
+  for(const k of Object.keys(taskCache)) delete taskCache[k];
+
+  const data=snap.val()||{};
+  const rows=Object.entries(data).map(([id,t])=>({id,...t}));
+  rows.forEach(r=>taskCache[r.id]=r);
+
+  const statusOrder={todo:1,doing:2,pending:3,done:4};
+  const prioOrder={high:1,med:2,low:3};
+  rows.sort((a,b)=>{
+    const sa=statusOrder[a.status]||9, sb=statusOrder[b.status]||9;
+    if(sa!==sb) return sa-sb;
+    const pa=prioOrder[a.priority]||9, pb=prioOrder[b.priority]||9;
+    if(pa!==pb) return pa-pb;
+    return (a.created||0)-(b.created||0);
+  });
+
+  rows.forEach(t=>{
+    const status=t.status||"todo";
+    const prio=t.priority||"low";
+    const people=(t.people||[]).join(", ");
+    const pendingInfo = (status==="pending" && t.pendingBy)
+      ? `<div style="color:rgba(255,255,255,.75);font-size:.78rem;margin-top:6px;">
+           Marcada por: <b>${safeText(t.pendingBy)}</b>
+         </div>`
+      : "";
+
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${safeText(t.name||"")}${pendingInfo}</td>
+      <td>${safeText(people)}</td>
+      <td><span class="badge ${status}">${safeText(statusLabel(status))}</span></td>
+      <td><span class="badge ${priorityClass(prio)}">${safeText(priorityLabel(prio))}</span></td>
+      <td>
+        <div class="actions">
+          <button class="action-btn btn-yellow" onclick="openEdit('${t.id}')">✏️ Editar</button>
+          ${
+            status==="pending"
+            ? `<button class="action-btn btn-green" onclick="approve('${t.id}')">✅ Aprovar</button>
+               <button class="action-btn btn-red" onclick="openReopen('${t.id}')">🔁 Reabrir</button>`
+            : `<button class="action-btn btn-red" onclick="deleteTask('${t.id}')">🗑️ Excluir</button>`
+          }
+        </div>
+      </td>
     `;
+    tbody.appendChild(tr);
   });
 });
 
-function approve(id){
-  db.ref("tasks/"+id).update({
-    status:"done",
-    approvedAt:Date.now()
-  });
+/* ===== DATAS IMPORTANTES ===== */
+function addDate(){
+  const title=document.getElementById("dateTitle").value.trim();
+  const date=document.getElementById("dateValue").value; // YYYY-MM-DD
+  if(!title) return alert("Digite o título.");
+  if(!date) return alert("Selecione a data.");
+  db.ref("dates").push({title, date, created:Date.now()});
+  document.getElementById("dateTitle").value="";
+  document.getElementById("dateValue").value="";
 }
-function openReopen(id){
-  reopenId=id;
-  modal.style.display="flex";
-}
-function reopen(status){
-  db.ref("tasks/"+reopenId).update({status});
-  modal.style.display="none";
-}
-</script>
 
+function openEditDate(id, current){
+  const newTitle=prompt("Editar título:", current.title||"");
+  if(newTitle===null) return;
+  const newDate=prompt("Editar data (YYYY-MM-DD):", current.date||"");
+  if(newDate===null) return;
+  const title=(newTitle||"").trim();
+  const date=(newDate||"").trim();
+  if(!title || !date) return alert("Título e data são obrigatórios.");
+  db.ref("dates/"+id).update({title, date, updatedAt:Date.now()});
+}
+
+function deleteDate(id){
+  if(!confirm("Remover esta data?")) return;
+  db.ref("dates/"+id).remove();
+}
+
+db.ref("dates").on("value", snap=>{
+  const tbody=document.getElementById("datesTable");
+  tbody.innerHTML="";
+  const data=snap.val()||{};
+  const rows=Object.entries(data).map(([id,d])=>({id,...d}));
+  rows.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+  rows.forEach(d=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${safeText(d.title||"")}</td>
+      <td>${safeText(d.date||"")}</td>
+      <td>
+        <div class="actions">
+          <button class="action-btn btn-yellow" onclick='openEditDate("${d.id}", ${JSON.stringify(d).replace(/</g,"\\u003c")})'>✏️ Editar</button>
+          <button class="action-btn btn-red" onclick='deleteDate("${d.id}")'>🗑️</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+});
+
+/* ===== EQUIPE + QR ===== */
+function addPerson(){
+  const name=document.getElementById("personName").value.trim();
+  if(!name) return alert("Digite o nome.");
+  db.ref("people").push({name, created:Date.now()});
+  document.getElementById("personName").value="";
+}
+
+function deletePerson(id){
+  if(!confirm("Excluir este membro da equipe?")) return;
+  db.ref("people/"+id).remove();
+}
+
+function toggleQr(id){
+  const wrap=document.getElementById("qrwrap_"+id);
+  if(!wrap) return;
+  const isOpen=wrap.style.display==="flex";
+  wrap.style.display=isOpen?"none":"flex";
+  if(!isOpen){
+    const box=document.getElementById("qrbox_"+id);
+    const linkEl=document.getElementById("personlink_"+id);
+    const url=linkEl.getAttribute("data-url");
+    box.innerHTML="";
+    new QRCode(box,{text:url,width:180,height:180,correctLevel:QRCode.CorrectLevel.M});
+  }
+}
+
+async function copyLink(id){
+  const linkEl=document.getElementById("personlink_"+id);
+  const url=linkEl.getAttribute("data-url");
+  try{await navigator.clipboard.writeText(url); alert("Link copiado!");}
+  catch(e){prompt("Copie o link abaixo:", url);}
+}
+
+db.ref("people").on("value", snap=>{
+  const list=document.getElementById("peopleList");
+  list.innerHTML="";
+  const data=snap.val()||{};
+  const rows=Object.entries(data).map(([id,p])=>({id,...p}));
+  rows.sort((a,b)=>(a.name||"").localeCompare(b.name||"","pt-BR",{sensitivity:"base"}));
+
+  const base=equipeBaseUrl();
+  rows.forEach(p=>{
+    const url=base+"?u="+encodeURIComponent(p.name||"");
+    const card=document.createElement("div");
+    card.className="person-card";
+    card.innerHTML=`
+      <div class="person-top">
+        <div class="person-name">${safeText(p.name||"")}</div>
+        <div class="person-actions">
+          <button class="action-btn btn-yellow" onclick="toggleQr('${p.id}')">📷 QR</button>
+          <button class="action-btn btn-muted" onclick="copyLink('${p.id}')">🔗 Copiar</button>
+          <button class="action-btn btn-red" onclick="deletePerson('${p.id}')">🗑️</button>
+        </div>
+      </div>
+
+      <div class="small-link" id="personlink_${p.id}" data-url="${safeText(url)}">${safeText(url)}</div>
+
+      <div class="qr-wrap" id="qrwrap_${p.id}">
+        <div class="qr-box" id="qrbox_${p.id}"></div>
+        <div class="qr-note">
+          Aponte a câmera do celular para o QR.<br>
+          Se não tiver câmera, a pessoa abre o link e escolhe o nome na lista.
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+});
+
+/* fechar modais clicando fora */
+document.getElementById("reopenModal").addEventListener("click",(e)=>{ if(e.target.id==="reopenModal") closeReopen(); });
+document.getElementById("editModal").addEventListener("click",(e)=>{ if(e.target.id==="editModal") closeEdit(); });
+</script>
 </body>
 </html>
