@@ -11,194 +11,46 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  font-family:'Orbitron',Arial,sans-serif;
-  background:radial-gradient(circle at top,#0a0a0a,#000);
-  color:#00e5ff;
-  overflow:hidden;
-}
+html,body{margin:0;width:100%;height:100%;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff;overflow:hidden;}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 26px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);box-shadow:0 0 20px rgba(0,0,0,.45);}
+.header-left{display:flex;align-items:center;gap:18px;font-size:2.1rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#000;}
+.header-left img{height:120px;background:none;padding:0;border:none;filter:drop-shadow(0 0 12px rgba(0,0,0,.6));}
+.clock{background:rgba(0,0,0,.75);color:#fff;padding:10px 18px;border-radius:16px;font-size:1.4rem;letter-spacing:2px;box-shadow:inset 0 0 14px rgba(0,0,0,.85);}
 
-/* ===== HEADER ===== */
-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:14px 26px;
-  background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
-  box-shadow:0 0 20px rgba(0,0,0,.45);
-}
+.container{display:grid;grid-template-columns:3.2fr 0.8fr;gap:12px;padding:12px;height:calc(100vh - 150px);box-sizing:border-box;}
+.panel{background:rgba(0,0,0,.78);border-radius:18px;padding:14px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.25);position:relative;overflow:hidden;}
+h2{margin:0 0 10px 0;text-align:center;font-size:1.45rem;color:#ff3d00;letter-spacing:2px;text-transform:uppercase;}
 
-.header-left{
-  display:flex;
-  align-items:center;
-  gap:18px;
-  font-size:2.1rem;
-  font-weight:800;
-  letter-spacing:2px;
-  text-transform:uppercase;
-  color:#000;
-}
+.task-groups{display:grid;grid-template-columns:1fr 1fr;gap:10px;height:100%;overflow:auto;}
+.group-card{background:rgba(255,255,255,.03);border:1px solid rgba(0,229,255,.18);border-radius:14px;padding:10px;}
+.group-title{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;letter-spacing:1px;margin-bottom:8px;}
+.task{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 10px;margin-bottom:6px;border-radius:12px;border:1px solid rgba(0,229,255,.15);background:rgba(0,0,0,.35);}
+.task-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;}
 
-.header-left img{
-  height:120px;
-  background:none;
-  padding:0;
-  border:none;
-  filter:drop-shadow(0 0 12px rgba(0,0,0,.6));
-}
-
-.clock{
-  background:rgba(0,0,0,.75);
-  color:#fff;
-  padding:10px 18px;
-  border-radius:16px;
-  font-size:1.4rem;
-  letter-spacing:2px;
-  box-shadow:inset 0 0 14px rgba(0,0,0,.85);
-}
-
-/* ===== LAYOUT ===== */
-.container{
-  display:grid;
-  grid-template-columns:3.2fr 0.8fr;
-  gap:12px;
-  padding:12px;
-  height:calc(100vh - 150px);
-  box-sizing:border-box;
-}
-
-.panel{
-  background:rgba(0,0,0,.78);
-  border-radius:18px;
-  padding:14px;
-  border:2px solid rgba(0,229,255,.22);
-  box-shadow:0 0 26px rgba(0,229,255,.25);
-  position:relative;
-  overflow:hidden;
-}
-
-h2{
-  margin:0 0 10px 0;
-  text-align:center;
-  font-size:1.45rem;
-  color:#ff3d00;
-  letter-spacing:2px;
-  text-transform:uppercase;
-}
-
-/* ===== TASKS ===== */
-.task-groups{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  height:100%;
-  overflow:auto;
-}
-
-.group-card{
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(0,229,255,.18);
-  border-radius:14px;
-  padding:10px;
-}
-
-.group-title{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  color:#fff;
-  font-weight:800;
-  letter-spacing:1px;
-  margin-bottom:8px;
-}
-
-.task{
-  display:grid;
-  grid-template-columns:1fr auto auto;
-  gap:8px;
-  align-items:center;
-  padding:8px 10px;
-  margin-bottom:6px;
-  border-radius:12px;
-  border:1px solid rgba(0,229,255,.15);
-  background:rgba(0,0,0,.35);
-}
-
-.task-name{
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  font-weight:700;
-}
-
-/* ===== BADGES ===== */
-.badge{
-  padding:6px 10px;
-  border-radius:999px;
-  font-size:.75rem;
-  font-weight:900;
-  text-transform:uppercase;
-}
-
+.badge{padding:6px 10px;border-radius:999px;font-size:.75rem;font-weight:900;text-transform:uppercase;}
 .todo{background:linear-gradient(90deg,#b71c1c,#ff1744);color:#fff;}
 .doing{background:linear-gradient(90deg,#f9a825,#ffea00);color:#000;}
 .done{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
 .pending{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
-
 .p-high{background:#ff1744;color:#fff;}
 .p-med{background:#ffea00;color:#000;}
 .p-low{background:#64ffda;color:#000;}
 
-/* ===== GLOW PENDING ===== */
-.pending-glow{
-  animation:glow 1.8s infinite;
-}
-@keyframes glow{
-  0%{box-shadow:0 0 8px rgba(41,121,255,.25);}
-  50%{box-shadow:0 0 22px rgba(41,121,255,.85);}
-  100%{box-shadow:0 0 8px rgba(41,121,255,.25);}
-}
+.pending-glow{animation:glow 1.8s infinite;}
+@keyframes glow{0%{box-shadow:0 0 8px rgba(41,121,255,.25);}50%{box-shadow:0 0 22px rgba(41,121,255,.85);}100%{box-shadow:0 0 8px rgba(41,121,255,.25);}}
 
-/* ===== DATES ===== */
-.dates ul{
-  list-style:none;
-  padding:0;
-  margin:0;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  overflow:auto;
-}
+.dates ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;overflow:auto;}
+.dates li{background:rgba(0,0,0,.6);border-left:6px solid red;padding:10px;border-radius:12px;box-shadow:0 0 12px rgba(255,0,0,.25);}
+.countdown{margin-top:6px;text-align:right;font-weight:900;color:#fff;opacity:.9;}
 
-.dates li{
-  background:rgba(0,0,0,.6);
-  border-left:6px solid red;
-  padding:10px;
-  border-radius:12px;
-  box-shadow:0 0 12px rgba(255,0,0,.25);
-}
-
-.countdown{
-  margin-top:6px;
-  text-align:right;
-  font-weight:900;
-}
-
-/* ===== RESPONSIVE ===== */
-@media(max-width:1100px){
-  .task-groups{grid-template-columns:1fr;}
-}
+@media(max-width:1100px){.task-groups{grid-template-columns:1fr;}}
 </style>
 </head>
 
 <body>
-
 <header>
   <div class="header-left">
-    <img src="logo_tmg_clean.png">
+    <img src="logo_tmg_clean.png" alt="TMG">
     Cronograma Oficina
   </div>
   <div class="clock" id="clock">00:00</div>
@@ -217,7 +69,7 @@ h2{
 </div>
 
 <script>
-/* ===== FIREBASE CONFIG ===== */
+/* ===== COLE SEU FIREBASE CONFIG ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
   authDomain: "tmg-painel.firebaseapp.com",
@@ -231,7 +83,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
-/* ===== CLOCK ===== */
+/* Relógio */
 setInterval(()=>{
   const d=new Date();
   document.getElementById("clock").innerText=
@@ -239,23 +91,35 @@ setInterval(()=>{
     " • "+d.toLocaleDateString("pt-BR");
 },1000);
 
-/* ===== STATUS LABEL ===== */
+/* Labels */
 function statusLabel(s){
   if(s==="todo") return "A Fazer";
   if(s==="doing") return "Em Andamento";
-  if(s==="pending") return "Aguardando Aprovação";
+  if(s==="pending") return "Aguardando aprovação";
   if(s==="done") return "Concluída";
   return s;
 }
+function priorityLabel(p){
+  if(p==="high") return "Alta";
+  if(p==="med") return "Média";
+  return "Baixa";
+}
+function getTaskPeople(t){
+  if(Array.isArray(t.people) && t.people.length) return t.people;
+  if(typeof t.person==="string" && t.person.trim()) return [t.person.trim()]; // fallback antigo
+  return [];
+}
 
-/* ===== TASKS ===== */
+/* Tarefas (agrupadas por responsável) */
 db.ref("tasks").on("value",snap=>{
   const data=snap.val()||{};
   const groups={};
 
   Object.values(data).forEach(t=>{
-    (t.people||["Sem Responsável"]).forEach(p=>{
-      if(!groups[p])groups[p]=[];
+    const ppl=getTaskPeople(t);
+    const people = ppl.length ? ppl : ["Sem Responsável"];
+    people.forEach(p=>{
+      if(!groups[p]) groups[p]=[];
       groups[p].push(t);
     });
   });
@@ -263,19 +127,20 @@ db.ref("tasks").on("value",snap=>{
   const container=document.getElementById("tasks");
   container.innerHTML="";
 
-  Object.keys(groups).sort().forEach(person=>{
+  Object.keys(groups).sort((a,b)=>a.localeCompare(b,"pt-BR",{sensitivity:"base"})).forEach(person=>{
     const card=document.createElement("div");
     card.className="group-card";
     card.innerHTML=`<div class="group-title">${person}</div>`;
 
     groups[person].forEach(t=>{
       const status=t.status||"todo";
+      const prio=t.priority||"low";
       const row=document.createElement("div");
       row.className="task "+(status==="pending"?"pending-glow":"");
       row.innerHTML=`
-        <div class="task-name">${t.name}</div>
+        <div class="task-name">${t.name||""}</div>
         <div class="badge ${status}">${statusLabel(status)}</div>
-        <div class="badge p-${t.priority||"low"}">${(t.priority||"baixa").toUpperCase()}</div>
+        <div class="badge p-${prio}">${priorityLabel(prio)}</div>
       `;
       card.appendChild(row);
     });
@@ -284,20 +149,61 @@ db.ref("tasks").on("value",snap=>{
   });
 });
 
-/* ===== DATES ===== */
-db.ref("dates").on("value",snap=>{
+/* Datas + Regressivo */
+let lastDates=[];
+
+function parseYMD(ymd){
+  // ymd = "YYYY-MM-DD"
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+  if(!m) return null;
+  const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]);
+  // meia-noite local
+  return new Date(y, mo, d, 0, 0, 0, 0);
+}
+
+function formatCountdown(target){
+  const now=new Date();
+  const diffMs = target.getTime() - now.getTime();
+  const abs = Math.abs(diffMs);
+
+  const totalHours = Math.floor(abs / (1000*60*60));
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+
+  if(diffMs > 0){
+    return `Faltam ${days}d ${hours}h`;
+  }
+  if(diffMs > -1000*60*60*24){
+    return `Hoje`;
+  }
+  return `Atrasado ${days}d ${hours}h`;
+}
+
+function renderDates(){
   const ul=document.getElementById("dates");
   ul.innerHTML="";
-  Object.values(snap.val()||{}).forEach(d=>{
+  lastDates.forEach(d=>{
+    const dt=parseYMD(d.date);
+    const cd = dt ? formatCountdown(dt) : "--";
     const li=document.createElement("li");
     li.innerHTML=`
-      <strong>${d.title}</strong><br>
-      ${d.date}
+      <strong>${d.title||""}</strong><br>
+      ${d.date||""}
+      <div class="countdown">${cd}</div>
     `;
     ul.appendChild(li);
   });
-});
-</script>
+}
 
+db.ref("dates").on("value",snap=>{
+  const vals=Object.values(snap.val()||{});
+  vals.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+  lastDates=vals;
+  renderDates();
+});
+
+// Atualiza o regressivo a cada 1 minuto (sem precisar recarregar)
+setInterval(()=>renderDates(), 60*1000);
+</script>
 </body>
 </html>
