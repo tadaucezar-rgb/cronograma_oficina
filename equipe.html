@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Equipe - Cronograma Oficina</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root{
+      --c-cyan:#00e5ff;
+      --c-red:#ff1744;
+      --c-yellow:#ffea00;
+      --c-green:#64dd17;
+      --c-blue:#2979ff;
+      --line: rgba(0,229,255,.18);
+      --bgcard: rgba(255,255,255,.04);
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family:'Orbitron', Arial, sans-serif;
+      background: radial-gradient(circle at top, #0a0a0a, #000);
+      color: var(--c-cyan);
+      min-height:100vh;
+    }
+
+    header{
+      background: linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
+      color:#000;
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      box-shadow: 0 0 18px rgba(0,0,0,.45);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .hdr-title{
+      font-weight:900;
+      letter-spacing:1.5px;
+      text-transform:uppercase;
+      font-size: 1.02rem;
+      line-height:1.1;
+    }
+
+    .hdr-sub{
+      font-size: .78rem;
+      opacity: .85;
+      letter-spacing: .8px;
+    }
+
+    .btn-top{
+      width:auto;
+      padding:10px 12px;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      font-family:'Orbitron', Arial, sans-serif;
+      font-weight:900;
+      background: rgba(0,0,0,.70);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.16);
+      white-space:nowrap;
+    }
+
+    .wrap{
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .panel{
+      background: rgba(0,0,0,.78);
+      border-radius: 18px;
+      padding: 14px;
+      border:2px solid rgba(0,229,255,.22);
+      box-shadow: 0 0 26px rgba(0,229,255,.22);
+      margin-bottom: 12px;
+      overflow:hidden;
+    }
+
+    h2{
+      margin:0 0 10px 0;
+      text-align:center;
+      color:#ff3d00;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      font-size:1.05rem;
+    }
+
+    .hint{
+      color: rgba(255,255,255,.72);
+      font-size:.82rem;
+      line-height:1.35;
+      margin-top:8px;
+    }
+
+    select{
+      width:100%;
+      padding:12px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-family:'Orbitron', Arial, sans-serif;
+      outline:none;
+      font-size: 1rem;
+    }
+
+    .btn{
+      width:100%;
+      padding: 12px;
+      border-radius: 14px;
+      border:none;
+      cursor:pointer;
+      font-family:'Orbitron', Arial, sans-serif;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin-top: 10px;
+    }
+    .btn-green{ background: linear-gradient(90deg,#00c853,#64dd17); color:#000; }
+    .btn-muted{ background: rgba(255,255,255,.10); color:#fff; border:1px solid rgba(255,255,255,.16); }
+
+    .cards{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .card{
+      background: var(--bgcard);
+      border: 1px solid rgba(0,229,255,.16);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 0 14px rgba(0,229,255,.10);
+    }
+
+    .card-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .task-name{
+      color: var(--c-cyan);
+      font-weight: 900;
+      font-size: 1.02rem;
+      line-height:1.2;
+      flex:1;
+      word-break: break-word;
+    }
+
+    .badges{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      gap:8px;
+    }
+
+    .badge{
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      white-space:nowrap;
+    }
+    .b-todo{ background: linear-gradient(90deg,#b71c1c,#ff1744); color:#fff; }
+    .b-doing{ background: linear-gradient(90deg,#f9a825,#ffea00); color:#000; }
+    .b-pending{ background: linear-gradient(90deg,#2979ff,#00e5ff); color:#000; }
+    .b-done{ background: linear-gradient(90deg,#00c853,#64dd17); color:#000; }
+
+    .p-high{ background:#ff1744; color:#fff; }
+    .p-med{ background:#ffea00; color:#000; }
+    .p-low{ background:#64ffda; color:#000; }
+
+    .meta{
+      margin-top: 8px;
+      font-size: .82rem;
+      color: rgba(255,255,255,.75);
+      line-height:1.35;
+    }
+
+    .action{
+      margin-top: 10px;
+    }
+
+    .action button{
+      width:100%;
+      padding: 12px;
+      border-radius: 14px;
+      border:none;
+      cursor:pointer;
+      font-family:'Orbitron', Arial, sans-serif;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .btn-done{
+      background: rgba(255,255,255,.10);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.16);
+      cursor:not-allowed;
+      opacity:.85;
+    }
+
+    .empty{
+      text-align:center;
+      padding: 12px;
+      color: rgba(255,255,255,.75);
+      font-size: .9rem;
+    }
+
+    .small{
+      font-size:.78rem;
+      color: rgba(255,255,255,.65);
+      margin-top:8px;
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div>
+    <div class="hdr-title">Equipe — Cronograma Oficina</div>
+    <div class="hdr-sub" id="who">Selecione seu nome</div>
+  </div>
+  <button class="btn-top" id="btnTrocar">Trocar</button>
+</header>
+
+<div class="wrap">
+
+  <!-- Identificação -->
+  <div class="panel" id="panelPick">
+    <h2>Entrar</h2>
+
+    <select id="selPeople">
+      <option value="">Carregando nomes...</option>
+    </select>
+
+    <button class="btn btn-green" id="btnEntrar">Entrar</button>
+
+    <div class="hint">
+      • Se você abriu pelo QR Code, o nome já pode vir selecionado.<br>
+      • Sua única ação aqui é <b>marcar tarefa como concluída</b> (vai para “Aguardando aprovação”).
+    </div>
+  </div>
+
+  <!-- Minhas tarefas -->
+  <div class="panel" id="panelTasks" style="display:none;">
+    <h2>Minhas tarefas</h2>
+    <div class="cards" id="cards"></div>
+    <div class="empty" id="empty" style="display:none;">Nenhuma tarefa atribuída a você.</div>
+    <div class="small" id="foot"></div>
+  </div>
+
+</div>
+
+<script>
+  /* =========================
+     FIREBASE CONFIG (COLE A SUA)
+  ========================= */
+  const firebaseConfig = {
+  apiKey: "AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+  authDomain: "tmg-painel.firebaseapp.com",
+  databaseURL: "https://tmg-painel-default-rtdb.firebaseio.com",
+  projectId: "tmg-painel",
+  storageBucket: "tmg-painel.firebasestorage.app",
+  messagingSenderId: "877912378151",
+  appId: "1:877912378151:web:88af3a4f8f551acd603702",
+  measurementId: "G-EK39245W6K"
+};
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  /* =========================
+     UI refs
+  ========================= */
+  const panelPick = document.getElementById("panelPick");
+  const panelTasks = document.getElementById("panelTasks");
+  const selPeople = document.getElementById("selPeople");
+  const btnEntrar = document.getElementById("btnEntrar");
+  const btnTrocar = document.getElementById("btnTrocar");
+  const who = document.getElementById("who");
+  const cards = document.getElementById("cards");
+  const empty = document.getElementById("empty");
+  const foot = document.getElementById("foot");
+
+  /* =========================
+     Helpers
+  ========================= */
+  function norm(s){ return (s || "").trim().toLowerCase(); }
+
+  function statusLabel(s){
+    if(s==="todo") return "A Fazer";
+    if(s==="doing") return "Em Andamento";
+    if(s==="pending") return "Aguardando aprovação";
+    if(s==="done") return "Concluída";
+    return s || "";
+  }
+
+  function statusBadgeClass(s){
+    if(s==="todo") return "b-todo";
+    if(s==="doing") return "b-doing";
+    if(s==="pending") return "b-pending";
+    return "b-done";
+  }
+
+  function prioLabel(p){
+    if(p==="high") return "Alta";
+    if(p==="med") return "Média";
+    return "Baixa";
+  }
+  function prioClass(p){
+    if(p==="high") return "p-high";
+    if(p==="med") return "p-med";
+    return "p-low";
+  }
+
+  function getTaskPeople(t){
+    if (Array.isArray(t.people) && t.people.length) return t.people;
+    // fallback antigo, se existir:
+    if (typeof t.person === "string" && t.person.trim()) return [t.person.trim()];
+    return [];
+  }
+
+  function qs(){
+    const p = new URLSearchParams(window.location.search);
+    return {
+      u: p.get("u") || ""
+    };
+  }
+
+  function setSessionName(name){
+    localStorage.setItem("tmg_member_name", name);
+  }
+  function getSessionName(){
+    return localStorage.getItem("tmg_member_name") || "";
+  }
+  function clearSession(){
+    localStorage.removeItem("tmg_member_name");
+  }
+
+  async function markPending(taskId, memberName){
+    const now = Date.now();
+    // membro não finaliza: só manda para pending
+    await db.ref("tasks/" + taskId).update({
+      status: "pending",
+      pendingBy: memberName,
+      pendingAt: now,
+      updatedAt: now
+    });
+  }
+
+  /* =========================
+     Load people list
+  ========================= */
+  function fillPeopleSelect(peopleNames, preselect){
+    selPeople.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "Selecione seu nome";
+    selPeople.appendChild(opt0);
+
+    peopleNames.forEach(name=>{
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      selPeople.appendChild(opt);
+    });
+
+    if (preselect){
+      const found = peopleNames.find(n => norm(n) === norm(preselect));
+      if (found) selPeople.value = found;
+    }
+  }
+
+  function showPick(){
+    panelTasks.style.display = "none";
+    panelPick.style.display = "block";
+    who.textContent = "Selecione seu nome";
+  }
+
+  function showTasksFor(name){
+    panelPick.style.display = "none";
+    panelTasks.style.display = "block";
+    who.textContent = "Você: " + name;
+
+    // listener em tasks
+    db.ref("tasks").on("value", snap=>{
+      const data = snap.val() || {};
+      const rows = Object.entries(data).map(([id,t]) => ({ id, ...t }));
+
+      const me = norm(name);
+      const mine = rows.filter(t => getTaskPeople(t).some(p => norm(p) === me));
+
+      // ordena: pendentes e feitas por último
+      const statusOrder = { todo: 1, doing: 2, pending: 3, done: 4 };
+      const prioOrder = { high: 1, med: 2, low: 3 };
+
+      mine.sort((a,b)=>{
+        const sa = statusOrder[a.status] || 9;
+        const sb = statusOrder[b.status] || 9;
+        if (sa !== sb) return sa - sb;
+
+        const pa = prioOrder[a.priority] || 9;
+        const pb = prioOrder[b.priority] || 9;
+        if (pa !== pb) return pa - pb;
+
+        return (a.created || 0) - (b.created || 0);
+      });
+
+      cards.innerHTML = "";
+      empty.style.display = mine.length ? "none" : "block";
+
+      mine.forEach(t=>{
+        const status = t.status || "todo";
+        const prio = t.priority || "low";
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="card-top">
+            <div class="task-name">${t.name || ""}</div>
+            <div class="badges">
+              <span class="badge ${statusBadgeClass(status)}">${statusLabel(status)}</span>
+              <span class="badge ${prioClass(prio)}">${prioLabel(prio)}</span>
+            </div>
+          </div>
+
+          <div class="meta">
+            Responsáveis: ${getTaskPeople(t).join(", ")}
+            ${t.pendingBy ? `<br>Marcada por: <b>${t.pendingBy}</b>` : ``}
+          </div>
+
+          <div class="action">
+            <button ${status==="todo" || status==="doing" ? "" : "disabled"} class="${status==="todo" || status==="doing" ? "btn btn-green" : "btn-done"}">
+              ${status==="todo" || status==="doing" ? "Marcar como concluída" : (status==="pending" ? "Aguardando aprovação" : "Concluída")}
+            </button>
+          </div>
+        `;
+
+        const btn = card.querySelector("button");
+        if (status==="todo" || status==="doing"){
+          btn.onclick = async ()=>{
+            try{
+              await markPending(t.id, name);
+            }catch(e){
+              console.log(e);
+              alert("Falha ao marcar. Verifique sua internet.");
+            }
+          };
+        }
+
+        cards.appendChild(card);
+      });
+
+      foot.textContent = "Dica: após marcar, a tarefa fica em “Aguardando aprovação” até o Admin aprovar.";
+    });
+  }
+
+  /* =========================
+     Startup flow
+  ========================= */
+  const { u } = qs();
+  const saved = getSessionName();
+
+  db.ref("people").on("value", snap=>{
+    const data = snap.val() || {};
+    const names = Object.values(data).map(p => (p && p.name ? String(p.name).trim() : "")).filter(Boolean);
+
+    names.sort((a,b)=> a.localeCompare(b, "pt-BR", { sensitivity:"base" }));
+
+    const pre = u || saved;
+    fillPeopleSelect(names, pre);
+
+    // se veio por QR ou já tinha salvo e existe na lista → entra direto
+    const selected = selPeople.value;
+    if (selected){
+      setSessionName(selected);
+      showTasksFor(selected);
+    } else {
+      showPick();
+    }
+  });
+
+  btnEntrar.onclick = ()=>{
+    const name = selPeople.value;
+    if (!name) return alert("Selecione seu nome.");
+    setSessionName(name);
+    showTasksFor(name);
+  };
+
+  btnTrocar.onclick = ()=>{
+    if (confirm("Trocar de nome?")) {
+      clearSession();
+      // remove query string (se veio do QR) para não auto-entrar de novo
+      const url = new URL(window.location.href);
+      url.search = "";
+      window.location.href = url.toString();
+    }
+  };
+</script>
+</body>
+</html>
