@@ -145,6 +145,13 @@
       box-shadow: 0 0 14px rgba(0,229,255,.10);
     }
 
+    
+    .card.due-warn{border-color: rgba(0,229,255,.55); box-shadow:0 0 22px rgba(0,229,255,.18);}
+    .card.due-soon{border-color: rgba(255,234,0,.85); box-shadow:0 0 24px rgba(255,234,0,.22); animation: blinkY 1.2s infinite;}
+    .card.due-late{border-color: rgba(255,23,68,.95); box-shadow:0 0 26px rgba(255,23,68,.25); animation: blinkR 1.2s infinite;}
+    @keyframes blinkY{0%{box-shadow:0 0 12px rgba(255,234,0,.10);}50%{box-shadow:0 0 30px rgba(255,234,0,.45);}100%{box-shadow:0 0 12px rgba(255,234,0,.10);}}
+    @keyframes blinkR{0%{box-shadow:0 0 12px rgba(255,23,68,.10);}50%{box-shadow:0 0 32px rgba(255,23,68,.55);}100%{box-shadow:0 0 12px rgba(255,23,68,.10);}}
+
     .card-top{
       display:flex;
       align-items:flex-start;
@@ -341,28 +348,70 @@
     if(!m) return "";
     return `${m[3]}/${m[2]}/${m[1]}`;
   }
-  function parseYMD(ymd){
-    const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
-    if(!m) return null;
-    const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]);
-    return new Date(y, mo, d, 0,0,0,0);
+  
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+function parseYMD(ymd){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+  if(!m) return null;
+  const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]);
+  return new Date(y, mo, d, 0,0,0,0);
+}
+
+function parseDTLocalToMs(v){
+  if(!v) return null;
+  const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
+  if(!m) return null;
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0).getTime();
+}
+
+function formatBRDateTime(ms){
+  const d=new Date(ms);
+  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+function getDueMs(t){
+  if(t && typeof t.dueAt === "number" && !isNaN(t.dueAt)) return t.dueAt;
+  if(t && typeof t.dueAt === "string" && t.dueAt.trim() && !isNaN(Number(t.dueAt))) return Number(t.dueAt);
+  if(t && typeof t.dueLocal === "string" && t.dueLocal.includes("T")){
+    const ms=parseDTLocalToMs(t.dueLocal);
+    if(ms!=null) return ms;
   }
-  function dueInfo(dueDate){
-    const dt=parseYMD(dueDate);
-    if(!dt) return {label:"", badgeClass:"", cardClass:""};
-    const now=new Date();
-    const diffMs=dt.getTime()-now.getTime();
-    const diffDays=Math.floor(diffMs/(1000*60*60*24));
-
-    if(diffMs < -1000*60*60*24) return {label:`Prazo: ${formatBR(dueDate)} • Atrasado`, badgeClass:"due-over", cardClass:"due-border-over"};
-    if(diffMs < 0) return {label:`Prazo: ${formatBR(dueDate)} • Hoje`, badgeClass:"due-today", cardClass:"due-border-over"};
-    if(diffDays <= 1) return {label:`Prazo: ${formatBR(dueDate)} • ≤24h`, badgeClass:"due-soon", cardClass:"due-border-soon"};
-    if(diffDays <= 3) return {label:`Prazo: ${formatBR(dueDate)} • ${diffDays}d`, badgeClass:"due-warn", cardClass:""};
-    return {label:`Prazo: ${formatBR(dueDate)}`, badgeClass:"", cardClass:""};
+  if(t && typeof t.dueDate === "string"){
+    const d=parseYMD(t.dueDate);
+    if(d) return d.getTime();
   }
+  return null;
+}
 
+function dueInfo(t){
+  const ms=getDueMs(t);
+  if(ms==null) return {label:"", badgeClass:"", cardClass:""};
+  const nowMs=Date.now();
+  const diffMs=ms-nowMs;
+  const abs=Math.abs(diffMs);
 
-  function getTaskPeople(t){
+  const totalMin=Math.floor(abs/(1000*60));
+  const days=Math.floor(totalMin/(60*24));
+  const hours=Math.floor((totalMin%(60*24))/60);
+  const mins=totalMin%60;
+
+  const base = formatBRDateTime(ms);
+
+  if(diffMs < 0){
+    const withinDay = abs < (1000*60*60*24);
+    return {label:`Prazo: ${base} • ${withinDay ? "Hoje" : `Atrasado ${days}d ${hours}h`}`, badgeClass:"due-over", cardClass:"due-border-over"};
+  }
+  if(diffMs <= 1000*60*60*24){
+    return {label:`Prazo: ${base} • ≤24h (${hours}h ${mins}m)`, badgeClass:"due-soon", cardClass:"due-border-soon"};
+  }
+  if(diffMs <= 1000*60*60*24*3){
+    return {label:`Prazo: ${base} • ${days}d ${hours}h`, badgeClass:"due-warn", cardClass:"due-border-warn"};
+  }
+  return {label:`Prazo: ${base}`, badgeClass:"", cardClass:""};
+}
+
+function getTaskPeople(t){
     if (Array.isArray(t.people) && t.people.length) return t.people;
     // fallback antigo, se existir:
     if (typeof t.person === "string" && t.person.trim()) return [t.person.trim()];
@@ -463,7 +512,7 @@
         const prio = t.priority || "low";
 
         const card = document.createElement("div");
-        const di = dueInfo(t.dueDate);
+        const di = dueInfo(t);
         card.className = "card " + (di.cardClass || "");
         const dueHtml = t.dueDate ? `<div class="meta"><span class="badge ${di.badgeClass}">${di.label}</span></div>` : ``;
         card.innerHTML = `
@@ -477,7 +526,9 @@
 
           <div class="meta">
             Responsáveis: ${getTaskPeople(t).join(", ")}
+            ${t.dueDate ? `<br>Prazo: <b>${t.dueDate}</b> • ${remainingText(t.dueDate)}` : ``}
             ${t.pendingBy ? `<br>Marcada por: <b>${t.pendingBy}</b>` : ``}
+            ${(status==='done' && (t.durationMs || (t.startedAt && t.approvedAt))) ? `<br>Tempo: <b>${formatDuration(t.durationMs || (t.approvedAt - t.startedAt))}</b>` : ``}
                     ${dueHtml}
 
           <div class="action">
