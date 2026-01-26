@@ -16,11 +16,16 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .header-left img{height:120px;filter:drop-shadow(0 0 12px rgba(0,0,0,.6));}
 .clock{background:rgba(0,0,0,.75);color:#fff;padding:10px 18px;border-radius:16px;font-size:1.4rem;letter-spacing:2px;}
 
-.container{display:grid;grid-template-columns:3.2fr 0.8fr;gap:12px;padding:12px;height:calc(100vh - 150px);}
-.panel{background:rgba(0,0,0,.78);border-radius:18px;padding:14px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.25);overflow:auto;}
+.container{padding:12px;height:calc(100vh - 150px);box-sizing:border-box;}
+.panel{background:rgba(0,0,0,.78);border-radius:18px;padding:14px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.25);overflow:auto;height:100%;}
 h2{text-align:center;color:#ff3d00;letter-spacing:2px;text-transform:uppercase;}
 
 .task{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 10px;margin-bottom:6px;border-radius:12px;border:1px solid rgba(0,229,255,.15);background:rgba(0,0,0,.35);}
+.task.blink{animation:blink 1s infinite}
+@keyframes blink{50%{box-shadow:0 0 18px rgba(255,234,0,.85)}}
+.task.late{animation:blinkred 1s infinite}
+@keyframes blinkred{50%{box-shadow:0 0 22px rgba(255,23,68,.9)}}
+
 .task-name{font-weight:700;}
 .badge{padding:6px 10px;border-radius:999px;font-size:.75rem;font-weight:900;text-transform:uppercase;}
 .todo{background:#ff1744;color:#fff}
@@ -28,9 +33,8 @@ h2{text-align:center;color:#ff3d00;letter-spacing:2px;text-transform:uppercase;}
 .pending{background:#00e5ff;color:#000}
 .done{background:#64dd17;color:#000}
 
-.countdown{font-size:.72rem;opacity:.85;margin-top:4px}
-.warn{color:#ffea00}
-.late{color:#ff1744}
+.countdown{font-size:.72rem;opacity:.9;margin-top:4px}
+.timeSpent{font-size:.72rem;color:#64dd17;margin-top:4px}
 </style>
 </head>
 
@@ -65,39 +69,93 @@ const db=firebase.database();
 
 setInterval(()=>{
   const d=new Date();
-  document.getElementById("clock").innerText=d.toLocaleTimeString("pt-BR");
+  document.getElementById("clock").innerText=d.toLocaleTimeString("pt-BR",{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 },1000);
+
+
+function pad2(n){return String(n).padStart(2,"0");}
 
 function parseYMD(ymd){
   if(!ymd) return null;
   const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
   if(!m) return null;
-  return new Date(m[1],m[2]-1,m[3]);
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0,0,0);
+}
+function parseDTLocalToMs(v){
+  if(!v) return null;
+  const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
+  if(!m) return null;
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0).getTime();
+}
+function getDueMs(t){
+  if(t && typeof t.dueAt === "number" && !isNaN(t.dueAt)) return t.dueAt;
+  if(t && typeof t.dueAt === "string" && t.dueAt.trim() && !isNaN(Number(t.dueAt))) return Number(t.dueAt);
+  if(t && typeof t.dueLocal === "string" && t.dueLocal.includes("T")){
+    const ms=parseDTLocalToMs(t.dueLocal);
+    if(ms!=null) return ms;
+  }
+  if(t && typeof t.dueDate === "string"){
+    const d=parseYMD(t.dueDate);
+    if(d) return d.getTime();
+  }
+  return null;
+}
+function fmt(ms){
+  const totalMin=Math.max(0, Math.floor(ms/(1000*60)));
+  const days=Math.floor(totalMin/(60*24));
+  const hours=Math.floor((totalMin%(60*24))/60);
+  const mins=totalMin%60;
+  if(days>0) return `${days}d ${hours}h`;
+  if(hours>0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+}
+function fmtSpent(ms){
+  const h=Math.floor(ms/36e5);
+  const d=Math.floor(h/24);
+  return d>0?`${d}d ${h%24}h`:`${h}h`;
 }
 
-function countdownText(due){
-  const dt=parseYMD(due);
-  if(!dt) return "";
-  const now=new Date();
-  const diff=dt-now;
-  const days=Math.floor(diff/(1000*60*60*24));
-  const hours=Math.floor((diff/(1000*60*60))%24);
-  if(diff<0) return `<span class='late'>⛔ Atrasado ${Math.abs(days)}d</span>`;
-  if(days===0) return `<span class='warn'>⚠️ Hoje ${hours}h</span>`;
-  return `⏳ ${days}d ${hours}h`;
+function countdownInfo(t){
+  const ms=getDueMs(t);
+  if(ms==null) return null;
+  const nowMs=Date.now();
+  const diffMs=ms-nowMs;
+  const abs=Math.abs(diffMs);
+
+  const base = (()=>{ const d=new Date(ms); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; })();
+
+  if(diffMs < 0){
+    return {txt:`⛔ ${base} • Atrasado ${fmt(abs)}`, cls:"late"};
+  }
+  if(diffMs <= 1000*60*60*24){
+    return {txt:`⚠️ ${base} • ${fmt(diffMs)} restantes`, cls:"blink"};
+  }
+  return {txt:`⏳ ${base} • ${fmt(diffMs)} restantes`, cls:""};
 }
 
 db.ref("tasks").on("value",snap=>{
   const wrap=document.getElementById("tasks");
   wrap.innerHTML="";
   const data=snap.val()||{};
+
   Object.values(data).forEach(t=>{
     const div=document.createElement("div");
-    div.className="task";
+    let cls="task";
+    let cd="";
+    const c=countdownInfo(t);
+    if(c){cls+=" "+c.cls; cd=`<div class='countdown'>${c.txt}</div>`;}
+
+    let spent="";
+    if(t.status==="done" && t.durationMs){
+      spent=`<div class='timeSpent'>⏱️ Levou ${fmtSpent(t.durationMs)}</div>`;
+    }
+
+    div.className=cls;
     div.innerHTML=`
       <div class="task-name">
         ${t.name||""}
-        ${t.dueDate?`<div class="countdown">${countdownText(t.dueDate)}</div>`:""}
+        ${cd}
+        ${spent}
       </div>
       <div class="badge ${t.status||"todo"}">${t.status||""}</div>
       <div class="badge">${t.priority||""}</div>
