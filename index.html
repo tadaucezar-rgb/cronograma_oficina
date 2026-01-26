@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -14,48 +13,31 @@
 html,body{margin:0;width:100%;height:100%;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff;overflow:hidden;}
 header{display:flex;align-items:center;justify-content:space-between;padding:14px 26px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);box-shadow:0 0 20px rgba(0,0,0,.45);}
 .header-left{display:flex;align-items:center;gap:18px;font-size:2.1rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#000;}
-.header-left img{height:120px;background:none;padding:0;border:none;filter:drop-shadow(0 0 12px rgba(0,0,0,.6));}
-.clock{background:rgba(0,0,0,.75);color:#fff;padding:10px 18px;border-radius:16px;font-size:1.4rem;letter-spacing:2px;box-shadow:inset 0 0 14px rgba(0,0,0,.85);}
+.header-left img{height:120px;filter:drop-shadow(0 0 12px rgba(0,0,0,.6));}
+.clock{background:rgba(0,0,0,.75);color:#fff;padding:10px 18px;border-radius:16px;font-size:1.4rem;letter-spacing:2px;}
 
-.container{display:grid;grid-template-columns:3.2fr 0.8fr;gap:12px;padding:12px;height:calc(100vh - 150px);box-sizing:border-box;}
-.panel{background:rgba(0,0,0,.78);border-radius:18px;padding:14px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.25);position:relative;overflow:hidden;}
-h2{margin:0 0 10px 0;text-align:center;font-size:1.45rem;color:#ff3d00;letter-spacing:2px;text-transform:uppercase;}
+.container{display:grid;grid-template-columns:3.2fr 0.8fr;gap:12px;padding:12px;height:calc(100vh - 150px);}
+.panel{background:rgba(0,0,0,.78);border-radius:18px;padding:14px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.25);overflow:auto;}
+h2{text-align:center;color:#ff3d00;letter-spacing:2px;text-transform:uppercase;}
 
-.task-groups{display:grid;grid-template-columns:1fr 1fr;gap:10px;height:100%;overflow:auto;}
-.group-card{background:rgba(255,255,255,.03);border:1px solid rgba(0,229,255,.18);border-radius:14px;padding:10px;}
-.group-title{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;letter-spacing:1px;margin-bottom:8px;}
 .task{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 10px;margin-bottom:6px;border-radius:12px;border:1px solid rgba(0,229,255,.15);background:rgba(0,0,0,.35);}
-.task-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;}
-
+.task-name{font-weight:700;}
 .badge{padding:6px 10px;border-radius:999px;font-size:.75rem;font-weight:900;text-transform:uppercase;}
-.todo{background:linear-gradient(90deg,#b71c1c,#ff1744);color:#fff;}
-.doing{background:linear-gradient(90deg,#f9a825,#ffea00);color:#000;}
-.done{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
-.pending{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
-.p-high{background:#ff1744;color:#fff;}
-.p-med{background:#ffea00;color:#000;}
-.due-over{background:#ff1744;color:#fff;}
-.due-today{background:#ff1744;color:#fff;}
-.due-soon{background:#ffea00;color:#000;}
-.due-warn{background:#00e5ff;color:#000;}
-.task.overdue{border-color:rgba(255,23,68,.9); box-shadow:0 0 16px rgba(255,23,68,.22);}
-.task.soon{border-color:rgba(255,234,0,.8); box-shadow:0 0 16px rgba(255,234,0,.16);}
+.todo{background:#ff1744;color:#fff}
+.doing{background:#ffea00;color:#000}
+.pending{background:#00e5ff;color:#000}
+.done{background:#64dd17;color:#000}
 
-{animation:glow 1.8s infinite;}
-@keyframes glow{0%{box-shadow:0 0 8px rgba(41,121,255,.25);}50%{box-shadow:0 0 22px rgba(41,121,255,.85);}100%{box-shadow:0 0 8px rgba(41,121,255,.25);}}
-
-.dates ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;overflow:auto;}
-.dates li{background:rgba(0,0,0,.6);border-left:6px solid red;padding:10px;border-radius:12px;box-shadow:0 0 12px rgba(255,0,0,.25);}
-.countdown{margin-top:6px;text-align:right;font-weight:900;color:#fff;opacity:.9;}
-
-@media(max-width:1100px){.task-groups{grid-template-columns:1fr;}}
+.countdown{font-size:.72rem;opacity:.85;margin-top:4px}
+.warn{color:#ffea00}
+.late{color:#ff1744}
 </style>
 </head>
 
 <body>
 <header>
   <div class="header-left">
-    <img src="logo_tmg_clean.png" alt="TMG">
+    <img src="logo_tmg_clean.png">
     Cronograma Oficina
   </div>
   <div class="clock" id="clock">00:00</div>
@@ -64,17 +46,11 @@ h2{margin:0 0 10px 0;text-align:center;font-size:1.45rem;color:#ff3d00;letter-sp
 <div class="container">
   <div class="panel">
     <h2>Tarefas</h2>
-    <div class="task-groups" id="tasks"></div>
-  </div>
-
-  <div class="panel dates">
-    <h2>Datas</h2>
-    <ul id="dates"></ul>
+    <div id="tasks"></div>
   </div>
 </div>
 
 <script>
-/* ===== COLE SEU FIREBASE CONFIG ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
   authDomain: "tmg-painel.firebaseapp.com",
@@ -82,162 +58,53 @@ const firebaseConfig = {
   projectId: "tmg-painel",
   storageBucket: "tmg-painel.firebasestorage.app",
   messagingSenderId: "877912378151",
-  appId: "1:877912378151:web:88af3a4f8f551acd603702",
-  measurementId: "G-EK39245W6K"
+  appId: "1:877912378151:web:88af3a4f8f551acd603702"
 };
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
-/* Relógio */
 setInterval(()=>{
   const d=new Date();
-  document.getElementById("clock").innerText=
-    d.toLocaleTimeString("pt-BR",{hour:'2-digit',minute:'2-digit',second:'2-digit'})+
-    " • "+d.toLocaleDateString("pt-BR");
+  document.getElementById("clock").innerText=d.toLocaleTimeString("pt-BR");
 },1000);
 
-/* Labels */
-function statusLabel(s){
-  if(s==="todo") return "A Fazer";
-  if(s==="doing") return "Em Andamento";
-  if(s==="pending") return "Aguardando aprovação";
-  if(s==="done") return "Concluída";
-  return s;
-}
-function priorityLabel(p){
-  if(p==="high") return "Alta";
-  if(p==="med") return "Média";
-  return "Baixa";
-}
-function getTaskPeople(t){
-  if(Array.isArray(t.people) && t.people.length) return t.people;
-  if(typeof t.person==="string" && t.person.trim()) return [t.person.trim()]; // fallback antigo
-  return [];
-}
-
-function formatBR(ymd){
-  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
-  if(!m) return "";
-  return `${m[3]}/${m[2]}/${m[1]}`;
-}
 function parseYMD(ymd){
-  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+  if(!ymd) return null;
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
   if(!m) return null;
-  const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]);
-  return new Date(y, mo, d, 0,0,0,0);
+  return new Date(m[1],m[2]-1,m[3]);
 }
-function dueInfo(dueDate){
-  const dt=parseYMD(dueDate);
-  if(!dt) return {label:"", badgeClass:"", rowClass:""};
+
+function countdownText(due){
+  const dt=parseYMD(due);
+  if(!dt) return "";
   const now=new Date();
-  const diffMs=dt.getTime()-now.getTime();
-  const diffDays=Math.floor(diffMs/(1000*60*60*24));
-  if(diffMs < -1000*60*60*24) return {label:`Atrasado`, badgeClass:"due-over", rowClass:"overdue"};
-  if(diffMs < 0) return {label:`Hoje`, badgeClass:"due-today", rowClass:"overdue"};
-  if(diffDays <= 1) return {label:`≤24h`, badgeClass:"due-soon", rowClass:"soon"};
-  if(diffDays <= 3) return {label:`${diffDays}d`, badgeClass:"due-warn", rowClass:""};
-  return {label:`${formatBR(dueDate)}`, badgeClass:"", rowClass:""};
+  const diff=dt-now;
+  const days=Math.floor(diff/(1000*60*60*24));
+  const hours=Math.floor((diff/(1000*60*60))%24);
+  if(diff<0) return `<span class='late'>⛔ Atrasado ${Math.abs(days)}d</span>`;
+  if(days===0) return `<span class='warn'>⚠️ Hoje ${hours}h</span>`;
+  return `⏳ ${days}d ${hours}h`;
 }
 
-
-/* Tarefas (agrupadas por responsável) */
 db.ref("tasks").on("value",snap=>{
+  const wrap=document.getElementById("tasks");
+  wrap.innerHTML="";
   const data=snap.val()||{};
-  const groups={};
-
   Object.values(data).forEach(t=>{
-    const ppl=getTaskPeople(t);
-    const people = ppl.length ? ppl : ["Sem Responsável"];
-    people.forEach(p=>{
-      if(!groups[p]) groups[p]=[];
-      groups[p].push(t);
-    });
-  });
-
-  const container=document.getElementById("tasks");
-  container.innerHTML="";
-
-  Object.keys(groups).sort((a,b)=>a.localeCompare(b,"pt-BR",{sensitivity:"base"})).forEach(person=>{
-    const card=document.createElement("div");
-    card.className="group-card";
-    card.innerHTML=`<div class="group-title">${person}</div>`;
-
-    groups[person].forEach(t=>{
-      const status=t.status||"todo";
-      const prio=t.priority||"low";
-      const row=document.createElement("div");
-      const di = (status!=="done") ? dueInfo(t.dueDate) : {rowClass:"",badgeClass:"",label:""};
-      row.className="task "+(status==="pending"?"pending-glow ":"") + (di.rowClass||"");
-      const dueHtml = (t.dueDate && status!=="done") ? `<div class="badge ${di.badgeClass}">Prazo: ${di.badgeClass?di.label:formatBR(t.dueDate)}</div>` : ``;
-      row.innerHTML=`
-        <div class="task-name">${t.name||""}</div>
-        <div class="badge ${status}">${statusLabel(status)}</div>
-        <div class="badge p-${prio}">${priorityLabel(prio)}</div>
-        ${dueHtml}
-      `;
-      card.appendChild(row);
-    });
-
-    container.appendChild(card);
-  });
-});
-
-/* Datas + Regressivo */
-let lastDates=[];
-
-function parseYMD(ymd){
-  // ymd = "YYYY-MM-DD"
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
-  if(!m) return null;
-  const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]);
-  // meia-noite local
-  return new Date(y, mo, d, 0, 0, 0, 0);
-}
-
-function formatCountdown(target){
-  const now=new Date();
-  const diffMs = target.getTime() - now.getTime();
-  const abs = Math.abs(diffMs);
-
-  const totalHours = Math.floor(abs / (1000*60*60));
-  const days = Math.floor(totalHours / 24);
-  const hours = totalHours % 24;
-
-  if(diffMs > 0){
-    return `Faltam ${days}d ${hours}h`;
-  }
-  if(diffMs > -1000*60*60*24){
-    return `Hoje`;
-  }
-  return `Atrasado ${days}d ${hours}h`;
-}
-
-function renderDates(){
-  const ul=document.getElementById("dates");
-  ul.innerHTML="";
-  lastDates.forEach(d=>{
-    const dt=parseYMD(d.date);
-    const cd = dt ? formatCountdown(dt) : "--";
-    const li=document.createElement("li");
-    li.innerHTML=`
-      <strong>${d.title||""}</strong><br>
-      ${d.date||""}
-      <div class="countdown">${cd}</div>
+    const div=document.createElement("div");
+    div.className="task";
+    div.innerHTML=`
+      <div class="task-name">
+        ${t.name||""}
+        ${t.dueDate?`<div class="countdown">${countdownText(t.dueDate)}</div>`:""}
+      </div>
+      <div class="badge ${t.status||"todo"}">${t.status||""}</div>
+      <div class="badge">${t.priority||""}</div>
     `;
-    ul.appendChild(li);
+    wrap.appendChild(div);
   });
-}
-
-db.ref("dates").on("value",snap=>{
-  const vals=Object.values(snap.val()||{});
-  vals.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
-  lastDates=vals;
-  renderDates();
 });
-
-// Atualiza o regressivo a cada 1 minuto (sem precisar recarregar)
-setInterval(()=>renderDates(), 60*1000);
 </script>
 </body>
 </html>
-
