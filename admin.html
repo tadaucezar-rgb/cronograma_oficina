@@ -47,6 +47,11 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
 
 .p-high{background:#ff1744;color:#fff}
 .p-med{background:#ffea00;color:#000}
+.due-over{background:#ff1744;color:#fff}
+.due-today{background:#ff1744;color:#fff}
+.due-soon{background:#ffea00;color:#000}
+.due-warn{background:#00e5ff;color:#000}
+
 .p-low{background:#64ffda;color:#000}
 
 /* Equipe */
@@ -104,7 +109,12 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
       <option value="low">Baixa</option>
     </select>
 
-    <button class="btn-green" onclick="addTask()">Adicionar</button>
+    
+
+    <label>Prazo</label>
+    <input id="taskDue" type="date">
+
+<button class="btn-green" onclick="addTask()">Adicionar</button>
     <div class="hint">Dica: use os nomes cadastrados em “Equipe” para bater certinho no celular.</div>
   </div>
 
@@ -163,6 +173,7 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
           <th style="width:20%;">Responsáveis</th>
           <th style="width:12%;">Status</th>
           <th style="width:10%;">Prior.</th>
+          <th style="width:14%;">Prazo</th>
           <th style="width:24%; text-align:right;">Ações</th>
         </tr>
       </thead>
@@ -170,6 +181,33 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
     </table>
   </div>
 
+</div>
+
+
+<!-- MODAL: LOGIN (ADMIN) -->
+<div class="modal-bg" id="loginModal">
+  <div class="modal">
+    <h3>Admin — Acesso</h3>
+    <div class="hint" style="margin-top:0;">
+      Digite o PIN para evitar alterações por engano.
+    </div>
+
+    <label>PIN</label>
+    <input id="pinInput" type="password" inputmode="numeric" placeholder="Ex: 1234" />
+
+    <label style="display:flex;align-items:center;gap:10px;margin-top:12px;">
+      <input id="pinRemember" type="checkbox" style="width:auto;margin:0;transform:scale(1.15);" />
+      Lembrar neste navegador (12h)
+    </label>
+
+    <div class="modal-actions">
+      <button class="btn-green full" onclick="checkPin()">Entrar</button>
+    </div>
+
+    <div class="hint">
+      Dica: você pode mudar o PIN dentro do arquivo <b>admin.html</b>.
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: REABRIR -->
@@ -214,7 +252,12 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
       <option value="low">Baixa</option>
     </select>
 
-    <div class="modal-actions">
+    
+
+    <label>Prazo</label>
+    <input id="editDue" type="date">
+
+<div class="modal-actions">
       <button class="btn-green" onclick="saveEdit()">Salvar</button>
       <button class="btn-muted" onclick="closeEdit()">Cancelar</button>
       <button class="btn-red full" onclick="deleteTaskFromModal()">Excluir tarefa</button>
@@ -236,6 +279,34 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+/* ===== Admin PIN (simples) =====
+   Troque o valor abaixo.
+*/
+const ADMIN_PIN = "4032";
+const AUTH_KEY = "tmg_admin_auth_until";
+
+function requireAdminAuth(){
+  const until = Number(localStorage.getItem(AUTH_KEY) || "0");
+  const ok = Date.now() < until;
+  if(ok){
+    document.getElementById("loginModal").style.display = "none";
+    return;
+  }
+  // bloqueia tela
+  document.getElementById("loginModal").style.display = "flex";
+  setTimeout(()=>document.getElementById("pinInput")?.focus(), 100);
+}
+function checkPin(){
+  const pin = document.getElementById("pinInput").value.trim();
+  if(pin !== ADMIN_PIN) return alert("PIN incorreto.");
+  const remember = document.getElementById("pinRemember").checked;
+  const ttl = remember ? (12*60*60*1000) : (2*60*60*1000); // 12h ou 2h
+  localStorage.setItem(AUTH_KEY, String(Date.now() + ttl));
+  document.getElementById("pinInput").value = "";
+  document.getElementById("loginModal").style.display = "none";
+}
+
 
 /* ===== Helpers ===== */
 function safeText(s){return String(s||"").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
@@ -263,6 +334,37 @@ function priorityClass(p){
   return "p-low";
 }
 
+/* ===== Datas (prazo) ===== */
+function formatBR(ymd){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+  if(!m) return "";
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+function parseYMD(ymd){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+  if(!m) return null;
+  const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]);
+  return new Date(y, mo, d, 0,0,0,0);
+}
+function dueInfo(dueDate){
+  const dt=parseYMD(dueDate);
+  if(!dt) return {label:"—", cls:""};
+  const now=new Date();
+  const diffMs=dt.getTime()-now.getTime();
+  const diffDays=Math.floor(diffMs/(1000*60*60*24));
+  if(diffMs < -1000*60*60*24) return {label:`${formatBR(dueDate)} • Atrasado`, cls:"due-over"};
+  if(diffMs < 0) return {label:`${formatBR(dueDate)} • Hoje`, cls:"due-today"};
+  if(diffDays <= 1) return {label:`${formatBR(dueDate)} • ≤24h`, cls:"due-soon"};
+  if(diffDays <= 3) return {label:`${formatBR(dueDate)} • ${diffDays}d`, cls:"due-warn"};
+  return {label:formatBR(dueDate), cls:""};
+}
+function renderDueCell(t){
+  const {label, cls}=dueInfo(t.dueDate);
+  if(label==="—") return `<span style="opacity:.65;">—</span>`;
+  return `<span class="badge ${cls}" title="Prazo">${safeText(label)}</span>`;
+}
+
+
 /* ✅ LINK DO QR (CORRIGIDO) — sempre vai para equipe.html na mesma pasta */
 function equipeBaseUrl(){
   const u = new URL(window.location.href);
@@ -286,10 +388,12 @@ function addTask(){
 
   const status=document.getElementById("taskStatus").value;
   const priority=document.getElementById("taskPriority").value;
+  const dueDate=document.getElementById("taskDue").value || null;
   const now=Date.now();
 
-  const payload={name, people, status, priority, created:now, updatedAt:now};
-  if(status==="done") payload.approvedAt=now;
+  const payload={name, people, status, priority, dueDate, created:now, updatedAt:now};
+  if(status==="doing") payload.startedAt=now;
+  if(status==="done") { payload.startedAt=now; payload.approvedAt=now; payload.durationMs=0; payload.leadTimeMs=0; }
 
   db.ref("tasks").push(payload);
 
@@ -297,6 +401,7 @@ function addTask(){
   document.getElementById("taskPeople").value="";
   document.getElementById("taskStatus").value="todo";
   document.getElementById("taskPriority").value="med";
+  document.getElementById("taskDue").value="";
 }
 
 const taskCache={};
@@ -304,7 +409,18 @@ let reopenId=null;
 
 function approve(id){
   const now=Date.now();
-  db.ref("tasks/"+id).update({status:"done", approvedAt:now, updatedAt:now});
+  const t=taskCache[id]||{};
+  const startedAt = t.startedAt || (t.status==="doing" ? now : null);
+  const created = t.created || null;
+
+  const update={status:"done", approvedAt:now, updatedAt:now};
+  if(startedAt){
+    update.durationMs = Math.max(0, now - startedAt);
+  }
+  if(created){
+    update.leadTimeMs = Math.max(0, now - created);
+  }
+  db.ref("tasks/"+id).update(update);
 }
 
 function openReopen(id){
@@ -319,7 +435,21 @@ function reopenTo(status){
   if(!reopenId) return;
   const now=Date.now();
   const update={status, updatedAt:now};
-  if(status!=="done") update.approvedAt=null;
+
+  if(status==="todo"){
+    update.startedAt=null;
+    update.approvedAt=null;
+    update.durationMs=null;
+  }
+  if(status==="doing"){
+    const t=taskCache[reopenId]||{};
+    if(!t.startedAt) update.startedAt=now;
+    update.approvedAt=null;
+    update.durationMs=null;
+  }
+  if(status!=="done"){
+    update.approvedAt=null;
+  }
   db.ref("tasks/"+reopenId).update(update);
   closeReopen();
 }
@@ -332,6 +462,7 @@ function openEdit(id){
   document.getElementById("editPeople").value=(t.people||[]).join(", ");
   document.getElementById("editStatus").value=t.status||"todo";
   document.getElementById("editPriority").value=t.priority||"low";
+  document.getElementById("editDue").value=t.dueDate||"";
   document.getElementById("editModal").style.display="flex";
 }
 function closeEdit(){ document.getElementById("editModal").style.display="none"; }
@@ -343,9 +474,37 @@ function saveEdit(){
   if(!people.length) return alert("Informe pelo menos 1 responsável.");
   const status=document.getElementById("editStatus").value;
   const priority=document.getElementById("editPriority").value;
+  const dueDate=document.getElementById("editDue").value || null;
   const now=Date.now();
-  const update={name, people, status, priority, updatedAt:now};
-  if(status==="done") update.approvedAt=now; else update.approvedAt=null;
+
+  const prev = taskCache[id] || {};
+  const prevStatus = prev.status || "todo";
+
+  const update={name, people, status, priority, dueDate, updatedAt:now};
+
+  // controla start/stop do tempo
+  if(status==="doing"){
+    if(!prev.startedAt || prevStatus==="todo") update.startedAt = prev.startedAt || now;
+    update.approvedAt = null;
+    update.durationMs = null;
+  } else if(status==="todo"){
+    update.startedAt = null;
+    update.approvedAt = null;
+    update.durationMs = null;
+  } else if(status==="pending"){
+    // mantém startedAt se já iniciou
+    update.approvedAt = null;
+    update.durationMs = null;
+  } else if(status==="done"){
+    // se marcar como done aqui, considera aprovado agora
+    const startedAt = prev.startedAt || now;
+    const created = prev.created || null;
+    update.startedAt = startedAt;
+    update.approvedAt = now;
+    update.durationMs = Math.max(0, now - startedAt);
+    if(created) update.leadTimeMs = Math.max(0, now - created);
+  }
+
   db.ref("tasks/"+id).update(update);
   closeEdit();
 }
@@ -394,6 +553,7 @@ db.ref("tasks").on("value", snap=>{
       <td>${safeText(people)}</td>
       <td><span class="badge ${status}">${safeText(statusLabel(status))}</span></td>
       <td><span class="badge ${priorityClass(prio)}">${safeText(priorityLabel(prio))}</span></td>
+      <td>${renderDueCell(t)}</td>
       <td>
         <div class="actions">
           <button class="action-btn btn-yellow" onclick="openEdit('${t.id}')">✏️ Editar</button>
@@ -526,6 +686,12 @@ db.ref("people").on("value", snap=>{
 /* fechar modais clicando fora */
 document.getElementById("reopenModal").addEventListener("click",(e)=>{ if(e.target.id==="reopenModal") closeReopen(); });
 document.getElementById("editModal").addEventListener("click",(e)=>{ if(e.target.id==="editModal") closeEdit(); });
+
+// Login modal behaviors
+requireAdminAuth();
+document.getElementById("loginModal").addEventListener("click",(e)=>{ /* não fecha clicando fora */ });
+document.getElementById("pinInput").addEventListener("keydown",(e)=>{ if(e.key==="Enter") checkPin(); });
 </script>
 </body>
 </html>
+
