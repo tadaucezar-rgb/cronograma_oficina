@@ -111,8 +111,8 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
 
     
 
-    <label>Prazo</label>
-    <input id="taskDue" type="date">
+    <label>Prazo (data e hora)</label>
+    <input id="taskDue" type="datetime-local">
 
 <button class="btn-green" onclick="addTask()">Adicionar</button>
     <div class="hint">Dica: use os nomes cadastrados em “Equipe” para bater certinho no celular.</div>
@@ -208,6 +208,56 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
       Dica: você pode mudar o PIN dentro do arquivo <b>admin.html</b>.
     </div>
   </div>
+  <!-- RELATÓRIOS -->
+  <div class="panel full">
+    <h2>Relatórios (Tempo por pessoa)</h2>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;align-items:end;">
+      <div>
+        <label>De (aprovadas a partir)</label>
+        <input id="repFrom" type="date">
+      </div>
+      <div>
+        <label>Até (aprovadas até)</label>
+        <input id="repTo" type="date">
+      </div>
+      <div>
+        <label style="display:flex;align-items:center;gap:10px;margin-top:16px;">
+          <input id="repSplit" type="checkbox" checked style="width:auto;margin:0;transform:scale(1.2);">
+          Dividir tempo entre responsáveis
+        </label>
+        <div class="hint" style="margin-top:6px;">
+          Se desmarcar, cada responsável “leva” o tempo inteiro da tarefa (pode duplicar).
+        </div>
+      </div>
+      <div>
+        <button class="btn-yellow" onclick="exportReportCSV()">⬇️ Exportar CSV</button>
+        <button class="btn-muted" onclick="refreshReport()" style="margin-top:10px;">🔄 Atualizar</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px; max-height:420px; overflow:auto; padding-right:6px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Pessoa</th>
+            <th style="width:14%;">Tarefas</th>
+            <th style="width:18%;">Tempo (execução)</th>
+            <th style="width:18%;">Tempo médio</th>
+            <th style="width:22%;">Lead time (criação→aprovação)</th>
+          </tr>
+        </thead>
+        <tbody id="reportTable"></tbody>
+      </table>
+    </div>
+
+    <div class="hint" style="margin-top:10px;">
+      • “Tempo (execução)” = startedAt → approvedAt<br>
+      • “Lead time” = created → approvedAt<br>
+      • Só entra tarefa que estiver <b>Concluída (aprovada)</b>
+    </div>
+  </div>
+
 </div>
 
 <!-- MODAL: REABRIR -->
@@ -254,8 +304,8 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
 
     
 
-    <label>Prazo</label>
-    <input id="editDue" type="date">
+    <label>Prazo (data e hora)</label>
+    <input id="editDue" type="datetime-local">
 
 <div class="modal-actions">
       <button class="btn-green" onclick="saveEdit()">Salvar</button>
@@ -340,26 +390,57 @@ function formatBR(ymd){
   if(!m) return "";
   return `${m[3]}/${m[2]}/${m[1]}`;
 }
+
 function parseYMD(ymd){
   const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
   if(!m) return null;
   const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]);
   return new Date(y, mo, d, 0,0,0,0);
 }
-function dueInfo(dueDate){
-  const dt=parseYMD(dueDate);
-  if(!dt) return {label:"—", cls:""};
-  const now=new Date();
-  const diffMs=dt.getTime()-now.getTime();
-  const diffDays=Math.floor(diffMs/(1000*60*60*24));
-  if(diffMs < -1000*60*60*24) return {label:`${formatBR(dueDate)} • Atrasado`, cls:"due-over"};
-  if(diffMs < 0) return {label:`${formatBR(dueDate)} • Hoje`, cls:"due-today"};
-  if(diffDays <= 1) return {label:`${formatBR(dueDate)} • ≤24h`, cls:"due-soon"};
-  if(diffDays <= 3) return {label:`${formatBR(dueDate)} • ${diffDays}d`, cls:"due-warn"};
-  return {label:formatBR(dueDate), cls:""};
+
+function getDueMs(t){
+  if(t && typeof t.dueAt === "number" && !isNaN(t.dueAt)) return t.dueAt;
+  if(t && typeof t.dueAt === "string" && t.dueAt.trim() && !isNaN(Number(t.dueAt))) return Number(t.dueAt);
+  if(t && typeof t.dueLocal === "string" && t.dueLocal.includes("T")){
+    const ms=parseDTLocalToMs(t.dueLocal);
+    if(ms!=null) return ms;
+  }
+  if(t && typeof t.dueDate === "string"){
+    const d=parseYMD(t.dueDate);
+    if(d) return d.getTime();
+  }
+  return null;
+}
+
+function dueInfo(t){
+  const ms=getDueMs(t);
+  if(ms==null) return {label:"—", cls:""};
+  const nowMs=Date.now();
+  const diffMs=ms-nowMs;
+  const abs=Math.abs(diffMs);
+
+  const totalMin=Math.floor(abs/(1000*60));
+  const days=Math.floor(totalMin/(60*24));
+  const hours=Math.floor((totalMin%(60*24))/60);
+  const mins=totalMin%60;
+
+  const base = formatBRDateTime(ms);
+
+  if(diffMs < 0){
+    // tolerância: se está dentro do mesmo dia, chama "Hoje"
+    const withinDay = abs < (1000*60*60*24);
+    return {label:`${base} • ${withinDay ? "Hoje" : `Atrasado ${days}d ${hours}h`}`, cls:"due-over"};
+  }
+  if(diffMs <= 1000*60*60*24){
+    return {label:`${base} • ≤24h (${hours}h ${mins}m)`, cls:"due-soon"};
+  }
+  if(diffMs <= 1000*60*60*24*3){
+    return {label:`${base} • ${days}d ${hours}h`, cls:"due-warn"};
+  }
+  return {label: base, cls:""};
 }
 function renderDueCell(t){
-  const {label, cls}=dueInfo(t.dueDate);
+  const {label, cls}=dueInfo(t);
   if(label==="—") return `<span style="opacity:.65;">—</span>`;
   return `<span class="badge ${cls}" title="Prazo">${safeText(label)}</span>`;
 }
@@ -388,10 +469,12 @@ function addTask(){
 
   const status=document.getElementById("taskStatus").value;
   const priority=document.getElementById("taskPriority").value;
-  const dueDate=document.getElementById("taskDue").value || null;
+  const dueLocal=document.getElementById("taskDue").value || null;
+  const dueAt = dueLocal ? parseDTLocalToMs(dueLocal) : null;
+  const dueDate = dueLocal ? dueLocal.slice(0,10) : null;
   const now=Date.now();
 
-  const payload={name, people, status, priority, dueDate, created:now, updatedAt:now};
+  const payload={name, people, status, priority, dueDate, dueLocal, dueAt, created:now, updatedAt:now};
   if(status==="doing") payload.startedAt=now;
   if(status==="done") { payload.startedAt=now; payload.approvedAt=now; payload.durationMs=0; payload.leadTimeMs=0; }
 
@@ -462,7 +545,7 @@ function openEdit(id){
   document.getElementById("editPeople").value=(t.people||[]).join(", ");
   document.getElementById("editStatus").value=t.status||"todo";
   document.getElementById("editPriority").value=t.priority||"low";
-  document.getElementById("editDue").value=t.dueDate||"";
+  document.getElementById("editDue").value = t.dueLocal || (t.dueAt ? msToDTLocal(t.dueAt) : (t.dueDate ? (t.dueDate + "T00:00") : ""));
   document.getElementById("editModal").style.display="flex";
 }
 function closeEdit(){ document.getElementById("editModal").style.display="none"; }
@@ -474,13 +557,15 @@ function saveEdit(){
   if(!people.length) return alert("Informe pelo menos 1 responsável.");
   const status=document.getElementById("editStatus").value;
   const priority=document.getElementById("editPriority").value;
-  const dueDate=document.getElementById("editDue").value || null;
+  const dueLocal=document.getElementById("editDue").value || null;
+  const dueAt = dueLocal ? parseDTLocalToMs(dueLocal) : null;
+  const dueDate = dueLocal ? dueLocal.slice(0,10) : null;
   const now=Date.now();
 
   const prev = taskCache[id] || {};
   const prevStatus = prev.status || "todo";
 
-  const update={name, people, status, priority, dueDate, updatedAt:now};
+  const update={name, people, status, priority, dueDate, dueLocal, dueAt, updatedAt:now};
 
   // controla start/stop do tempo
   if(status==="doing"){
@@ -691,7 +776,137 @@ document.getElementById("editModal").addEventListener("click",(e)=>{ if(e.target
 requireAdminAuth();
 document.getElementById("loginModal").addEventListener("click",(e)=>{ /* não fecha clicando fora */ });
 document.getElementById("pinInput").addEventListener("keydown",(e)=>{ if(e.key==="Enter") checkPin(); });
+/* ===== RELATÓRIOS ===== */
+function msToHuman(ms){
+  const n = Number(ms||0);
+  if(!n || n<0) return "0m";
+  const totalHours = Math.floor(n/(1000*60*60));
+  const days = Math.floor(totalHours/24);
+  const hours = totalHours%24;
+  const mins = Math.floor((n/(1000*60))%60);
+  if(days>0) return `${days}d ${hours}h`;
+  if(totalHours>0) return `${totalHours}h ${mins}m`;
+  return `${mins}m`;
+}
+function ymdToDate(ymd){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+  if(!m) return null;
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0,0,0,0);
+}
+function refreshReport(){
+  const from = document.getElementById("repFrom").value;
+  const to   = document.getElementById("repTo").value;
+  const split = document.getElementById("repSplit").checked;
+
+  const fromDt = from ? ymdToDate(from) : null;
+  const toDt = to ? ymdToDate(to) : null;
+  if(toDt) toDt.setHours(23,59,59,999);
+
+  const agg = {}; // name -> {count, durMs, leadMs}
+  Object.values(taskCache).forEach(t=>{
+    const status=t.status||"todo";
+    if(status!=="done") return;
+
+    const approvedAt = Number(t.approvedAt||0);
+    if(!approvedAt) return;
+
+    if(fromDt && approvedAt < fromDt.getTime()) return;
+    if(toDt && approvedAt > toDt.getTime()) return;
+
+    const people = Array.isArray(t.people) && t.people.length ? t.people : (t.person ? [t.person] : ["Sem Responsável"]);
+    const durMs = Number(t.durationMs || (t.startedAt && t.approvedAt ? (t.approvedAt - t.startedAt) : 0) || 0);
+    const leadMs = Number((t.created && t.approvedAt) ? (t.approvedAt - t.created) : 0);
+
+    const share = split && people.length ? (durMs/people.length) : durMs;
+    const shareLead = split && people.length ? (leadMs/people.length) : leadMs;
+
+    people.forEach(p=>{
+      const key = String(p||"Sem Responsável");
+      if(!agg[key]) agg[key] = {count:0, durMs:0, leadMs:0};
+      agg[key].count += 1;
+      agg[key].durMs += share;
+      agg[key].leadMs += shareLead;
+    });
+  });
+
+  const rows = Object.entries(agg).sort((a,b)=>b[1].durMs - a[1].durMs);
+  const tbody = document.getElementById("reportTable");
+  tbody.innerHTML = "";
+
+  if(!rows.length){
+    const tr=document.createElement("tr");
+    tr.innerHTML = `<td colspan="5" style="color:rgba(255,255,255,.75);text-align:center;padding:16px;">Sem tarefas aprovadas no período.</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  rows.forEach(([name,v])=>{
+    const avg = v.count ? (v.durMs / v.count) : 0;
+    const avgLead = v.count ? (v.leadMs / v.count) : 0;
+    const tr=document.createElement("tr");
+    tr.innerHTML = `
+      <td><b style="color:#fff;">${safeText(name)}</b></td>
+      <td>${v.count}</td>
+      <td>${msToHuman(v.durMs)}</td>
+      <td>${msToHuman(avg)}</td>
+      <td>${msToHuman(v.leadMs)} <span style="opacity:.7"> (média ${msToHuman(avgLead)})</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+function exportReportCSV(){
+  // gera CSV a partir do relatório atual (tabela)
+  const rows = [];
+  rows.push(["Pessoa","Tarefas","Tempo_execucao","Tempo_medio","Lead_time"]);
+  const tbody = document.getElementById("reportTable");
+  const trs = Array.from(tbody.querySelectorAll("tr"));
+  trs.forEach(tr=>{
+    const tds = Array.from(tr.querySelectorAll("td")).map(td=>td.innerText.replace(/\s+/g," ").trim());
+    if(tds.length===5) rows.push(tds);
+  });
+  const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "relatorio_tmg.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+// atualiza automático quando tasks mudam e quando filtros mudam
+["repFrom","repTo","repSplit"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener("change", refreshReport);
+});
+setTimeout(()=>{ try{ refreshReport(); }catch(e){} }, 800);
+
 </script>
 </body>
 </html>
+
+function pad2(n){return String(n).padStart(2,"0");}
+function parseDTLocalToMs(v){
+  // v = "YYYY-MM-DDTHH:MM"
+  if(!v) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
+  if(!m) return null;
+  const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]), hh=Number(m[4]), mm=Number(m[5]);
+  return new Date(y, mo, d, hh, mm, 0, 0).getTime();
+}
+function msToDTLocal(ms){
+  if(ms==null) return "";
+  const d=new Date(Number(ms));
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+function formatBRDateTime(msOrLocalOrDate){
+  // accepts: ms (number), "YYYY-MM-DDTHH:MM", or "YYYY-MM-DD"
+  let d=null;
+  if(typeof msOrLocalOrDate==="number") d=new Date(msOrLocalOrDate);
+  else if(typeof msOrLocalOrDate==="string" && msOrLocalOrDate.includes("T")) d=new Date(parseDTLocalToMs(msOrLocalOrDate));
+  else if(typeof msOrLocalOrDate==="string") d=parseYMD(msOrLocalOrDate);
+  if(!d || isNaN(d.getTime())) return "—";
+  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
 
