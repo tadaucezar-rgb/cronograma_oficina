@@ -47,11 +47,6 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
 
 .p-high{background:#ff1744;color:#fff}
 .p-med{background:#ffea00;color:#000}
-.due-over{background:#ff1744;color:#fff}
-.due-today{background:#ff1744;color:#fff}
-.due-soon{background:#ffea00;color:#000}
-.due-warn{background:#00e5ff;color:#000}
-
 .p-low{background:#64ffda;color:#000}
 
 /* Equipe */
@@ -67,14 +62,48 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
 
 /* Modais */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;padding:18px;z-index:999;}
-.modal{background:rgba(0,0,0,.9);padding:16px;border-radius:18px;border:2px solid rgba(0,229,255,.35);width:100%;max-width:560px;box-shadow:0 0 26px rgba(0,229,255,.22);}
+.modal{background:rgba(0,0,0,.9);padding:16px;border-radius:18px;border:2px solid rgba(0,229,255,.35);width:100%;max-width:600px;box-shadow:0 0 26px rgba(0,229,255,.22);}
 .modal h3{margin:0 0 10px 0;text-align:center;color:#ff3d00;letter-spacing:2px;text-transform:uppercase;}
 .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
 .modal-actions .full{grid-column:1/-1}
+
+/* PIN */
+.lock-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:2000;padding:18px;}
+.lock-card{width:100%;max-width:520px;background:rgba(0,0,0,.92);border:2px solid rgba(0,229,255,.35);border-radius:18px;box-shadow:0 0 30px rgba(0,229,255,.2);padding:16px;}
+.lock-title{color:#ff3d00;text-transform:uppercase;letter-spacing:2px;font-weight:900;text-align:center;margin:0 0 8px 0;}
+.lock-sub{color:rgba(255,255,255,.75);text-align:center;font-size:.82rem;line-height:1.35;margin-bottom:12px;}
+.lock-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;}
+.lock-row input{font-size:1.1rem;letter-spacing:4px;text-align:center;}
+.lock-check{margin-top:10px;display:flex;gap:10px;align-items:center;color:rgba(255,255,255,.75);font-size:.82rem;}
+.lock-check input{width:auto;margin:0;}
+.lock-error{display:none;margin-top:10px;color:#ff1744;font-weight:900;text-align:center;}
 </style>
 </head>
 
 <body>
+<!-- 🔒 PIN gate -->
+<div class="lock-bg" id="lock">
+  <div class="lock-card">
+    <div class="lock-title">Admin protegido</div>
+    <div class="lock-sub">Digite o PIN para evitar alterações por engano.</div>
+    <div class="lock-row">
+      <div>
+        <label>PIN</label>
+        <input id="pinInput" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="••••">
+      </div>
+      <button class="btn-green" id="pinBtn">Entrar</button>
+    </div>
+    <div class="lock-check">
+      <input type="checkbox" id="pinRemember">
+      <label for="pinRemember">Lembrar neste navegador (12h)</label>
+    </div>
+    <div class="lock-error" id="pinErr">PIN incorreto</div>
+    <div class="hint" style="margin-top:10px;">
+      Dica: para trocar o PIN, edite a constante <b>ADMIN_PIN</b> no código.
+    </div>
+  </div>
+</div>
+
 <header>
   <div class="header-left">
     <img src="logo_tmg_clean.png" alt="TMG">
@@ -109,12 +138,10 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
       <option value="low">Baixa</option>
     </select>
 
-    
-
-    <label>Prazo (data e hora)</label>
+    <label>Prazo (data + hora)</label>
     <input id="taskDue" type="datetime-local">
 
-<button class="btn-green" onclick="addTask()">Adicionar</button>
+    <button class="btn-green" onclick="addTask()">Adicionar</button>
     <div class="hint">Dica: use os nomes cadastrados em “Equipe” para bater certinho no celular.</div>
   </div>
 
@@ -169,92 +196,51 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
     <table>
       <thead>
         <tr>
-          <th style="width:34%;">Tarefa</th>
-          <th style="width:20%;">Responsáveis</th>
-          <th style="width:12%;">Status</th>
+          <th style="width:26%;">Tarefa</th>
+          <th style="width:18%;">Responsáveis</th>
+          <th style="width:10%;">Status</th>
           <th style="width:10%;">Prior.</th>
-          <th style="width:14%;">Prazo</th>
-          <th style="width:24%; text-align:right;">Ações</th>
+          <th style="width:16%;">Prazo</th>
+          <th style="width:20%; text-align:right;">Ações</th>
         </tr>
       </thead>
       <tbody id="taskTable"></tbody>
     </table>
   </div>
 
-</div>
-
-
-<!-- MODAL: LOGIN (ADMIN) -->
-<div class="modal-bg" id="loginModal">
-  <div class="modal">
-    <h3>Admin — Acesso</h3>
-    <div class="hint" style="margin-top:0;">
-      Digite o PIN para evitar alterações por engano.
-    </div>
-
-    <label>PIN</label>
-    <input id="pinInput" type="password" inputmode="numeric" placeholder="Ex: 1234" />
-
-    <label style="display:flex;align-items:center;gap:10px;margin-top:12px;">
-      <input id="pinRemember" type="checkbox" style="width:auto;margin:0;transform:scale(1.15);" />
-      Lembrar neste navegador (12h)
-    </label>
-
-    <div class="modal-actions">
-      <button class="btn-green full" onclick="checkPin()">Entrar</button>
-    </div>
-
-    <div class="hint">
-      Dica: você pode mudar o PIN dentro do arquivo <b>admin.html</b>.
-    </div>
-  </div>
   <!-- RELATÓRIOS -->
   <div class="panel full">
-    <h2>Relatórios (Tempo por pessoa)</h2>
+    <h2>Relatórios (Horas por pessoa)</h2>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;align-items:end;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end;">
       <div>
-        <label>De (aprovadas a partir)</label>
-        <input id="repFrom" type="date">
+        <label>De (aprovação)</label>
+        <input type="date" id="repFrom">
       </div>
       <div>
-        <label>Até (aprovadas até)</label>
-        <input id="repTo" type="date">
+        <label>Até (aprovação)</label>
+        <input type="date" id="repTo">
       </div>
       <div>
-        <label style="display:flex;align-items:center;gap:10px;margin-top:16px;">
-          <input id="repSplit" type="checkbox" checked style="width:auto;margin:0;transform:scale(1.2);">
-          Dividir tempo entre responsáveis
-        </label>
-        <div class="hint" style="margin-top:6px;">
-          Se desmarcar, cada responsável “leva” o tempo inteiro da tarefa (pode duplicar).
-        </div>
-      </div>
-      <div>
-        <button class="btn-yellow" onclick="exportReportCSV()">⬇️ Exportar CSV</button>
-        <button class="btn-muted" onclick="refreshReport()" style="margin-top:10px;">🔄 Atualizar</button>
+        <button class="btn-yellow" onclick="exportCSV()">⬇️ Exportar CSV</button>
       </div>
     </div>
 
-    <div style="margin-top:12px; max-height:420px; overflow:auto; padding-right:6px;">
+    <div class="hint">Conta o tempo de <b>Em Andamento → Aprovada</b> (duration). Se a tarefa tiver 2+ responsáveis, o tempo é <b>dividido</b> entre eles.</div>
+
+    <div style="margin-top:12px; max-height:360px; overflow:auto; padding-right:6px;">
       <table>
         <thead>
           <tr>
             <th>Pessoa</th>
-            <th style="width:14%;">Tarefas</th>
-            <th style="width:18%;">Tempo (execução)</th>
-            <th style="width:18%;">Tempo médio</th>
-            <th style="width:22%;">Lead time (criação→aprovação)</th>
+            <th style="text-align:right;">Tarefas</th>
+            <th style="text-align:right;">Horas (exec.)</th>
+            <th style="text-align:right;">Média (h)</th>
+            <th style="text-align:right;">Lead Time (h)</th>
           </tr>
         </thead>
-        <tbody id="reportTable"></tbody>
+        <tbody id="repTable"></tbody>
       </table>
-    </div>
-
-    <div class="hint" style="margin-top:10px;">
-      • “Tempo (execução)” = startedAt → approvedAt<br>
-      • “Lead time” = created → approvedAt<br>
-      • Só entra tarefa que estiver <b>Concluída (aprovada)</b>
     </div>
   </div>
 
@@ -302,12 +288,10 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
       <option value="low">Baixa</option>
     </select>
 
-    
-
-    <label>Prazo (data e hora)</label>
+    <label>Prazo (data + hora)</label>
     <input id="editDue" type="datetime-local">
 
-<div class="modal-actions">
+    <div class="modal-actions">
       <button class="btn-green" onclick="saveEdit()">Salvar</button>
       <button class="btn-muted" onclick="closeEdit()">Cancelar</button>
       <button class="btn-red full" onclick="deleteTaskFromModal()">Excluir tarefa</button>
@@ -316,7 +300,11 @@ th{color:#fff;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;backg
 </div>
 
 <script>
-/* ===== COLE SEU FIREBASE CONFIG ===== */
+/* =========================
+   CONFIG
+========================= */
+const ADMIN_PIN = "1234"; // <-- troque aqui
+
 const firebaseConfig = {
   apiKey: "AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
   authDomain: "tmg-painel.firebaseapp.com",
@@ -330,42 +318,58 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* ===== Admin PIN (simples) =====
-   Troque o valor abaixo.
-*/
-const ADMIN_PIN = "4032";
-const AUTH_KEY = "tmg_admin_auth_until";
+/* =========================
+   PIN gate
+========================= */
+(function pinGate(){
+  const lock = document.getElementById("lock");
+  const pinInput = document.getElementById("pinInput");
+  const pinBtn = document.getElementById("pinBtn");
+  const pinErr = document.getElementById("pinErr");
+  const remember = document.getElementById("pinRemember");
 
-function requireAdminAuth(){
-  const until = Number(localStorage.getItem(AUTH_KEY) || "0");
-  const ok = Date.now() < until;
-  if(ok){
-    document.getElementById("loginModal").style.display = "none";
-    return;
+  function ok(){
+    lock.style.display = "none";
   }
-  // bloqueia tela
-  document.getElementById("loginModal").style.display = "flex";
-  setTimeout(()=>document.getElementById("pinInput")?.focus(), 100);
-}
-function checkPin(){
-  const pin = document.getElementById("pinInput").value.trim();
-  if(pin !== ADMIN_PIN) return alert("PIN incorreto.");
-  const remember = document.getElementById("pinRemember").checked;
-  const ttl = remember ? (12*60*60*1000) : (2*60*60*1000); // 12h ou 2h
-  localStorage.setItem(AUTH_KEY, String(Date.now() + ttl));
-  document.getElementById("pinInput").value = "";
-  document.getElementById("loginModal").style.display = "none";
-}
 
+  function setToken(hours){
+    const exp = Date.now() + hours*60*60*1000;
+    localStorage.setItem("tmg_admin_unlock_until", String(exp));
+  }
 
-/* ===== Helpers ===== */
+  const exp = Number(localStorage.getItem("tmg_admin_unlock_until") || 0);
+  if (exp && exp > Date.now()) ok();
+
+  function tryUnlock(){
+    pinErr.style.display = "none";
+    const val = (pinInput.value || "").trim();
+    if (!val) return;
+    if (val === ADMIN_PIN){
+      setToken(remember.checked ? 12 : 2);
+      ok();
+    } else {
+      pinErr.style.display = "block";
+      pinInput.focus();
+      pinInput.select?.();
+    }
+  }
+
+  pinBtn.addEventListener("click", tryUnlock);
+  pinInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") tryUnlock(); });
+})();
+
+/* =========================
+   Helpers
+========================= */
 function safeText(s){return String(s||"").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
 function parsePeople(text){
   const parts=(text||"").split(",").map(s=>s.trim()).filter(Boolean);
   const seen=new Set(); const out=[];
   for(const p of parts){const k=p.toLowerCase(); if(!seen.has(k)){seen.add(k); out.push(p);}}
   return out;
 }
+
 function statusLabel(s){
   if(s==="todo") return "A Fazer";
   if(s==="doing") return "Em Andamento";
@@ -383,83 +387,43 @@ function priorityClass(p){
   if(p==="med") return "p-med";
   return "p-low";
 }
+function pad2(n){return String(n).padStart(2,"0");}
 
-/* ===== Datas (prazo) ===== */
-function formatBR(ymd){
-  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
-  if(!m) return "";
-  return `${m[3]}/${m[2]}/${m[1]}`;
-}
-
-function parseYMD(ymd){
-  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+function parseDTLocalToMs(v){
+  // v = "YYYY-MM-DDTHH:MM"
+  if(!v) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
   if(!m) return null;
-  const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]);
-  return new Date(y, mo, d, 0,0,0,0);
+  const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]), hh=Number(m[4]), mm=Number(m[5]);
+  return new Date(y, mo, d, hh, mm, 0, 0).getTime();
+}
+function msToDTLocal(ms){
+  if(!ms && ms!==0) return "";
+  const d = new Date(Number(ms));
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+function formatBRDateTime(msOrLocal){
+  if(!msOrLocal && msOrLocal!==0) return "";
+  let d=null;
+  if(typeof msOrLocal==="number") d=new Date(msOrLocal);
+  else if(typeof msOrLocal==="string" && msOrLocal.includes("T")) d=new Date(parseDTLocalToMs(msOrLocal));
+  else if(typeof msOrLocal==="string") d=new Date(msOrLocal); // fallback
+  if(!d || isNaN(d.getTime())) return "";
+  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
-function getDueMs(t){
-  if(t && typeof t.dueAt === "number" && !isNaN(t.dueAt)) return t.dueAt;
-  if(t && typeof t.dueAt === "string" && t.dueAt.trim() && !isNaN(Number(t.dueAt))) return Number(t.dueAt);
-  if(t && typeof t.dueLocal === "string" && t.dueLocal.includes("T")){
-    const ms=parseDTLocalToMs(t.dueLocal);
-    if(ms!=null) return ms;
-  }
-  if(t && typeof t.dueDate === "string"){
-    const d=parseYMD(t.dueDate);
-    if(d) return d.getTime();
-  }
-  return null;
-}
-
-function dueInfo(t){
-  const ms=getDueMs(t);
-  if(ms==null) return {label:"—", cls:""};
-  const nowMs=Date.now();
-  const diffMs=ms-nowMs;
-  const abs=Math.abs(diffMs);
-
-  const totalMin=Math.floor(abs/(1000*60));
-  const days=Math.floor(totalMin/(60*24));
-  const hours=Math.floor((totalMin%(60*24))/60);
-  const mins=totalMin%60;
-
-  const base = formatBRDateTime(ms);
-
-  if(diffMs < 0){
-    // tolerância: se está dentro do mesmo dia, chama "Hoje"
-    const withinDay = abs < (1000*60*60*24);
-    return {label:`${base} • ${withinDay ? "Hoje" : `Atrasado ${days}d ${hours}h`}`, cls:"due-over"};
-  }
-  if(diffMs <= 1000*60*60*24){
-    return {label:`${base} • ≤24h (${hours}h ${mins}m)`, cls:"due-soon"};
-  }
-  if(diffMs <= 1000*60*60*24*3){
-    return {label:`${base} • ${days}d ${hours}h`, cls:"due-warn"};
-  }
-  return {label: base, cls:""};
-}
-function renderDueCell(t){
-  const {label, cls}=dueInfo(t);
-  if(label==="—") return `<span style="opacity:.65;">—</span>`;
-  return `<span class="badge ${cls}" title="Prazo">${safeText(label)}</span>`;
-}
-
-
-/* ✅ LINK DO QR (CORRIGIDO) — sempre vai para equipe.html na mesma pasta */
+/* ✅ LINK DO QR — sempre vai para equipe.html na mesma pasta */
 function equipeBaseUrl(){
   const u = new URL(window.location.href);
-  // remove query/hash e garante que aponta para a mesma pasta do site
   u.search = "";
   u.hash = "";
-
-  // pega o diretório atual e força equipe.html
-  // funciona para /admin, /admin.html, /index.html ou /
-  u.pathname = u.pathname.replace(/[^\/]*$/, ""); // fica na pasta
+  u.pathname = u.pathname.replace(/[^\/]*$/, "");
   return u.toString() + "equipe.html";
 }
 
-/* ===== TAREFAS ===== */
+/* =========================
+   TAREFAS
+========================= */
 function addTask(){
   const name=document.getElementById("taskName").value.trim();
   if(!name) return alert("Preencha o nome da tarefa.");
@@ -469,14 +433,26 @@ function addTask(){
 
   const status=document.getElementById("taskStatus").value;
   const priority=document.getElementById("taskPriority").value;
-  const dueLocal=document.getElementById("taskDue").value || null;
-  const dueAt = dueLocal ? parseDTLocalToMs(dueLocal) : null;
-  const dueDate = dueLocal ? dueLocal.slice(0,10) : null;
-  const now=Date.now();
 
-  const payload={name, people, status, priority, dueDate, dueLocal, dueAt, created:now, updatedAt:now};
-  if(status==="doing") payload.startedAt=now;
-  if(status==="done") { payload.startedAt=now; payload.approvedAt=now; payload.durationMs=0; payload.leadTimeMs=0; }
+  const dueLocal = (document.getElementById("taskDue").value||"").trim();
+  const dueAt = parseDTLocalToMs(dueLocal);
+
+  const now=Date.now();
+  const payload={name, people, status, priority, created:now, updatedAt:now};
+
+  if(dueLocal && dueAt){
+    payload.dueLocal = dueLocal;
+    payload.dueAt = dueAt;
+    payload.dueDate = dueLocal.slice(0,10); // compat
+  }
+
+  // tempo: se já nasce em doing, já começa
+  if(status==="doing") payload.startedAt = now;
+  if(status==="done"){
+    payload.approvedAt = now;
+    payload.durationMs = payload.startedAt ? (now - payload.startedAt) : null;
+    payload.leadTimeMs = now - now; // 0 (nasceu done)
+  }
 
   db.ref("tasks").push(payload);
 
@@ -491,18 +467,15 @@ const taskCache={};
 let reopenId=null;
 
 function approve(id){
+  const t = taskCache[id] || {};
   const now=Date.now();
-  const t=taskCache[id]||{};
-  const startedAt = t.startedAt || (t.status==="doing" ? now : null);
-  const created = t.created || null;
-
   const update={status:"done", approvedAt:now, updatedAt:now};
-  if(startedAt){
-    update.durationMs = Math.max(0, now - startedAt);
-  }
-  if(created){
-    update.leadTimeMs = Math.max(0, now - created);
-  }
+
+  // calcula duration/leadTime
+  const startedAt = t.startedAt || null;
+  if(startedAt) update.durationMs = now - startedAt;
+  if(t.created) update.leadTimeMs = now - t.created;
+
   db.ref("tasks/"+id).update(update);
 }
 
@@ -519,20 +492,21 @@ function reopenTo(status){
   const now=Date.now();
   const update={status, updatedAt:now};
 
+  // se voltar pra todo: zera tempo
   if(status==="todo"){
-    update.startedAt=null;
-    update.approvedAt=null;
-    update.durationMs=null;
+    update.startedAt = null;
+    update.approvedAt = null;
+    update.durationMs = null;
   }
+  // se voltar pra doing: start (se não tiver)
   if(status==="doing"){
-    const t=taskCache[reopenId]||{};
-    if(!t.startedAt) update.startedAt=now;
-    update.approvedAt=null;
-    update.durationMs=null;
+    const t = taskCache[reopenId] || {};
+    update.startedAt = t.startedAt || now;
+    update.approvedAt = null;
+    update.durationMs = null;
   }
-  if(status!=="done"){
-    update.approvedAt=null;
-  }
+  if(status!=="done") update.approvedAt=null;
+
   db.ref("tasks/"+reopenId).update(update);
   closeReopen();
 }
@@ -545,54 +519,74 @@ function openEdit(id){
   document.getElementById("editPeople").value=(t.people||[]).join(", ");
   document.getElementById("editStatus").value=t.status||"todo";
   document.getElementById("editPriority").value=t.priority||"low";
-  document.getElementById("editDue").value = t.dueLocal || (t.dueAt ? msToDTLocal(t.dueAt) : (t.dueDate ? (t.dueDate + "T00:00") : ""));
+
+  // due
+  const dueLocal = t.dueLocal || (typeof t.dueAt==="number" ? msToDTLocal(t.dueAt) : "");
+  document.getElementById("editDue").value = dueLocal || "";
+
   document.getElementById("editModal").style.display="flex";
 }
 function closeEdit(){ document.getElementById("editModal").style.display="none"; }
+
 function saveEdit(){
   const id=document.getElementById("editId").value; if(!id) return;
+  const prev = taskCache[id] || {};
+
   const name=document.getElementById("editName").value.trim();
   if(!name) return alert("Nome obrigatório.");
+
   const people=parsePeople(document.getElementById("editPeople").value);
   if(!people.length) return alert("Informe pelo menos 1 responsável.");
+
   const status=document.getElementById("editStatus").value;
   const priority=document.getElementById("editPriority").value;
-  const dueLocal=document.getElementById("editDue").value || null;
-  const dueAt = dueLocal ? parseDTLocalToMs(dueLocal) : null;
-  const dueDate = dueLocal ? dueLocal.slice(0,10) : null;
-  const now=Date.now();
 
-  const prev = taskCache[id] || {};
+  const dueLocal=(document.getElementById("editDue").value||"").trim();
+  const dueAt=parseDTLocalToMs(dueLocal);
+
+  const now=Date.now();
+  const update={name, people, status, priority, updatedAt:now};
+
+  // prazo
+  if(dueLocal && dueAt){
+    update.dueLocal = dueLocal;
+    update.dueAt = dueAt;
+    update.dueDate = dueLocal.slice(0,10);
+  } else {
+    update.dueLocal = null;
+    update.dueAt = null;
+    update.dueDate = null;
+  }
+
+  // tempo: transições
   const prevStatus = prev.status || "todo";
 
-  const update={name, people, status, priority, dueDate, dueLocal, dueAt, updatedAt:now};
-
-  // controla start/stop do tempo
   if(status==="doing"){
-    if(!prev.startedAt || prevStatus==="todo") update.startedAt = prev.startedAt || now;
+    update.startedAt = prev.startedAt || now;
     update.approvedAt = null;
     update.durationMs = null;
-  } else if(status==="todo"){
+  }
+
+  if(status==="todo"){
     update.startedAt = null;
     update.approvedAt = null;
     update.durationMs = null;
-  } else if(status==="pending"){
-    // mantém startedAt se já iniciou
-    update.approvedAt = null;
-    update.durationMs = null;
-  } else if(status==="done"){
-    // se marcar como done aqui, considera aprovado agora
-    const startedAt = prev.startedAt || now;
-    const created = prev.created || null;
-    update.startedAt = startedAt;
+  }
+
+  if(status==="done"){
     update.approvedAt = now;
-    update.durationMs = Math.max(0, now - startedAt);
-    if(created) update.leadTimeMs = Math.max(0, now - created);
+    const startedAt = prev.startedAt || now;
+    update.startedAt = startedAt;
+    update.durationMs = now - startedAt;
+    if(prev.created) update.leadTimeMs = now - prev.created;
+  } else {
+    update.approvedAt = null;
   }
 
   db.ref("tasks/"+id).update(update);
   closeEdit();
 }
+
 function deleteTask(id){
   if(!confirm("Excluir esta tarefa?")) return;
   db.ref("tasks/"+id).remove();
@@ -603,6 +597,9 @@ function deleteTaskFromModal(){
   if(id) deleteTask(id);
 }
 
+/* Render tasks + keep cache */
+let latestTasks = [];
+
 db.ref("tasks").on("value", snap=>{
   const tbody=document.getElementById("taskTable");
   tbody.innerHTML="";
@@ -611,14 +608,20 @@ db.ref("tasks").on("value", snap=>{
   const data=snap.val()||{};
   const rows=Object.entries(data).map(([id,t])=>({id,...t}));
   rows.forEach(r=>taskCache[r.id]=r);
+  latestTasks = rows;
 
   const statusOrder={todo:1,doing:2,pending:3,done:4};
   const prioOrder={high:1,med:2,low:3};
+
   rows.sort((a,b)=>{
     const sa=statusOrder[a.status]||9, sb=statusOrder[b.status]||9;
     if(sa!==sb) return sa-sb;
     const pa=prioOrder[a.priority]||9, pb=prioOrder[b.priority]||9;
     if(pa!==pb) return pa-pb;
+    // prazo primeiro
+    const da = (a.dueAt || 9e18);
+    const dbb = (b.dueAt || 9e18);
+    if(da!==dbb) return da-dbb;
     return (a.created||0)-(b.created||0);
   });
 
@@ -626,19 +629,28 @@ db.ref("tasks").on("value", snap=>{
     const status=t.status||"todo";
     const prio=t.priority||"low";
     const people=(t.people||[]).join(", ");
+
+    const dueTxt = t.dueAt ? formatBRDateTime(t.dueAt) : (t.dueDate ? t.dueDate : "");
+
     const pendingInfo = (status==="pending" && t.pendingBy)
       ? `<div style="color:rgba(255,255,255,.75);font-size:.78rem;margin-top:6px;">
            Marcada por: <b>${safeText(t.pendingBy)}</b>
          </div>`
       : "";
 
+    const timeInfo = (status==="done" && t.durationMs)
+      ? `<div style="color:rgba(255,255,255,.75);font-size:.78rem;margin-top:6px;">
+           ⏱️ Exec: <b>${safeText((t.durationMs/36e5).toFixed(1))}h</b>
+         </div>`
+      : "";
+
     const tr=document.createElement("tr");
     tr.innerHTML=`
-      <td>${safeText(t.name||"")}${pendingInfo}</td>
+      <td>${safeText(t.name||"")}${pendingInfo}${timeInfo}</td>
       <td>${safeText(people)}</td>
       <td><span class="badge ${status}">${safeText(statusLabel(status))}</span></td>
       <td><span class="badge ${priorityClass(prio)}">${safeText(priorityLabel(prio))}</span></td>
-      <td>${renderDueCell(t)}</td>
+      <td>${safeText(dueTxt)}</td>
       <td>
         <div class="actions">
           <button class="action-btn btn-yellow" onclick="openEdit('${t.id}')">✏️ Editar</button>
@@ -653,9 +665,14 @@ db.ref("tasks").on("value", snap=>{
     `;
     tbody.appendChild(tr);
   });
+
+  // refresh reports whenever tasks update
+  renderReports();
 });
 
-/* ===== DATAS ===== */
+/* =========================
+   DATAS
+========================= */
 function addDate(){
   const title=document.getElementById("dateTitle").value.trim();
   const date=document.getElementById("dateValue").value;
@@ -692,7 +709,7 @@ db.ref("dates").on("value", snap=>{
       <td>${safeText(d.date||"")}</td>
       <td>
         <div class="actions">
-          <button class="action-btn btn-yellow" onclick='openEditDate("${d.id}", ${JSON.stringify(d).replace(/</g,"\\u003c")})'>✏️ Editar</button>
+          <button class="action-btn btn-yellow" onclick='openEditDate("${d.id}", ${JSON.stringify(d).replace(/</g,"\u003c")})'>✏️ Editar</button>
           <button class="action-btn btn-red" onclick='deleteDate("${d.id}")'>🗑️</button>
         </div>
       </td>
@@ -701,7 +718,9 @@ db.ref("dates").on("value", snap=>{
   });
 });
 
-/* ===== EQUIPE + QR ===== */
+/* =========================
+   EQUIPE + QR
+========================= */
 function addPerson(){
   const name=document.getElementById("personName").value.trim();
   if(!name) return alert("Digite o nome.");
@@ -739,7 +758,7 @@ db.ref("people").on("value", snap=>{
   const rows=Object.entries(data).map(([id,p])=>({id,...p}));
   rows.sort((a,b)=>(a.name||"").localeCompare(b.name||"","pt-BR",{sensitivity:"base"}));
 
-  const base=equipeBaseUrl(); // ✅ agora sempre equipe.html
+  const base=equipeBaseUrl();
   rows.forEach(p=>{
     const url=base+"?u="+encodeURIComponent(p.name||"");
     const card=document.createElement("div");
@@ -772,141 +791,110 @@ db.ref("people").on("value", snap=>{
 document.getElementById("reopenModal").addEventListener("click",(e)=>{ if(e.target.id==="reopenModal") closeReopen(); });
 document.getElementById("editModal").addEventListener("click",(e)=>{ if(e.target.id==="editModal") closeEdit(); });
 
-// Login modal behaviors
-requireAdminAuth();
-document.getElementById("loginModal").addEventListener("click",(e)=>{ /* não fecha clicando fora */ });
-document.getElementById("pinInput").addEventListener("keydown",(e)=>{ if(e.key==="Enter") checkPin(); });
-/* ===== RELATÓRIOS ===== */
-function msToHuman(ms){
-  const n = Number(ms||0);
-  if(!n || n<0) return "0m";
-  const totalHours = Math.floor(n/(1000*60*60));
-  const days = Math.floor(totalHours/24);
-  const hours = totalHours%24;
-  const mins = Math.floor((n/(1000*60))%60);
-  if(days>0) return `${days}d ${hours}h`;
-  if(totalHours>0) return `${totalHours}h ${mins}m`;
-  return `${mins}m`;
-}
-function ymdToDate(ymd){
-  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+/* =========================
+   RELATÓRIOS
+========================= */
+function ymdToMsStart(ymd){
+  if(!ymd) return null;
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
   if(!m) return null;
-  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0,0,0,0);
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0,0,0,0).getTime();
 }
-function refreshReport(){
+function ymdToMsEndExclusive(ymd){
+  const start=ymdToMsStart(ymd);
+  if(start===null) return null;
+  return start + 24*60*60*1000;
+}
+function hours(ms){ return ms/36e5; }
+
+function computeReports(){
   const from = document.getElementById("repFrom").value;
-  const to   = document.getElementById("repTo").value;
-  const split = document.getElementById("repSplit").checked;
+  const to = document.getElementById("repTo").value;
 
-  const fromDt = from ? ymdToDate(from) : null;
-  const toDt = to ? ymdToDate(to) : null;
-  if(toDt) toDt.setHours(23,59,59,999);
+  const fromMs = from ? ymdToMsStart(from) : null;
+  const toMsEx = to ? ymdToMsEndExclusive(to) : null;
 
-  const agg = {}; // name -> {count, durMs, leadMs}
-  Object.values(taskCache).forEach(t=>{
-    const status=t.status||"todo";
-    if(status!=="done") return;
+  const agg = {}; // person -> {tasks, execMs, leadMs}
+  const tasks = latestTasks || [];
 
-    const approvedAt = Number(t.approvedAt||0);
-    if(!approvedAt) return;
+  for(const t of tasks){
+    if((t.status||"")!=="done") continue;
+    const approvedAt = t.approvedAt || null;
+    if(!approvedAt) continue;
 
-    if(fromDt && approvedAt < fromDt.getTime()) return;
-    if(toDt && approvedAt > toDt.getTime()) return;
+    if(fromMs!==null && approvedAt < fromMs) continue;
+    if(toMsEx!==null && approvedAt >= toMsEx) continue;
 
-    const people = Array.isArray(t.people) && t.people.length ? t.people : (t.person ? [t.person] : ["Sem Responsável"]);
-    const durMs = Number(t.durationMs || (t.startedAt && t.approvedAt ? (t.approvedAt - t.startedAt) : 0) || 0);
-    const leadMs = Number((t.created && t.approvedAt) ? (t.approvedAt - t.created) : 0);
+    const people = Array.isArray(t.people) && t.people.length ? t.people : ["Sem responsável"];
+    const share = people.length;
 
-    const share = split && people.length ? (durMs/people.length) : durMs;
-    const shareLead = split && people.length ? (leadMs/people.length) : leadMs;
+    const execMs = (typeof t.durationMs==="number" && t.durationMs>0) ? t.durationMs : (t.startedAt ? (approvedAt - t.startedAt) : 0);
+    const leadMs = (typeof t.leadTimeMs==="number" && t.leadTimeMs>0) ? t.leadTimeMs : (t.created ? (approvedAt - t.created) : 0);
 
-    people.forEach(p=>{
-      const key = String(p||"Sem Responsável");
-      if(!agg[key]) agg[key] = {count:0, durMs:0, leadMs:0};
-      agg[key].count += 1;
-      agg[key].durMs += share;
-      agg[key].leadMs += shareLead;
-    });
+    for(const p of people){
+      if(!agg[p]) agg[p]={tasks:0, execMs:0, leadMs:0};
+      agg[p].tasks += 1;
+      agg[p].execMs += execMs/share;
+      agg[p].leadMs += leadMs/share;
+    }
+  }
+
+  const rows = Object.entries(agg).map(([person,v])=>{
+    const execH = hours(v.execMs);
+    const leadH = hours(v.leadMs);
+    const avg = v.tasks ? execH / v.tasks : 0;
+    const avgLead = v.tasks ? leadH / v.tasks : 0;
+    return {person, tasks:v.tasks, execH, avgH:avg, leadH, avgLeadH:avgLead};
   });
 
-  const rows = Object.entries(agg).sort((a,b)=>b[1].durMs - a[1].durMs);
-  const tbody = document.getElementById("reportTable");
+  rows.sort((a,b)=> b.execH - a.execH);
+  return rows;
+}
+
+function renderReports(){
+  const tbody = document.getElementById("repTable");
+  if(!tbody) return;
+  const rows = computeReports();
   tbody.innerHTML = "";
 
   if(!rows.length){
     const tr=document.createElement("tr");
-    tr.innerHTML = `<td colspan="5" style="color:rgba(255,255,255,.75);text-align:center;padding:16px;">Sem tarefas aprovadas no período.</td>`;
+    tr.innerHTML = `<td colspan="5" style="color:rgba(255,255,255,.75);text-align:center;padding:14px;">Sem dados no período (tarefa precisa estar Aprovada).</td>`;
     tbody.appendChild(tr);
     return;
   }
 
-  rows.forEach(([name,v])=>{
-    const avg = v.count ? (v.durMs / v.count) : 0;
-    const avgLead = v.count ? (v.leadMs / v.count) : 0;
+  for(const r of rows){
     const tr=document.createElement("tr");
     tr.innerHTML = `
-      <td><b style="color:#fff;">${safeText(name)}</b></td>
-      <td>${v.count}</td>
-      <td>${msToHuman(v.durMs)}</td>
-      <td>${msToHuman(avg)}</td>
-      <td>${msToHuman(v.leadMs)} <span style="opacity:.7"> (média ${msToHuman(avgLead)})</span></td>
+      <td>${safeText(r.person)}</td>
+      <td style="text-align:right;">${r.tasks}</td>
+      <td style="text-align:right;">${r.execH.toFixed(1)}</td>
+      <td style="text-align:right;">${r.avgH.toFixed(1)}</td>
+      <td style="text-align:right;">${r.leadH.toFixed(1)}</td>
     `;
     tbody.appendChild(tr);
-  });
+  }
 }
-function exportReportCSV(){
-  // gera CSV a partir do relatório atual (tabela)
-  const rows = [];
-  rows.push(["Pessoa","Tarefas","Tempo_execucao","Tempo_medio","Lead_time"]);
-  const tbody = document.getElementById("reportTable");
-  const trs = Array.from(tbody.querySelectorAll("tr"));
-  trs.forEach(tr=>{
-    const tds = Array.from(tr.querySelectorAll("td")).map(td=>td.innerText.replace(/\s+/g," ").trim());
-    if(tds.length===5) rows.push(tds);
-  });
-  const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-  const url = URL.createObjectURL(blob);
+
+document.getElementById("repFrom").addEventListener("change", renderReports);
+document.getElementById("repTo").addEventListener("change", renderReports);
+
+function exportCSV(){
+  const rows = computeReports();
+  const lines = [];
+  lines.push(["Pessoa","Tarefas","HorasExec","MediaHoras","LeadHoras"].join(","));
+  for(const r of rows){
+    lines.push([r.person, r.tasks, r.execH.toFixed(2), r.avgH.toFixed(2), r.leadH.toFixed(2)].map(v=>String(v).replaceAll('"','""')).map(v=>`"${v}"`).join(","));
+  }
+  const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
   const a = document.createElement("a");
-  a.href = url;
-  a.download = "relatorio_tmg.csv";
+  a.href = URL.createObjectURL(blob);
+  a.download = "relatorio_horas_por_pessoa.csv";
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
 }
-// atualiza automático quando tasks mudam e quando filtros mudam
-["repFrom","repTo","repSplit"].forEach(id=>{
-  const el=document.getElementById(id);
-  if(el) el.addEventListener("change", refreshReport);
-});
-setTimeout(()=>{ try{ refreshReport(); }catch(e){} }, 800);
-
 </script>
 </body>
 </html>
-
-function pad2(n){return String(n).padStart(2,"0");}
-function parseDTLocalToMs(v){
-  // v = "YYYY-MM-DDTHH:MM"
-  if(!v) return null;
-  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
-  if(!m) return null;
-  const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]), hh=Number(m[4]), mm=Number(m[5]);
-  return new Date(y, mo, d, hh, mm, 0, 0).getTime();
-}
-function msToDTLocal(ms){
-  if(ms==null) return "";
-  const d=new Date(Number(ms));
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
-function formatBRDateTime(msOrLocalOrDate){
-  // accepts: ms (number), "YYYY-MM-DDTHH:MM", or "YYYY-MM-DD"
-  let d=null;
-  if(typeof msOrLocalOrDate==="number") d=new Date(msOrLocalOrDate);
-  else if(typeof msOrLocalOrDate==="string" && msOrLocalOrDate.includes("T")) d=new Date(parseDTLocalToMs(msOrLocalOrDate));
-  else if(typeof msOrLocalOrDate==="string") d=parseYMD(msOrLocalOrDate);
-  if(!d || isNaN(d.getTime())) return "—";
-  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
-
