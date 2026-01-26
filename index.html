@@ -34,9 +34,14 @@ h2{margin:0 0 10px 0;text-align:center;font-size:1.45rem;color:#ff3d00;letter-sp
 .pending{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
 .p-high{background:#ff1744;color:#fff;}
 .p-med{background:#ffea00;color:#000;}
-.p-low{background:#64ffda;color:#000;}
+.due-over{background:#ff1744;color:#fff;}
+.due-today{background:#ff1744;color:#fff;}
+.due-soon{background:#ffea00;color:#000;}
+.due-warn{background:#00e5ff;color:#000;}
+.task.overdue{border-color:rgba(255,23,68,.9); box-shadow:0 0 16px rgba(255,23,68,.22);}
+.task.soon{border-color:rgba(255,234,0,.8); box-shadow:0 0 16px rgba(255,234,0,.16);}
 
-.pending-glow{animation:glow 1.8s infinite;}
+{animation:glow 1.8s infinite;}
 @keyframes glow{0%{box-shadow:0 0 8px rgba(41,121,255,.25);}50%{box-shadow:0 0 22px rgba(41,121,255,.85);}100%{box-shadow:0 0 8px rgba(41,121,255,.25);}}
 
 .dates ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;overflow:auto;}
@@ -110,6 +115,31 @@ function getTaskPeople(t){
   return [];
 }
 
+function formatBR(ymd){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+  if(!m) return "";
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+function parseYMD(ymd){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+  if(!m) return null;
+  const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]);
+  return new Date(y, mo, d, 0,0,0,0);
+}
+function dueInfo(dueDate){
+  const dt=parseYMD(dueDate);
+  if(!dt) return {label:"", badgeClass:"", rowClass:""};
+  const now=new Date();
+  const diffMs=dt.getTime()-now.getTime();
+  const diffDays=Math.floor(diffMs/(1000*60*60*24));
+  if(diffMs < -1000*60*60*24) return {label:`Atrasado`, badgeClass:"due-over", rowClass:"overdue"};
+  if(diffMs < 0) return {label:`Hoje`, badgeClass:"due-today", rowClass:"overdue"};
+  if(diffDays <= 1) return {label:`≤24h`, badgeClass:"due-soon", rowClass:"soon"};
+  if(diffDays <= 3) return {label:`${diffDays}d`, badgeClass:"due-warn", rowClass:""};
+  return {label:`${formatBR(dueDate)}`, badgeClass:"", rowClass:""};
+}
+
+
 /* Tarefas (agrupadas por responsável) */
 db.ref("tasks").on("value",snap=>{
   const data=snap.val()||{};
@@ -136,11 +166,14 @@ db.ref("tasks").on("value",snap=>{
       const status=t.status||"todo";
       const prio=t.priority||"low";
       const row=document.createElement("div");
-      row.className="task "+(status==="pending"?"pending-glow":"");
+      const di = (status!=="done") ? dueInfo(t.dueDate) : {rowClass:"",badgeClass:"",label:""};
+      row.className="task "+(status==="pending"?"pending-glow ":"") + (di.rowClass||"");
+      const dueHtml = (t.dueDate && status!=="done") ? `<div class="badge ${di.badgeClass}">Prazo: ${di.badgeClass?di.label:formatBR(t.dueDate)}</div>` : ``;
       row.innerHTML=`
         <div class="task-name">${t.name||""}</div>
         <div class="badge ${status}">${statusLabel(status)}</div>
         <div class="badge p-${prio}">${priorityLabel(prio)}</div>
+        ${dueHtml}
       `;
       card.appendChild(row);
     });
@@ -207,3 +240,4 @@ setInterval(()=>renderDates(), 60*1000);
 </script>
 </body>
 </html>
+
