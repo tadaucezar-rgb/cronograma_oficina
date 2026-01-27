@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Compras - Execução</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff;}
+header{padding:14px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900;text-align:center;}
+.container{padding:14px;max-width:1100px;margin:auto;}
+.card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22);margin-bottom:12px;}
+h2{margin-top:0;color:#ff3d00;text-align:center;}
+table{width:100%;border-collapse:collapse;font-size:.85rem;}
+th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.15);text-align:left;vertical-align:top;}
+input{width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:'Orbitron';}
+button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Arial,sans-serif;font-weight:900;cursor:pointer;}
+.btn-ok{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
+.btn-blue{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
+.small{font-size:.75rem;opacity:.8;}
+</style>
+</head>
+
+<body>
+<header>Setor de Compras</header>
+
+<div class="container">
+  <div class="card">
+    <h2>Compras Autorizadas</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Solicitação</th>
+          <th>Item</th>
+          <th>Fornecedor</th>
+          <th>Valores</th>
+          <th>Previsão</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+  authDomain:"tmg-painel.firebaseapp.com",
+  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com",
+  projectId:"tmg-painel",
+  storageBucket:"tmg-painel.firebasestorage.app",
+  messagingSenderId:"877912378151",
+  appId:"1:877912378151:web:88af3a4f8f551acd603702"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+function fmt(ts){return new Date(ts).toLocaleString("pt-BR");}
+
+db.ref("purchaseRequests").on("value",snap=>{
+  const data=snap.val()||{};
+  const tbody=document.getElementById("rows");
+  tbody.innerHTML="";
+  Object.entries(data).forEach(([id,r])=>{
+    if(r.status!=="authorized" && r.status!=="purchased") return;
+
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>
+        <b>${r.member}</b><br>
+        <span class="small">${fmt(r.requestedAt)}</span><br>
+        ${r.cost}
+      </td>
+      <td>
+        ${r.item}<br>
+        <span class="small">${r.qty} ${r.unit}</span>
+      </td>
+      <td>
+        <input placeholder="Fornecedor" value="${r.supplier?.name||""}" onchange="upd('${id}','supplier/name',this.value)">
+        <input placeholder="Contato" value="${r.supplier?.contact||""}" onchange="upd('${id}','supplier/contact',this.value)">
+        <input placeholder="Link" value="${r.supplier?.link||""}" onchange="upd('${id}','supplier/link',this.value)">
+      </td>
+      <td>
+        <input type="number" step="any" placeholder="Valor total" value="${r.total||""}" onchange="upd('${id}','total',Number(this.value))">
+      </td>
+      <td>
+        <input type="datetime-local" onchange="upd('${id}','expectedDelivery',new Date(this.value).getTime())">
+        ${r.expectedDelivery?'<div class="small">'+fmt(r.expectedDelivery)+'</div>':''}
+      </td>
+      <td>
+        ${r.status==="authorized"?
+          `<button class="btn-blue" onclick="markPurchased('${id}')">Comprar</button>`:
+          `<button class="btn-ok" onclick="markReceived('${id}')">Dar entrada</button>`
+        }
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+});
+
+function upd(id,path,val){
+  const obj={};
+  obj[path]=val;
+  db.ref("purchaseRequests/"+id).update(obj);
+}
+
+function markPurchased(id){
+  db.ref("purchaseRequests/"+id).update({
+    status:"purchased",
+    purchasedAt:Date.now()
+  });
+}
+
+function markReceived(id){
+  db.ref("purchaseRequests/"+id).update({
+    status:"received",
+    receivedAt:Date.now()
+  });
+}
+</script>
+</body>
+</html>
