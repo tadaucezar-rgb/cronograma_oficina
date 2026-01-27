@@ -145,8 +145,6 @@
       box-shadow: 0 0 14px rgba(0,229,255,.10);
     }
 
-    
-    .card.due-warn{border-color: rgba(0,229,255,.55); box-shadow:0 0 22px rgba(0,229,255,.18);}
     .card.due-soon{border-color: rgba(255,234,0,.85); box-shadow:0 0 24px rgba(255,234,0,.22); animation: blinkY 1.2s infinite;}
     .card.due-late{border-color: rgba(255,23,68,.95); box-shadow:0 0 26px rgba(255,23,68,.25); animation: blinkR 1.2s infinite;}
     @keyframes blinkY{0%{box-shadow:0 0 12px rgba(255,234,0,.10);}50%{box-shadow:0 0 30px rgba(255,234,0,.45);}100%{box-shadow:0 0 12px rgba(255,234,0,.10);}}
@@ -191,36 +189,38 @@
 
     .p-high{ background:#ff1744; color:#fff; }
     .p-med{ background:#ffea00; color:#000; }
-    .due-over{ background:#ff1744; color:#fff; }
-.due-today{ background:#ff1744; color:#fff; }
-.due-soon{ background:#ffea00; color:#000; }
-.due-warn{ background:#00e5ff; color:#000; }
-.card.due-border-over{ border-color: rgba(255,23,68,.9); box-shadow: 0 0 18px rgba(255,23,68,.25); }
-.card.due-border-soon{ border-color: rgba(255,234,0,.75); box-shadow: 0 0 18px rgba(255,234,0,.18); }
+    .p-low{ background:#64ffda; color:#000; }
 
-
+    .meta{
       margin-top: 8px;
       font-size: .82rem;
       color: rgba(255,255,255,.75);
       line-height:1.35;
     }
 
-    .action{
-      margin-top: 10px;
+    .meta .due-badge{
+      display:inline-block;
+      margin-top:8px;
+      padding:8px 10px;
+      border-radius:12px;
+      font-weight:900;
+      color:#000;
+      background: rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.16);
     }
+    .meta .due-badge.soon{ background: var(--c-yellow); }
+    .meta .due-badge.late{ background: var(--c-red); color:#fff; }
+    .meta .due-badge.ok{ background: var(--c-cyan); }
 
-    .action button{
+    .action{ margin-top: 10px; }
+    .btn-done{
       width:100%;
       padding: 12px;
       border-radius: 14px;
       border:none;
-      cursor:pointer;
       font-family:'Orbitron', Arial, sans-serif;
       font-weight: 900;
       letter-spacing: 1px;
-    }
-
-    .btn-done{
       background: rgba(255,255,255,.10);
       color:#fff;
       border:1px solid rgba(255,255,255,.16);
@@ -254,7 +254,6 @@
 
 <div class="wrap">
 
-  <!-- Identificação -->
   <div class="panel" id="panelPick">
     <h2>Entrar</h2>
 
@@ -270,7 +269,6 @@
     </div>
   </div>
 
-  <!-- Minhas tarefas -->
   <div class="panel" id="panelTasks" style="display:none;">
     <h2>Minhas tarefas</h2>
     <div class="cards" id="cards"></div>
@@ -281,26 +279,19 @@
 </div>
 
 <script>
-  /* =========================
-     FIREBASE CONFIG (COLE A SUA)
-  ========================= */
   const firebaseConfig = {
-  apiKey: "AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
-  authDomain: "tmg-painel.firebaseapp.com",
-  databaseURL: "https://tmg-painel-default-rtdb.firebaseio.com",
-  projectId: "tmg-painel",
-  storageBucket: "tmg-painel.firebasestorage.app",
-  messagingSenderId: "877912378151",
-  appId: "1:877912378151:web:88af3a4f8f551acd603702",
-  measurementId: "G-EK39245W6K"
-};
-
+    apiKey: "AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+    authDomain: "tmg-painel.firebaseapp.com",
+    databaseURL: "https://tmg-painel-default-rtdb.firebaseio.com",
+    projectId: "tmg-painel",
+    storageBucket: "tmg-painel.firebasestorage.app",
+    messagingSenderId: "877912378151",
+    appId: "1:877912378151:web:88af3a4f8f551acd603702",
+    measurementId: "G-EK39245W6K"
+  };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  /* =========================
-     UI refs
-  ========================= */
   const panelPick = document.getElementById("panelPick");
   const panelTasks = document.getElementById("panelTasks");
   const selPeople = document.getElementById("selPeople");
@@ -311,9 +302,6 @@
   const empty = document.getElementById("empty");
   const foot = document.getElementById("foot");
 
-  /* =========================
-     Helpers
-  ========================= */
   function norm(s){ return (s || "").trim().toLowerCase(); }
 
   function statusLabel(s){
@@ -323,7 +311,6 @@
     if(s==="done") return "Concluída";
     return s || "";
   }
-
   function statusBadgeClass(s){
     if(s==="todo") return "b-todo";
     if(s==="doing") return "b-doing";
@@ -342,102 +329,81 @@
     return "p-low";
   }
 
-  // Prazo (due date)
-  function formatBR(ymd){
+  function pad2(n){ return String(n).padStart(2,"0"); }
+  function parseDTLocalToMs(v){
+    if(!v) return null;
+    const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
+    if(!m) return null;
+    return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0).getTime();
+  }
+  function parseYMDToMs(ymd){
     const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
-    if(!m) return "";
-    return `${m[3]}/${m[2]}/${m[1]}`;
+    if(!m) return null;
+    return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0,0,0,0).getTime();
   }
-  
-function pad2(n){ return String(n).padStart(2,"0"); }
-
-function parseYMD(ymd){
-  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
-  if(!m) return null;
-  const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]);
-  return new Date(y, mo, d, 0,0,0,0);
-}
-
-function parseDTLocalToMs(v){
-  if(!v) return null;
-  const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
-  if(!m) return null;
-  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0).getTime();
-}
-
-function formatBRDateTime(ms){
-  const d=new Date(ms);
-  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
-
-function getDueMs(t){
-  if(t && typeof t.dueAt === "number" && !isNaN(t.dueAt)) return t.dueAt;
-  if(t && typeof t.dueAt === "string" && t.dueAt.trim() && !isNaN(Number(t.dueAt))) return Number(t.dueAt);
-  if(t && typeof t.dueLocal === "string" && t.dueLocal.includes("T")){
-    const ms=parseDTLocalToMs(t.dueLocal);
-    if(ms!=null) return ms;
+  function formatBRDateTime(ms){
+    const d=new Date(ms);
+    return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   }
-  if(t && typeof t.dueDate === "string"){
-    const d=parseYMD(t.dueDate);
-    if(d) return d.getTime();
+  function formatDuration(ms){
+    const totalMin=Math.max(0, Math.floor(ms/60000));
+    const days=Math.floor(totalMin/(60*24));
+    const hours=Math.floor((totalMin%(60*24))/60);
+    const mins=totalMin%60;
+    if(days>0) return `${days}d ${hours}h`;
+    if(hours>0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
   }
-  return null;
-}
 
-function dueInfo(t){
-  const ms=getDueMs(t);
-  if(ms==null) return {label:"", badgeClass:"", cardClass:""};
-  const nowMs=Date.now();
-  const diffMs=ms-nowMs;
-  const abs=Math.abs(diffMs);
-
-  const totalMin=Math.floor(abs/(1000*60));
-  const days=Math.floor(totalMin/(60*24));
-  const hours=Math.floor((totalMin%(60*24))/60);
-  const mins=totalMin%60;
-
-  const base = formatBRDateTime(ms);
-
-  if(diffMs < 0){
-    const withinDay = abs < (1000*60*60*24);
-    return {label:`Prazo: ${base} • ${withinDay ? "Hoje" : `Atrasado ${days}d ${hours}h`}`, badgeClass:"due-over", cardClass:"due-border-over"};
+  function getDueMs(t){
+    if(t && typeof t.dueAt === "number" && isFinite(t.dueAt)) return t.dueAt;
+    if(t && typeof t.dueAt === "string" && t.dueAt.trim() && isFinite(Number(t.dueAt))) return Number(t.dueAt);
+    if(t && typeof t.dueLocal === "string" && t.dueLocal.includes("T")){
+      const ms=parseDTLocalToMs(t.dueLocal);
+      if(ms!=null) return ms;
+    }
+    if(t && typeof t.dueDate === "string"){
+      const ms=parseYMDToMs(t.dueDate);
+      if(ms!=null) return ms;
+    }
+    return null;
   }
-  if(diffMs <= 1000*60*60*24){
-    return {label:`Prazo: ${base} • ≤24h (${hours}h ${mins}m)`, badgeClass:"due-soon", cardClass:"due-border-soon"};
-  }
-  if(diffMs <= 1000*60*60*24*3){
-    return {label:`Prazo: ${base} • ${days}d ${hours}h`, badgeClass:"due-warn", cardClass:"due-border-warn"};
-  }
-  return {label:`Prazo: ${base}`, badgeClass:"", cardClass:""};
-}
 
-function getTaskPeople(t){
+  function dueInfo(t){
+    const ms=getDueMs(t);
+    if(ms==null) return {text:"", badge:"", card:""};
+    const diffMs = ms - Date.now();
+    const base = formatBRDateTime(ms);
+
+    if(diffMs < 0){
+      return {text:`Prazo: ${base} • ⛔ Atrasado ${formatDuration(-diffMs)}`, badge:"late", card:"due-late"};
+    }
+    if(diffMs <= 24*60*60*1000){
+      return {text:`Prazo: ${base} • ⚠️ ${formatDuration(diffMs)} restantes`, badge:"soon", card:"due-soon"};
+    }
+    if(diffMs <= 3*24*60*60*1000){
+      return {text:`Prazo: ${base} • ⏳ ${formatDuration(diffMs)} restantes`, badge:"ok", card:""};
+    }
+    return {text:`Prazo: ${base}`, badge:"", card:""};
+  }
+
+  function getTaskPeople(t){
     if (Array.isArray(t.people) && t.people.length) return t.people;
-    // fallback antigo, se existir:
     if (typeof t.person === "string" && t.person.trim()) return [t.person.trim()];
     return [];
   }
 
   function qs(){
     const p = new URLSearchParams(window.location.search);
-    return {
-      u: p.get("u") || ""
-    };
+    return { u: p.get("u") || "" };
   }
 
-  function setSessionName(name){
-    localStorage.setItem("tmg_member_name", name);
-  }
-  function getSessionName(){
-    return localStorage.getItem("tmg_member_name") || "";
-  }
-  function clearSession(){
-    localStorage.removeItem("tmg_member_name");
-  }
+  function setSessionName(name){ localStorage.setItem("tmg_member_name", name); }
+  function getSessionName(){ return localStorage.getItem("tmg_member_name") || ""; }
+  function clearSession(){ localStorage.removeItem("tmg_member_name"); }
 
   async function markPending(taskId, memberName){
     const now = Date.now();
-    // membro não finaliza: só manda para pending
     await db.ref("tasks/" + taskId).update({
       status: "pending",
       pendingBy: memberName,
@@ -446,9 +412,6 @@ function getTaskPeople(t){
     });
   }
 
-  /* =========================
-     Load people list
-  ========================= */
   function fillPeopleSelect(peopleNames, preselect){
     selPeople.innerHTML = "";
     const opt0 = document.createElement("option");
@@ -480,7 +443,9 @@ function getTaskPeople(t){
     panelTasks.style.display = "block";
     who.textContent = "Você: " + name;
 
-    // listener em tasks
+    // evita acumular listeners ao trocar
+    db.ref("tasks").off();
+
     db.ref("tasks").on("value", snap=>{
       const data = snap.val() || {};
       const rows = Object.entries(data).map(([id,t]) => ({ id, ...t }));
@@ -488,7 +453,6 @@ function getTaskPeople(t){
       const me = norm(name);
       const mine = rows.filter(t => getTaskPeople(t).some(p => norm(p) === me));
 
-      // ordena: pendentes e feitas por último
       const statusOrder = { todo: 1, doing: 2, pending: 3, done: 4 };
       const prioOrder = { high: 1, med: 2, low: 3 };
 
@@ -501,6 +465,10 @@ function getTaskPeople(t){
         const pb = prioOrder[b.priority] || 9;
         if (pa !== pb) return pa - pb;
 
+        const da = getDueMs(a) ?? 9e18;
+        const dbb = getDueMs(b) ?? 9e18;
+        if (da !== dbb) return da - dbb;
+
         return (a.created || 0) - (b.created || 0);
       });
 
@@ -510,11 +478,11 @@ function getTaskPeople(t){
       mine.forEach(t=>{
         const status = t.status || "todo";
         const prio = t.priority || "low";
+        const di = dueInfo(t);
 
         const card = document.createElement("div");
-        const di = dueInfo(t);
-        card.className = "card " + (di.cardClass || "");
-        const dueHtml = t.dueDate ? `<div class="meta"><span class="badge ${di.badgeClass}">${di.label}</span></div>` : ``;
+        card.className = "card " + (di.card || "");
+
         card.innerHTML = `
           <div class="card-top">
             <div class="task-name">${t.name || ""}</div>
@@ -526,10 +494,10 @@ function getTaskPeople(t){
 
           <div class="meta">
             Responsáveis: ${getTaskPeople(t).join(", ")}
-            ${t.dueDate ? `<br>Prazo: <b>${t.dueDate}</b> • ${remainingText(t.dueDate)}` : ``}
             ${t.pendingBy ? `<br>Marcada por: <b>${t.pendingBy}</b>` : ``}
             ${(status==='done' && (t.durationMs || (t.startedAt && t.approvedAt))) ? `<br>Tempo: <b>${formatDuration(t.durationMs || (t.approvedAt - t.startedAt))}</b>` : ``}
-                    ${dueHtml}
+            ${di.text ? `<div class="due-badge ${di.badge || ""}">${di.text}</div>` : ``}
+          </div>
 
           <div class="action">
             <button ${status==="todo" || status==="doing" ? "" : "disabled"} class="${status==="todo" || status==="doing" ? "btn btn-green" : "btn-done"}">
@@ -541,12 +509,8 @@ function getTaskPeople(t){
         const btn = card.querySelector("button");
         if (status==="todo" || status==="doing"){
           btn.onclick = async ()=>{
-            try{
-              await markPending(t.id, name);
-            }catch(e){
-              console.log(e);
-              alert("Falha ao marcar. Verifique sua internet.");
-            }
+            try{ await markPending(t.id, name); }
+            catch(e){ console.log(e); alert("Falha ao marcar. Verifique sua internet."); }
           };
         }
 
@@ -557,9 +521,6 @@ function getTaskPeople(t){
     });
   }
 
-  /* =========================
-     Startup flow
-  ========================= */
   const { u } = qs();
   const saved = getSessionName();
 
@@ -572,7 +533,6 @@ function getTaskPeople(t){
     const pre = u || saved;
     fillPeopleSelect(names, pre);
 
-    // se veio por QR ou já tinha salvo e existe na lista → entra direto
     const selected = selPeople.value;
     if (selected){
       setSessionName(selected);
@@ -592,7 +552,6 @@ function getTaskPeople(t){
   btnTrocar.onclick = ()=>{
     if (confirm("Trocar de nome?")) {
       clearSession();
-      // remove query string (se veio do QR) para não auto-entrar de novo
       const url = new URL(window.location.href);
       url.search = "";
       window.location.href = url.toString();
@@ -601,4 +560,3 @@ function getTaskPeople(t){
 </script>
 </body>
 </html>
-
