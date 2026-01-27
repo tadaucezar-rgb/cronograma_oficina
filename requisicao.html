@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Requisição de Compras - Equipe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:'Orbitron',Arial,sans-serif;
+  background:radial-gradient(circle at top,#0a0a0a,#000);
+  color:#00e5ff;
+}
+header{
+  background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
+  color:#000;
+  padding:14px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:2px;
+}
+.wrap{padding:14px;max-width:520px;margin:auto;}
+.panel{
+  background:rgba(0,0,0,.78);
+  border-radius:18px;
+  padding:16px;
+  border:2px solid rgba(0,229,255,.22);
+  box-shadow:0 0 24px rgba(0,229,255,.25);
+}
+h2{text-align:center;color:#ff3d00;margin-top:0;}
+
+label{display:block;margin-top:14px;font-size:.8rem;color:#fff;}
+input,select,textarea{
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(0,229,255,.3);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-family:'Orbitron',Arial,sans-serif;
+}
+textarea{resize:none;height:80px;}
+
+button{
+  margin-top:18px;
+  width:100%;
+  padding:14px;
+  border-radius:16px;
+  border:none;
+  font-family:'Orbitron',Arial,sans-serif;
+  font-weight:900;
+  background:linear-gradient(90deg,#00c853,#64dd17);
+  color:#000;
+  cursor:pointer;
+}
+.success{margin-top:12px;color:#64dd17;text-align:center;font-weight:900;}
+</style>
+</head>
+
+<body>
+<header>Requisição de Compras / Serviços</header>
+
+<div class="wrap">
+  <div class="panel">
+    <h2>Nova Requisição</h2>
+
+    <label>Solicitante</label>
+    <select id="member"></select>
+
+    <label>Centro de custo</label>
+    <select id="cost"></select>
+
+    <label>Material ou Serviço</label>
+    <input id="item" placeholder="Ex: Usinagem flange alumínio">
+
+    <label>Quantidade</label>
+    <input id="qty" type="number" min="0" step="any">
+
+    <label>Unidade</label>
+    <select id="unit"></select>
+
+    <label>Observações</label>
+    <textarea id="obs" placeholder="Opcional"></textarea>
+
+    <button onclick="send()">Enviar requisição</button>
+    <div class="success" id="ok" style="display:none;">Requisição enviada ✔</div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+  authDomain: "tmg-painel.firebaseapp.com",
+  databaseURL: "https://tmg-painel-default-rtdb.firebaseio.com",
+  projectId: "tmg-painel",
+  storageBucket: "tmg-painel.firebasestorage.app",
+  messagingSenderId: "877912378151",
+  appId: "1:877912378151:web:88af3a4f8f551acd603702"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+const units=["un","kg","m","m²","l","jogo","serviço"];
+const costs=["Oficina Geral","Projeto X","Projeto Y","Desenvolvimento","Pista/Testes","Administrativo"];
+
+const member=document.getElementById("member");
+const unit=document.getElementById("unit");
+const cost=document.getElementById("cost");
+
+units.forEach(u=>unit.innerHTML+=`<option>${u}</option>`);
+costs.forEach(c=>cost.innerHTML+=`<option>${c}</option>`);
+
+db.ref("people").on("value",s=>{
+  member.innerHTML="";
+  Object.values(s.val()||{}).forEach(p=>{
+    member.innerHTML+=`<option>${p.name}</option>`;
+  });
+});
+
+function send(){
+  if(!item.value||!qty.value) return alert("Preencha item e quantidade.");
+  db.ref("purchaseRequests").push({
+    requestedBy: member.value,
+    costCenter: cost.value,
+    item: item.value,
+    qty: Number(qty.value),
+    unit: unit.value,
+    notes: obs.value||"",
+    requestedAt: Date.now(),
+    status: "requested"
+  }).then(()=>{
+    ok.style.display="block";
+    item.value="";qty.value="";obs.value="";
+  });
+}
+</script>
+</body>
+</html>
