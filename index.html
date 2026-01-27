@@ -10,46 +10,184 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-html,body{margin:0;width:100%;height:100%;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff;overflow:hidden;}
-header{display:flex;align-items:center;justify-content:space-between;padding:14px 26px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);box-shadow:0 0 20px rgba(0,0,0,.45);}
-.header-left{display:flex;align-items:center;gap:18px;font-size:2.1rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#000;}
-.header-left img{height:120px;filter:drop-shadow(0 0 12px rgba(0,0,0,.6));}
-.clock{background:rgba(0,0,0,.75);color:#fff;padding:10px 18px;border-radius:16px;font-size:1.4rem;letter-spacing:2px;}
+  :root{
+    --c-cyan:#00e5ff;
+    --c-red:#ff1744;
+    --c-yellow:#ffea00;
+    --c-green:#64dd17;
+    --c-blue:#2979ff;
+    --line: rgba(0,229,255,.18);
+  }
 
-.container{display:grid;grid-template-columns:3.2fr 0.8fr;gap:12px;padding:12px;height:calc(100vh - 150px);}
-.panel{background:rgba(0,0,0,.78);border-radius:18px;padding:14px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.25);overflow:auto;}
-h2{text-align:center;color:#ff3d00;letter-spacing:2px;text-transform:uppercase;}
+  html,body{
+    margin:0;width:100%;height:100%;
+    font-family:'Orbitron',Arial,sans-serif;
+    background:radial-gradient(circle at top,#0a0a0a,#000);
+    color:var(--c-cyan);
+    overflow:hidden;
+  }
 
-.group-card{background:rgba(255,255,255,.03);border:1px solid rgba(0,229,255,.18);border-radius:14px;padding:10px;margin-bottom:10px;}
-.group-title{font-weight:800;color:#fff;margin-bottom:8px}
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 26px;
+    background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
+    box-shadow:0 0 20px rgba(0,0,0,.45);
+  }
+  .header-left{
+    display:flex;align-items:center;gap:18px;
+    font-size:2.1rem;font-weight:800;letter-spacing:2px;
+    text-transform:uppercase;color:#000;
+  }
+  .header-left img{height:120px;filter:drop-shadow(0 0 12px rgba(0,0,0,.6));}
 
-.task{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 10px;margin-bottom:6px;border-radius:12px;border:1px solid rgba(0,229,255,.15);background:rgba(0,0,0,.35);}
-.task-name{font-weight:700;}
-.badge{padding:6px 10px;border-radius:999px;font-size:.75rem;font-weight:900;text-transform:uppercase;}
-.todo{background:#ff1744;color:#fff}
-.doing{background:#ffea00;color:#000}
-.pending{background:#00e5ff;color:#000}
-.done{background:#64dd17;color:#000}
+  .clock{
+    background:rgba(0,0,0,.75);
+    color:#fff;
+    padding:12px 20px;
+    border-radius:18px;
+    font-size:2.1rem;
+    letter-spacing:2px;
+    box-shadow:inset 0 0 14px rgba(0,0,0,.85);
+    display:flex;flex-direction:column;gap:6px;align-items:flex-end;
+  }
+  .clock .date{
+    font-size:.95rem;
+    letter-spacing:1px;
+    opacity:.9;
+  }
 
-.countdown{font-size:.72rem;opacity:.9;margin-top:4px}
-.dates ul{list-style:none;padding:0;margin:0}
-.dates li{background:rgba(0,0,0,.6);border-left:6px solid red;padding:10px;border-radius:12px;margin-bottom:10px}
+  .container{
+    display:grid;
+    grid-template-columns:3.2fr 0.9fr;
+    gap:12px;
+    padding:12px;
+    height:calc(100vh - 150px);
+    box-sizing:border-box;
+  }
+
+  .panel{
+    background:rgba(0,0,0,.78);
+    border-radius:18px;
+    padding:14px;
+    border:2px solid rgba(0,229,255,.22);
+    box-shadow:0 0 26px rgba(0,229,255,.25);
+    overflow:hidden;
+  }
+
+  h2{
+    margin:0 0 10px 0;
+    text-align:center;
+    font-size:1.45rem;
+    color:#ff3d00;
+    letter-spacing:2px;
+    text-transform:uppercase;
+  }
+
+  .task-groups{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    height:100%;
+    overflow:auto;
+    padding-right:6px;
+  }
+  @media(max-width:1100px){ .task-groups{grid-template-columns:1fr;} }
+
+  .group-card{
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(0,229,255,.18);
+    border-radius:14px;
+    padding:10px;
+  }
+  .group-title{
+    display:flex;justify-content:space-between;align-items:center;
+    color:#fff;font-weight:800;letter-spacing:1px;margin-bottom:8px;
+  }
+
+  .task{
+    display:grid;
+    grid-template-columns: 1fr auto auto;
+    gap:10px;
+    align-items:center;
+    padding:8px 10px;
+    margin-bottom:6px;
+    border-radius:12px;
+    border:1px solid rgba(0,229,255,.15);
+    background:rgba(0,0,0,.35);
+  }
+  .task-left{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    min-width:0;
+  }
+  .task-name{
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-weight:700;
+  }
+  .task-cd{
+    font-size:.78rem;
+    opacity:.9;
+    white-space:nowrap;
+  }
+
+  .badge{
+    padding:6px 10px;border-radius:999px;
+    font-size:.75rem;font-weight:900;text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .todo{background:linear-gradient(90deg,#b71c1c,#ff1744);color:#fff;}
+  .doing{background:linear-gradient(90deg,#f9a825,#ffea00);color:#000;}
+  .pending{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
+  .done{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
+
+  .p-high{background:#ff1744;color:#fff;}
+  .p-med{background:#ffea00;color:#000;}
+  .p-low{background:#64ffda;color:#000;}
+
+  .blink{animation:blink 1s infinite;}
+  @keyframes blink{50%{box-shadow:0 0 18px rgba(255,234,0,.85)}}
+  .late{animation:blinkred 1s infinite;}
+  @keyframes blinkred{50%{box-shadow:0 0 22px rgba(255,23,68,.9)}}
+
+  .dates{height:100%;display:flex;flex-direction:column;}
+  .dates ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;overflow:auto;padding-right:6px;}
+  .dates li{
+    background:rgba(0,0,0,.6);
+    border-left:6px solid red;
+    padding:10px;
+    border-radius:12px;
+    box-shadow:0 0 12px rgba(255,0,0,.25);
+  }
+  .countdown{
+    margin-top:6px;
+    text-align:right;
+    font-weight:900;
+    color:#fff;
+    opacity:.9;
+  }
 </style>
 </head>
 
 <body>
 <header>
   <div class="header-left">
-    <img src="logo_tmg_clean.png">
+    <img src="logo_tmg_clean.png" alt="TMG">
     Cronograma Oficina
   </div>
-  <div class="clock" id="clock">00:00</div>
+  <div class="clock">
+    <div id="clockTime">00:00:00</div>
+    <div class="date" id="clockDate">--/--/----</div>
+  </div>
 </header>
 
 <div class="container">
   <div class="panel">
     <h2>Tarefas</h2>
-    <div id="tasks"></div>
+    <div class="task-groups" id="tasks"></div>
   </div>
 
   <div class="panel dates">
@@ -69,85 +207,186 @@ const firebaseConfig = {
   appId: "1:877912378151:web:88af3a4f8f551acd603702"
 };
 firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+const db = firebase.database();
 
 setInterval(()=>{
   const d=new Date();
-  document.getElementById("clock").innerText=d.toLocaleTimeString("pt-BR",{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById("clockTime").innerText =
+    d.toLocaleTimeString("pt-BR",{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById("clockDate").innerText =
+    d.toLocaleDateString("pt-BR");
 },1000);
 
+function statusLabel(s){
+  if(s==="todo") return "A Fazer";
+  if(s==="doing") return "Em Andamento";
+  if(s==="pending") return "Aguardando";
+  if(s==="done") return "Concluída";
+  return s || "";
+}
+function priorityLabel(p){
+  if(p==="high") return "Alta";
+  if(p==="med") return "Média";
+  return "Baixa";
+}
+function prioClass(p){
+  if(p==="high") return "p-high";
+  if(p==="med") return "p-med";
+  return "p-low";
+}
+
 function getTaskPeople(t){
-  if(Array.isArray(t.people)&&t.people.length) return t.people;
-  if(typeof t.person==="string"&&t.person.trim()) return [t.person.trim()];
-  return ["Sem responsável"];
+  if(Array.isArray(t.people) && t.people.length) return t.people;
+  if(typeof t.person==="string" && t.person.trim()) return [t.person.trim()];
+  return ["Sem Responsável"];
 }
 
-function countdown(dueAt){
-  if(!dueAt) return "";
-  const diff=dueAt-Date.now();
-  const h=Math.floor(Math.abs(diff)/36e5);
-  const d=Math.floor(h/24);
-  if(diff<0) return `⛔ Atrasado ${d}d`;
-  if(d===0) return `⚠️ ${h}h restantes`;
-  return `⏳ ${d}d ${h%24}h`;
+function parseDTLocalToMs(v){
+  if(!v) return null;
+  const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
+  if(!m) return null;
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0).getTime();
+}
+function parseYMDToMs(ymd){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+  if(!m) return null;
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0,0,0,0).getTime();
+}
+function getDueAt(t){
+  if(typeof t.dueAt==="number") return t.dueAt;
+  if(typeof t.dueLocal==="string" && t.dueLocal.includes("T")) return parseDTLocalToMs(t.dueLocal);
+  if(typeof t.dueDate==="string") return parseYMDToMs(t.dueDate);
+  return null;
 }
 
-/* Tasks grouped by person */
-db.ref("tasks").on("value",snap=>{
-  const data=snap.val()||{};
-  const groups={};
+function countdownShort(ms){
+  if(ms===null) return "";
+  const diff = ms - Date.now();
+  const abs = Math.abs(diff);
+
+  const totalMin = Math.floor(abs / (1000*60));
+  const days = Math.floor(totalMin / (60*24));
+  const hours = Math.floor((totalMin / 60) % 24);
+  const mins = totalMin % 60;
+
+  if(diff < 0) return `⛔ ${days}d ${hours}h`;
+  if(days === 0) return `⚠️ ${hours}h ${mins}m`;
+  return `⏳ ${days}d ${hours}h`;
+}
+function urgencyClass(ms){
+  if(ms===null) return "";
+  const diff = ms - Date.now();
+  if(diff < 0) return "late";
+  if(diff <= 24*60*60*1000) return "blink";
+  return "";
+}
+
+db.ref("tasks").on("value", snap=>{
+  const data = snap.val() || {};
+  const groups = {};
 
   Object.values(data).forEach(t=>{
     getTaskPeople(t).forEach(p=>{
-      if(!groups[p]) groups[p]=[];
+      if(!groups[p]) groups[p] = [];
       groups[p].push(t);
     });
   });
 
-  const wrap=document.getElementById("tasks");
-  wrap.innerHTML="";
+  const container = document.getElementById("tasks");
+  container.innerHTML = "";
 
-  Object.keys(groups).sort().forEach(person=>{
-    const card=document.createElement("div");
-    card.className="group-card";
-    card.innerHTML=`<div class="group-title">${person}</div>`;
+  const statusOrder = { todo:1, doing:2, pending:3, done:4 };
+  const prioOrder = { high:1, med:2, low:3 };
 
-    groups[person].forEach(t=>{
-      const div=document.createElement("div");
-      div.className="task";
-      div.innerHTML=`
-        <div class="task-name">
-          ${t.name||""}
-          ${t.dueAt?`<div class="countdown">${countdown(t.dueAt)}</div>`:""}
-        </div>
-        <div class="badge ${t.status||"todo"}">${t.status||""}</div>
-        <div class="badge">${t.priority||""}</div>
-      `;
-      card.appendChild(div);
+  Object.keys(groups)
+    .sort((a,b)=>a.localeCompare(b,"pt-BR",{sensitivity:"base"}))
+    .forEach(person=>{
+      const card = document.createElement("div");
+      card.className = "group-card";
+      card.innerHTML = `<div class="group-title">${person}</div>`;
+
+      const arr = groups[person];
+
+      arr.sort((a,b)=>{
+        const sa=statusOrder[a.status]||9, sb=statusOrder[b.status]||9;
+        if(sa!==sb) return sa-sb;
+        const pa=prioOrder[a.priority]||9, pb=prioOrder[b.priority]||9;
+        if(pa!==pb) return pa-pb;
+        const da=getDueAt(a) ?? 9e18;
+        const dbb=getDueAt(b) ?? 9e18;
+        if(da!==dbb) return da-dbb;
+        return (a.created||0)-(b.created||0);
+      });
+
+      arr.forEach(t=>{
+        const status = t.status || "todo";
+        const prio = t.priority || "low";
+        const dueAt = getDueAt(t);
+        const cd = dueAt ? countdownShort(dueAt) : "";
+        const urg = urgencyClass(dueAt);
+
+        const row = document.createElement("div");
+        row.className = `task ${urg}`.trim();
+        row.innerHTML = `
+          <div class="task-left">
+            <div class="task-name">${t.name || ""}</div>
+            ${cd ? `<div class="task-cd">${cd}</div>` : ``}
+          </div>
+          <div class="badge ${status}">${statusLabel(status)}</div>
+          <div class="badge ${prioClass(prio)}">${priorityLabel(prio)}</div>
+        `;
+        card.appendChild(row);
+      });
+
+      container.appendChild(card);
     });
-
-    wrap.appendChild(card);
-  });
 });
 
-/* Dates */
+/* Datas + regressivo */
+let lastDates = [];
+
 function parseYMD(ymd){
-  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
-  if(!m) return null;
-  return new Date(m[1],m[2]-1,m[3]);
+  const ms = parseYMDToMs(ymd);
+  if(ms===null) return null;
+  return new Date(ms);
+}
+function formatCountdown(target){
+  const now=new Date();
+  const diffMs = target.getTime() - now.getTime();
+  const abs = Math.abs(diffMs);
+
+  const totalHours = Math.floor(abs / (1000*60*60));
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+
+  if(diffMs > 0) return `Faltam ${days}d ${hours}h`;
+  if(diffMs > -1000*60*60*24) return `Hoje`;
+  return `Atrasado ${days}d ${hours}h`;
 }
 
-db.ref("dates").on("value",snap=>{
+function renderDates(){
   const ul=document.getElementById("dates");
   ul.innerHTML="";
-  const arr=Object.values(snap.val()||{});
-  arr.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
-  arr.forEach(d=>{
+  lastDates.forEach(d=>{
+    const dt=parseYMD(d.date);
+    const cd = dt ? formatCountdown(dt) : "--";
     const li=document.createElement("li");
-    li.innerHTML=`<strong>${d.title||""}</strong><br>${d.date||""}`;
+    li.innerHTML=`
+      <strong>${d.title||""}</strong><br>
+      ${d.date||""}
+      <div class="countdown">${cd}</div>
+    `;
     ul.appendChild(li);
   });
+}
+
+db.ref("dates").on("value", snap=>{
+  const vals = Object.values(snap.val()||{});
+  vals.sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+  lastDates = vals;
+  renderDates();
 });
+setInterval(()=>renderDates(), 60*1000);
 </script>
 </body>
 </html>
