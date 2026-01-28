@@ -23,11 +23,17 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
 .btn-blue{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
 .small{font-size:.75rem;opacity:.8;}
 .muted{opacity:.75;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media (max-width:760px){ .grid2{grid-template-columns:1fr;} }
 </style>
 </head>
 
 <body>
 <header>Setor de Compras</header>
+
+<!-- Autocomplete -->
+<datalist id="dlSuppliers"></datalist>
+<datalist id="dlItems"></datalist>
 
 <div class="container">
   <div class="card">
@@ -38,7 +44,7 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
           <th>Solicitação</th>
           <th>Item</th>
           <th>Fornecedor</th>
-          <th>Valores</th>
+          <th>Valor</th>
           <th>Previsão de entrega</th>
           <th>Ações</th>
         </tr>
@@ -47,7 +53,7 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
     </table>
     <div class="small muted" style="margin-top:10px;">
       Mostra itens com status <b>authorized</b> (autorizado) e <b>purchased</b> (comprado).<br>
-      Compatível com registros antigos (não exibe “undefined”).
+      Autocomplete baseado em <b>todos os registros</b>.
     </div>
   </div>
 </div>
@@ -71,23 +77,16 @@ function fmt(ts){
 }
 
 // ===== Compatibilidade de campos (antigos/novos) =====
-function getMember(r){
-  return r.member || r.requestedBy || r.solicitadoPor || r.solicitante || "-";
-}
-function getCost(r){
-  return r.cost || r.centroCusto || r.costCenter || r.cc || "-";
-}
-function getItem(r){
-  return r.item || r.description || r.descricao || "-";
-}
+function norm(s){ return (s||"").toString().trim(); }
+function getMember(r){ return r.member || r.requestedBy || r.solicitadoPor || r.solicitante || "-"; }
+function getCost(r){ return r.cost || r.centroCusto || r.costCenter || r.cc || "-"; }
+function getItem(r){ return r.item || r.description || r.descricao || "-"; }
 function getQty(r){
   const q = (typeof r.qty === "number" && isFinite(r.qty)) ? r.qty : (isFinite(Number(r.qty)) ? Number(r.qty) : 0);
   const u = r.unit || r.un || r.unidade || "";
-  return `${q} ${u}`.trim();
+  return (String(q) + " " + String(u)).trim();
 }
-function getRequestedAt(r){
-  return r.requestedAt || r.createdAt || r.created || r.ts || null;
-}
+function getRequestedAt(r){ return r.requestedAt || r.createdAt || r.created || r.ts || null; }
 
 // datetime-local helper (LOCAL, não UTC)
 function pad2(n){ return String(n).padStart(2,"0"); }
@@ -98,23 +97,54 @@ function msToLocalInput(ms){
 }
 function localInputToMs(v){
   if(!v) return null;
-  // v: YYYY-MM-DDTHH:MM (local)
   const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
   if(!m) return null;
   return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0).getTime();
 }
 
+// ===== Autocomplete (fornecedor + item) baseado em todos os registros =====
+function uniqueSorted(arr){
+  const set = new Set();
+  arr.forEach(v=>{ const s = norm(v); if(s) set.add(s); });
+  return Array.from(set).sort((a,b)=>a.localeCompare(b,"pt-BR"));
+}
+function fillDatalist(id, values, max=120){
+  const dl = document.getElementById(id);
+  dl.innerHTML = "";
+  values.slice(0,max).forEach(v=>{
+    const op = document.createElement("option");
+    op.value = v;
+    dl.appendChild(op);
+  });
+}
+
+// ===== Render =====
 db.ref("purchaseRequests").on("value",snap=>{
   const data=snap.val()||{};
   const tbody=document.getElementById("rows");
   tbody.innerHTML="";
+
+  // monta listas para autocomplete (todos os registros)
+  const itemsAll = [];
+  const suppliersAll = [];
+
+  Object.values(data).forEach(r=>{
+    if(!r) return;
+    itemsAll.push(getItem(r));
+    suppliersAll.push(r.supplier && r.supplier.name ? r.supplier.name : "");
+  });
+
+  const itemsU = uniqueSorted(itemsAll);
+  const suppliersU = uniqueSorted(suppliersAll);
+
+  fillDatalist("dlItems", itemsU);
+  fillDatalist("dlSuppliers", suppliersU);
 
   let count=0;
 
   Object.entries(data).forEach(([id,r])=>{
     const st = (r.status||"");
     if(st!=="authorized" && st!=="purchased") return;
-
     count++;
 
     const member = getMember(r);
@@ -131,21 +161,27 @@ db.ref("purchaseRequests").on("value",snap=>{
         <span class="small">${escapeHtml(String(cost))}</span>
       </td>
 
-      <td>
-        ${escapeHtml(String(item))}<br>
-        <span class="small">${escapeHtml(String(qtd))}</span>
+      <td style="min-width:220px;">
+        <input placeholder="Item" list="dlItems" value="${escapeAttr(String(item))}"
+               onblur="upd('${id}','item',this.value)">
+        <div class="small" style="margin-top:6px;">${escapeHtml(String(qtd))}</div>
         ${r.obs ? `<div class="small muted" style="margin-top:6px;">Obs: ${escapeHtml(String(r.obs))}</div>` : ``}
       </td>
 
-      <td>
-        <input placeholder="Fornecedor" value="${escapeAttr(r.supplier?.name||"")}" onblur="upd('${id}','supplier/name',this.value)">
-        <input placeholder="Contato" value="${escapeAttr(r.supplier?.contact||"")}" onblur="upd('${id}','supplier/contact',this.value)">
-        <input placeholder="Link" value="${escapeAttr(r.supplier?.link||"")}" onblur="upd('${id}','supplier/link',this.value)">
+      <td style="min-width:260px;">
+        <div class="grid2">
+          <input placeholder="Fornecedor" list="dlSuppliers" value="${escapeAttr(r.supplier?.name||"")}"
+                 onblur="upd('${id}','supplier/name',this.value)">
+          <input placeholder="Contato" value="${escapeAttr(r.supplier?.contact||"")}"
+                 onblur="upd('${id}','supplier/contact',this.value)">
+        </div>
+        <input style="margin-top:8px;" placeholder="Link" value="${escapeAttr(r.supplier?.link||"")}"
+               onblur="upd('${id}','supplier/link',this.value)">
       </td>
 
-      <td style="min-width:170px;">
-        <input type="number" step="any" placeholder="Valor total" value="${escapeAttr(r.total??"")}" onblur="updNumber('${id}','total',this.value)">
-        ${r.total ? `<div class="small muted" style="margin-top:6px;">Total: R$ ${escapeHtml(String(r.total))}</div>` : ``}
+      <td style="min-width:160px;">
+        <input type="number" step="any" placeholder="Valor total" value="${escapeAttr(r.total??"")}"
+               onblur="updNumber('${id}','total',this.value)">
       </td>
 
       <td style="min-width:240px;">
@@ -174,18 +210,19 @@ db.ref("purchaseRequests").on("value",snap=>{
 // Multi-path update (com /) funciona no RTDB
 function upd(id,path,val){
   const obj={};
-  obj[path]=val;
+  obj[path]=norm(val);
   db.ref("purchaseRequests/"+id).update(obj);
 }
-
 function updNumber(id,path,v){
   const n = Number(v);
-  upd(id, path, (isFinite(n) && v!=="" ? n : null));
+  const obj={};
+  obj[path] = (isFinite(n) && String(v).trim()!=="" ? n : null);
+  db.ref("purchaseRequests/"+id).update(obj);
 }
-
 function updExpected(id,v){
   const ms = localInputToMs(v);
-  upd(id, "expectedDelivery", ms);
+  const obj={ expectedDelivery: ms };
+  db.ref("purchaseRequests/"+id).update(obj);
 }
 
 function markPurchased(id){
@@ -194,7 +231,6 @@ function markPurchased(id){
     purchasedAt:Date.now()
   });
 }
-
 function markReceived(id){
   db.ref("purchaseRequests/"+id).update({
     status:"received",
@@ -206,7 +242,6 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
 function escapeAttr(s){
-  // para value=""
   return escapeHtml(s).replace(/\n/g," ");
 }
 </script>
