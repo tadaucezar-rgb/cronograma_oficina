@@ -54,9 +54,31 @@ input{padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.2);back
           <th>Ações</th>
         </tr>
       </thead>
-      <tbody id="rows"></tbody>
+      <tbody id="rowsPending"></tbody>
     </table>
-    <div class="note">Mostra apenas solicitações com status <b>requested</b>. (Compatível com registros antigos)</div>
+    <div class="note">Mostra apenas solicitações com status <b>requested</b>.</div>
+  </div>
+
+  <div class="card">
+    <h2>Acompanhamento</h2>
+    <div class="note" style="margin-bottom:10px;">
+      Aqui você acompanha: <b>Autorizado → Comprado → Chegou</b> (com previsão e entrada).
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Membro</th>
+          <th>Centro de custo</th>
+          <th>Item</th>
+                    <th>Previsão</th>
+          <th>Comprado em</th>
+          <th>Chegou em</th>
+        </tr>
+      </thead>
+      <tbody id="rowsTrack"></tbody>
+    </table>
+    <div class="note">Mostra itens com status <b>authorized</b>, <b>purchased</b> e <b>received</b>. (Compatível com registros antigos)</div>
   </div>
 </div>
 
@@ -110,36 +132,70 @@ function getRequestedAt(r){
 function load(){
   db.ref("purchaseRequests").on("value",snap=>{
     const data=snap.val()||{};
-    const tbody=document.getElementById("rows");
+    const tbody=document.getElementById("rowsPending");
     tbody.innerHTML="";
 
-    Object.entries(data).forEach(([id,r])=>{
-      if((r.status||"")!=="requested") return;
+    const tbodyTrack=document.getElementById("rowsTrack");
+    tbodyTrack.innerHTML="";
+    let trackCount=0;
 
+    Object.entries(data).forEach(([id,r])=>{
+      const status = (r.status||"");
       const member = getMember(r);
       const cost = getCost(r);
       const item = getItem(r);
       const qtd = getQty(r);
       const reqAt = getRequestedAt(r);
 
-      const tr=document.createElement("tr");
-      tr.innerHTML=`
-        <td>${fmt(reqAt)}</td>
-        <td>${member}</td>
-        <td>${cost}</td>
-        <td>${item}${r.obs?`<div class="small">${escapeHtml(String(r.obs))}</div>`:""}</td>
-        <td>${qtd}</td>
-        <td>
-          <button class="btn-ok" onclick="approve('${id}')">Autorizar</button>
-          <button class="btn-no" onclick="reject('${id}')">Recusar</button>
-        </td>`;
-      tbody.appendChild(tr);
+      // Pendentes (requested)
+      if(status==="requested"){
+        const tr=document.createElement("tr");
+        tr.innerHTML=`
+          <td>${fmt(reqAt)}</td>
+          <td>${escapeHtml(member)}</td>
+          <td>${escapeHtml(cost)}</td>
+          <td>${escapeHtml(item)}${r.obs?`<div class="small">${escapeHtml(String(r.obs))}</div>`:""}</td>
+          <td>${escapeHtml(qtd)}</td>
+          <td>
+            <button class="btn-ok" onclick="approve('${id}')">Autorizar</button>
+            <button class="btn-no" onclick="reject('${id}')">Recusar</button>
+          </td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+
+      // Acompanhamento (authorized / purchased / received)
+      if(status==="authorized" || status==="purchased" || status==="received"){
+        trackCount++;
+
+        const stLabel = status==="authorized" ? "Autorizado"
+                      : status==="purchased" ? "Comprado"
+                      : "Chegou";
+
+        const tr=document.createElement("tr");
+        tr.innerHTML=`
+          <td><b>${stLabel}</b></td>
+          <td>${escapeHtml(member)}</td>
+          <td>${escapeHtml(cost)}</td>
+          <td>${escapeHtml(item)}<div class="small">${escapeHtml(qtd)}</div></td>
+          <td>${fmt(r.expectedDelivery)}</td>
+          <td>${fmt(r.purchasedAt)}</td>
+          <td>${fmt(r.receivedAt)}</td>
+        `;
+        tbodyTrack.appendChild(tr);
+      }
     });
 
     if(!tbody.children.length){
       const tr=document.createElement("tr");
       tr.innerHTML = `<td colspan="6" class="small">Nenhuma requisição pendente.</td>`;
       tbody.appendChild(tr);
+    }
+
+    if(trackCount===0){
+      const tr=document.createElement("tr");
+      tr.innerHTML = `<td colspan="7" class="small">Nenhum item em acompanhamento no momento.</td>`;
+      tbodyTrack.appendChild(tr);
     }
   });
 }
