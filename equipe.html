@@ -274,6 +274,16 @@
     .s-buy{ background: rgba(0,229,255,.12); border-color: rgba(0,229,255,.30); color: var(--c-cyan); }
     .s-rec{ background: rgba(100,221,23,.18); border-color: rgba(100,221,23,.35); color: var(--c-green); }
     .s-rej{ background: rgba(255,23,68,.16); border-color: rgba(255,23,68,.35); color: var(--c-red); }
+
+    .overdue{
+      border-color: rgba(255,23,68,.55) !important;
+      box-shadow: 0 0 26px rgba(255,23,68,.20) !important;
+    }
+    .overdue .badge{
+      background: rgba(255,23,68,.16) !important;
+      border-color: rgba(255,23,68,.35) !important;
+      color: var(--c-red) !important;
+    }
 </style>
 </head>
 
@@ -525,7 +535,8 @@
     list.forEach(r=>{
       const st = r.status || "-";
       const card = document.createElement("div");
-      card.className = "p-card";
+      const isOverdue = r.expectedDelivery && (Date.now() > r.expectedDelivery) && (st!=="received") && (st!=="rejected");
+      card.className = "p-card" + (isOverdue ? " overdue" : "");
 
       card.innerHTML = `
         <div class="p-top">
@@ -535,6 +546,7 @@
           </div>
           <span class="badge ${prStatusClass(st)}">${prStatusLabel(st)}</span>
         </div>
+        ${isOverdue ? `<div class="p-sub" style="color:var(--c-red);font-weight:800;margin-top:8px;">⚠️ Atrasado (passou da previsão)</div>` : ``}
 
         <div class="p-grid">
           <div><span class="p-label">Solicitado em:</span> <b>${formatBRDateTime(prGetRequestedAt(r))}</b></div>
