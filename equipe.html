@@ -247,7 +247,34 @@
       color: rgba(255,255,255,.65);
       margin-top:8px;
     }
-  </style>
+  
+    /* === Compras / Requisições === */
+    .p-card{
+      background: var(--bgcard);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    .p-top{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+    .p-title{ font-weight:800; color:#fff; }
+    .p-sub{ font-size:.75rem; opacity:.85; margin-top:4px; }
+    .p-grid{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap:10px;
+      font-size:.78rem;
+      opacity:.95;
+    }
+    @media (max-width:520px){ .p-grid{ grid-template-columns:1fr; } }
+    .p-label{ opacity:.75; }
+    .s-req{ background: rgba(255,234,0,.18); border-color: rgba(255,234,0,.35); color: var(--c-yellow); }
+    .s-auth{ background: rgba(41,121,255,.18); border-color: rgba(41,121,255,.35); color: var(--c-blue); }
+    .s-buy{ background: rgba(0,229,255,.12); border-color: rgba(0,229,255,.30); color: var(--c-cyan); }
+    .s-rec{ background: rgba(100,221,23,.18); border-color: rgba(100,221,23,.35); color: var(--c-green); }
+    .s-rej{ background: rgba(255,23,68,.16); border-color: rgba(255,23,68,.35); color: var(--c-red); }
+</style>
 </head>
 
 <body>
@@ -287,6 +314,16 @@
     <div class="empty" id="empty" style="display:none;">Nenhuma tarefa atribuída a você.</div>
     <div class="small" id="foot"></div>
   </div>
+    <div class="panel" id="panelCompras" style="margin-top:14px;">
+      <h2>Minhas requisições</h2>
+      <div class="small" style="margin-top:-6px;opacity:.85;">
+        Acompanhe aqui o <b>status</b>, a <b>previsão de entrega</b> e quando <b>chegou</b>.
+      </div>
+
+      <div class="cards" id="cardsCompras"></div>
+      <div class="empty" id="emptyCompras" style="display:none;">Nenhuma requisição encontrada para você.</div>
+    </div>
+
 
 </div>
 
@@ -316,6 +353,10 @@
   const cards = document.getElementById("cards");
   const empty = document.getElementById("empty");
   const foot = document.getElementById("foot");
+
+  const cardsCompras = document.getElementById("cardsCompras");
+  const emptyCompras = document.getElementById("emptyCompras");
+
 
   function norm(s){ return (s || "").trim().toLowerCase(); }
 
@@ -448,6 +489,85 @@
     }
   }
 
+
+  // ===== Compras / Requisições (status + previsão + entrada) =====
+  function prStatusLabel(s){
+    if(s==="requested") return "Solicitado";
+    if(s==="authorized") return "Autorizado";
+    if(s==="purchased") return "Comprado";
+    if(s==="received") return "Chegou";
+    if(s==="rejected") return "Recusado";
+    return s || "-";
+  }
+  function prStatusClass(s){
+    if(s==="requested") return "s-req";
+    if(s==="authorized") return "s-auth";
+    if(s==="purchased") return "s-buy";
+    if(s==="received") return "s-rec";
+    if(s==="rejected") return "s-rej";
+    return "";
+  }
+
+  function prGetMember(r){ return r.member || r.requestedBy || r.solicitadoPor || r.solicitante || "-"; }
+  function prGetCost(r){ return r.cost || r.centroCusto || r.costCenter || r.cc || "-"; }
+  function prGetItem(r){ return r.item || r.description || r.descricao || "-"; }
+  function prGetQty(r){
+    const q = (typeof r.qty === "number" && isFinite(r.qty)) ? r.qty : (isFinite(Number(r.qty)) ? Number(r.qty) : 0);
+    const u = r.unit || r.un || r.unidade || "";
+    return (String(q) + " " + String(u)).trim();
+  }
+  function prGetRequestedAt(r){ return r.requestedAt || r.createdAt || r.created || r.ts || null; }
+
+  function renderPurchases(list){
+    cardsCompras.innerHTML = "";
+    emptyCompras.style.display = list.length ? "none" : "block";
+
+    list.forEach(r=>{
+      const st = r.status || "-";
+      const card = document.createElement("div");
+      card.className = "p-card";
+
+      const supplierName = r.supplier && r.supplier.name ? String(r.supplier.name) : "-";
+      const total = (r.total !== undefined && r.total !== null && r.total !== "") ? ("R$ " + String(r.total)) : "-";
+
+      card.innerHTML = `
+        <div class="p-top">
+          <div>
+            <div class="p-title">${escapeHtml(prGetItem(r))}</div>
+            <div class="p-sub">${escapeHtml(prGetQty(r))} • ${escapeHtml(prGetCost(r))}</div>
+          </div>
+          <span class="badge ${prStatusClass(st)}">${prStatusLabel(st)}</span>
+        </div>
+
+        <div class="p-grid">
+          <div><span class="p-label">Solicitado em:</span> <b>${formatBRDateTime(prGetRequestedAt(r))}</b></div>
+          <div><span class="p-label">Solicitado por:</span> <b>${escapeHtml(prGetMember(r))}</b></div>
+
+          <div><span class="p-label">Fornecedor:</span> <b>${escapeHtml(supplierName)}</b></div>
+          <div><span class="p-label">Valor:</span> <b>${escapeHtml(total)}</b></div>
+
+          <div><span class="p-label">Previsão de entrega:</span> <b>${formatBRDateTime(r.expectedDelivery)}</b></div>
+          <div><span class="p-label">Entrada (chegou):</span> <b>${formatBRDateTime(r.receivedAt)}</b></div>
+        </div>
+      `;
+      cardsCompras.appendChild(card);
+    });
+  }
+
+  function watchPurchasesFor(name){
+    // remove listener anterior
+    db.ref("purchaseRequests").off();
+
+    const me = norm(name);
+    db.ref("purchaseRequests").on("value", snap=>{
+      const data = snap.val() || {};
+      const rows = Object.entries(data).map(([id,v])=>({ id, ...(v||{}) }));
+      const mine = rows.filter(r => norm(prGetMember(r)) === me);
+      mine.sort((a,b)=> (prGetRequestedAt(b)||0) - (prGetRequestedAt(a)||0));
+      renderPurchases(mine);
+    });
+  }
+
   async function markPending(taskId, memberName){
     const now = Date.now();
     await db.ref("tasks/" + taskId).update({
@@ -490,6 +610,10 @@
     panelPick.style.display = "none";
     panelTasks.style.display = "block";
     who.textContent = "Você: " + name;
+
+    // acompanhar compras/requisições do membro
+    watchPurchasesFor(name);
+
 
     // evita acumular listeners ao trocar
     db.ref("tasks").off();
@@ -608,6 +732,10 @@
 
   // Atalhos de requisição
   wireReqButtons();
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (m)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  }
 </script>
 </body>
 </html>
