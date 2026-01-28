@@ -527,9 +527,6 @@
       const card = document.createElement("div");
       card.className = "p-card";
 
-      const supplierName = r.supplier && r.supplier.name ? String(r.supplier.name) : "-";
-      const total = (r.total !== undefined && r.total !== null && r.total !== "") ? ("R$ " + String(r.total)) : "-";
-
       card.innerHTML = `
         <div class="p-top">
           <div>
@@ -543,10 +540,7 @@
           <div><span class="p-label">Solicitado em:</span> <b>${formatBRDateTime(prGetRequestedAt(r))}</b></div>
           <div><span class="p-label">Solicitado por:</span> <b>${escapeHtml(prGetMember(r))}</b></div>
 
-          <div><span class="p-label">Fornecedor:</span> <b>${escapeHtml(supplierName)}</b></div>
-          <div><span class="p-label">Valor:</span> <b>${escapeHtml(total)}</b></div>
-
-          <div><span class="p-label">Previsão de entrega:</span> <b>${formatBRDateTime(r.expectedDelivery)}</b></div>
+                    <div><span class="p-label">Previsão de entrega:</span> <b>${formatBRDateTime(r.expectedDelivery)}</b></div>
           <div><span class="p-label">Entrada (chegou):</span> <b>${formatBRDateTime(r.receivedAt)}</b></div>
         </div>
       `;
