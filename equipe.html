@@ -1,562 +1,108 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Equipe - Cronograma Oficina</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<title>Equipe</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-  <style>
-    :root{
-      --c-cyan:#00e5ff;
-      --c-red:#ff1744;
-      --c-yellow:#ffea00;
-      --c-green:#64dd17;
-      --c-blue:#2979ff;
-      --line: rgba(0,229,255,.18);
-      --bgcard: rgba(255,255,255,.04);
-    }
-
-    *{ box-sizing:border-box; }
-
-    body{
-      margin:0;
-      font-family:'Orbitron', Arial, sans-serif;
-      background: radial-gradient(circle at top, #0a0a0a, #000);
-      color: var(--c-cyan);
-      min-height:100vh;
-    }
-
-    header{
-      background: linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
-      color:#000;
-      padding: 12px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      box-shadow: 0 0 18px rgba(0,0,0,.45);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .hdr-title{
-      font-weight:900;
-      letter-spacing:1.5px;
-      text-transform:uppercase;
-      font-size: 1.02rem;
-      line-height:1.1;
-    }
-
-    .hdr-sub{
-      font-size: .78rem;
-      opacity: .85;
-      letter-spacing: .8px;
-    }
-
-    .btn-top{
-      width:auto;
-      padding:10px 12px;
-      border:none;
-      border-radius:12px;
-      cursor:pointer;
-      font-family:'Orbitron', Arial, sans-serif;
-      font-weight:900;
-      background: rgba(0,0,0,.70);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.16);
-      white-space:nowrap;
-    }
-
-    .wrap{
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 12px;
-    }
-
-    .panel{
-      background: rgba(0,0,0,.78);
-      border-radius: 18px;
-      padding: 14px;
-      border:2px solid rgba(0,229,255,.22);
-      box-shadow: 0 0 26px rgba(0,229,255,.22);
-      margin-bottom: 12px;
-      overflow:hidden;
-    }
-
-    h2{
-      margin:0 0 10px 0;
-      text-align:center;
-      color:#ff3d00;
-      letter-spacing:2px;
-      text-transform:uppercase;
-      font-size:1.05rem;
-    }
-
-    .hint{
-      color: rgba(255,255,255,.72);
-      font-size:.82rem;
-      line-height:1.35;
-      margin-top:8px;
-    }
-
-    select{
-      width:100%;
-      padding:12px;
-      border-radius: 14px;
-      border:1px solid var(--line);
-      background: rgba(255,255,255,.06);
-      color:#fff;
-      font-family:'Orbitron', Arial, sans-serif;
-      outline:none;
-      font-size: 1rem;
-    }
-
-    .btn{
-      width:100%;
-      padding: 12px;
-      border-radius: 14px;
-      border:none;
-      cursor:pointer;
-      font-family:'Orbitron', Arial, sans-serif;
-      font-weight: 900;
-      letter-spacing: 1px;
-      margin-top: 10px;
-    }
-    .btn-green{ background: linear-gradient(90deg,#00c853,#64dd17); color:#000; }
-    .btn-muted{ background: rgba(255,255,255,.10); color:#fff; border:1px solid rgba(255,255,255,.16); }
-
-    .cards{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .card{
-      background: var(--bgcard);
-      border: 1px solid rgba(0,229,255,.16);
-      border-radius: 16px;
-      padding: 12px;
-      box-shadow: 0 0 14px rgba(0,229,255,.10);
-    }
-
-    .card.due-soon{border-color: rgba(255,234,0,.85); box-shadow:0 0 24px rgba(255,234,0,.22); animation: blinkY 1.2s infinite;}
-    .card.due-late{border-color: rgba(255,23,68,.95); box-shadow:0 0 26px rgba(255,23,68,.25); animation: blinkR 1.2s infinite;}
-    @keyframes blinkY{0%{box-shadow:0 0 12px rgba(255,234,0,.10);}50%{box-shadow:0 0 30px rgba(255,234,0,.45);}100%{box-shadow:0 0 12px rgba(255,234,0,.10);}}
-    @keyframes blinkR{0%{box-shadow:0 0 12px rgba(255,23,68,.10);}50%{box-shadow:0 0 32px rgba(255,23,68,.55);}100%{box-shadow:0 0 12px rgba(255,23,68,.10);}}
-
-    .card-top{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .task-name{
-      color: var(--c-cyan);
-      font-weight: 900;
-      font-size: 1.02rem;
-      line-height:1.2;
-      flex:1;
-      word-break: break-word;
-    }
-
-    .badges{
-      display:flex;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-      gap:8px;
-    }
-
-    .badge{
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: .72rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      white-space:nowrap;
-    }
-    .b-todo{ background: linear-gradient(90deg,#b71c1c,#ff1744); color:#fff; }
-    .b-doing{ background: linear-gradient(90deg,#f9a825,#ffea00); color:#000; }
-    .b-pending{ background: linear-gradient(90deg,#2979ff,#00e5ff); color:#000; }
-    .b-done{ background: linear-gradient(90deg,#00c853,#64dd17); color:#000; }
-
-    .p-high{ background:#ff1744; color:#fff; }
-    .p-med{ background:#ffea00; color:#000; }
-    .p-low{ background:#64ffda; color:#000; }
-
-    .meta{
-      margin-top: 8px;
-      font-size: .82rem;
-      color: rgba(255,255,255,.75);
-      line-height:1.35;
-    }
-
-    .meta .due-badge{
-      display:inline-block;
-      margin-top:8px;
-      padding:8px 10px;
-      border-radius:12px;
-      font-weight:900;
-      color:#000;
-      background: rgba(255,255,255,.12);
-      border:1px solid rgba(255,255,255,.16);
-    }
-    .meta .due-badge.soon{ background: var(--c-yellow); }
-    .meta .due-badge.late{ background: var(--c-red); color:#fff; }
-    .meta .due-badge.ok{ background: var(--c-cyan); }
-
-    .action{ margin-top: 10px; }
-    .btn-done{
-      width:100%;
-      padding: 12px;
-      border-radius: 14px;
-      border:none;
-      font-family:'Orbitron', Arial, sans-serif;
-      font-weight: 900;
-      letter-spacing: 1px;
-      background: rgba(255,255,255,.10);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.16);
-      cursor:not-allowed;
-      opacity:.85;
-    }
-
-    .empty{
-      text-align:center;
-      padding: 12px;
-      color: rgba(255,255,255,.75);
-      font-size: .9rem;
-    }
-
-    .small{
-      font-size:.78rem;
-      color: rgba(255,255,255,.65);
-      margin-top:8px;
-    }
-  </style>
+<style>
+body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff;}
+header{padding:14px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900;text-align:center;position:sticky;top:0;z-index:5;}
+.container{padding:14px;max-width:720px;margin:auto;}
+.card{background:rgba(0,0,0,.78);border-radius:18px;padding:14px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22);margin-bottom:14px;}
+h2{margin:0;color:#ff3d00;text-align:center;}
+input{width:100%;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:'Orbitron';margin-top:10px;}
+button{padding:10px 12px;border-radius:12px;border:none;font-family:'Orbitron';font-weight:900;cursor:pointer;}
+.btn-main{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;width:100%;margin-top:10px;}
+.member{margin-top:14px;}
+.name{font-size:1.1rem;font-weight:800;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.btn-qr{background:#ffeb3b;color:#000;}
+.btn-req{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
+.btn-copy{background:rgba(255,255,255,.15);color:#fff;}
+.btn-del{background:#ff1744;color:#fff;}
+.small{font-size:.75rem;opacity:.85;word-break:break-all;margin-top:6px;}
+</style>
 </head>
 
 <body>
+
 <header>
-  <div>
-    <div class="hdr-title">Equipe — Cronograma Oficina</div>
-    <div class="hdr-sub" id="who">Selecione seu nome</div>
-  </div>
-  <button class="btn-top" id="btnTrocar">Trocar</button>
+  <h2>EQUIPE</h2>
 </header>
 
-<div class="wrap">
+<div class="container">
+  <!-- Atalho topo -->
+  <button class="btn-main" onclick="openReqTop()">Nova Requisição</button>
 
-  <div class="panel" id="panelPick">
-    <h2>Entrar</h2>
+  <!-- Cadastro -->
+  <input id="name" placeholder="Nome do membro">
+  <button class="btn-main" onclick="add()">Cadastrar membro</button>
 
-    <select id="selPeople">
-      <option value="">Carregando nomes...</option>
-    </select>
-
-    <button class="btn btn-green" id="btnEntrar">Entrar</button>
-
-    <div class="hint">
-      • Se você abriu pelo QR Code, o nome já pode vir selecionado.<br>
-      • Sua única ação aqui é <b>marcar tarefa como concluída</b> (vai para “Aguardando aprovação”).
-    </div>
-  </div>
-
-  <div class="panel" id="panelTasks" style="display:none;">
-    <h2>Minhas tarefas</h2>
-    <div class="cards" id="cards"></div>
-    <div class="empty" id="empty" style="display:none;">Nenhuma tarefa atribuída a você.</div>
-    <div class="small" id="foot"></div>
-  </div>
-
+  <div id="list"></div>
 </div>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
-    authDomain: "tmg-painel.firebaseapp.com",
-    databaseURL: "https://tmg-painel-default-rtdb.firebaseio.com",
-    projectId: "tmg-painel",
-    storageBucket: "tmg-painel.firebasestorage.app",
-    messagingSenderId: "877912378151",
-    appId: "1:877912378151:web:88af3a4f8f551acd603702",
-    measurementId: "G-EK39245W6K"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+const KEY="tmg_team";
 
-  const panelPick = document.getElementById("panelPick");
-  const panelTasks = document.getElementById("panelTasks");
-  const selPeople = document.getElementById("selPeople");
-  const btnEntrar = document.getElementById("btnEntrar");
-  const btnTrocar = document.getElementById("btnTrocar");
-  const who = document.getElementById("who");
-  const cards = document.getElementById("cards");
-  const empty = document.getElementById("empty");
-  const foot = document.getElementById("foot");
-
-  function norm(s){ return (s || "").trim().toLowerCase(); }
-
-  function statusLabel(s){
-    if(s==="todo") return "A Fazer";
-    if(s==="doing") return "Em Andamento";
-    if(s==="pending") return "Aguardando aprovação";
-    if(s==="done") return "Concluída";
-    return s || "";
-  }
-  function statusBadgeClass(s){
-    if(s==="todo") return "b-todo";
-    if(s==="doing") return "b-doing";
-    if(s==="pending") return "b-pending";
-    return "b-done";
-  }
-
-  function prioLabel(p){
-    if(p==="high") return "Alta";
-    if(p==="med") return "Média";
-    return "Baixa";
-  }
-  function prioClass(p){
-    if(p==="high") return "p-high";
-    if(p==="med") return "p-med";
-    return "p-low";
-  }
-
-  function pad2(n){ return String(n).padStart(2,"0"); }
-  function parseDTLocalToMs(v){
-    if(!v) return null;
-    const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
-    if(!m) return null;
-    return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0).getTime();
-  }
-  function parseYMDToMs(ymd){
-    const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
-    if(!m) return null;
-    return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0,0,0,0).getTime();
-  }
-  function formatBRDateTime(ms){
-    const d=new Date(ms);
-    return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-  }
-  function formatDuration(ms){
-    const totalMin=Math.max(0, Math.floor(ms/60000));
-    const days=Math.floor(totalMin/(60*24));
-    const hours=Math.floor((totalMin%(60*24))/60);
-    const mins=totalMin%60;
-    if(days>0) return `${days}d ${hours}h`;
-    if(hours>0) return `${hours}h ${mins}m`;
-    return `${mins}m`;
-  }
-
-  function getDueMs(t){
-    if(t && typeof t.dueAt === "number" && isFinite(t.dueAt)) return t.dueAt;
-    if(t && typeof t.dueAt === "string" && t.dueAt.trim() && isFinite(Number(t.dueAt))) return Number(t.dueAt);
-    if(t && typeof t.dueLocal === "string" && t.dueLocal.includes("T")){
-      const ms=parseDTLocalToMs(t.dueLocal);
-      if(ms!=null) return ms;
-    }
-    if(t && typeof t.dueDate === "string"){
-      const ms=parseYMDToMs(t.dueDate);
-      if(ms!=null) return ms;
-    }
-    return null;
-  }
-
-  function dueInfo(t){
-    const ms=getDueMs(t);
-    if(ms==null) return {text:"", badge:"", card:""};
-    const diffMs = ms - Date.now();
-    const base = formatBRDateTime(ms);
-
-    if(diffMs < 0){
-      return {text:`Prazo: ${base} • ⛔ Atrasado ${formatDuration(-diffMs)}`, badge:"late", card:"due-late"};
-    }
-    if(diffMs <= 24*60*60*1000){
-      return {text:`Prazo: ${base} • ⚠️ ${formatDuration(diffMs)} restantes`, badge:"soon", card:"due-soon"};
-    }
-    if(diffMs <= 3*24*60*60*1000){
-      return {text:`Prazo: ${base} • ⏳ ${formatDuration(diffMs)} restantes`, badge:"ok", card:""};
-    }
-    return {text:`Prazo: ${base}`, badge:"", card:""};
-  }
-
-  function getTaskPeople(t){
-    if (Array.isArray(t.people) && t.people.length) return t.people;
-    if (typeof t.person === "string" && t.person.trim()) return [t.person.trim()];
-    return [];
-  }
-
-  function qs(){
-    const p = new URLSearchParams(window.location.search);
-    return { u: p.get("u") || "" };
-  }
-
-  function setSessionName(name){ localStorage.setItem("tmg_member_name", name); }
-  function getSessionName(){ return localStorage.getItem("tmg_member_name") || ""; }
-  function clearSession(){ localStorage.removeItem("tmg_member_name"); }
-
-  async function markPending(taskId, memberName){
-    const now = Date.now();
-    await db.ref("tasks/" + taskId).update({
-      status: "pending",
-      pendingBy: memberName,
-      pendingAt: now,
-      updatedAt: now
-    });
-  }
-
-  function fillPeopleSelect(peopleNames, preselect){
-    selPeople.innerHTML = "";
-    const opt0 = document.createElement("option");
-    opt0.value = "";
-    opt0.textContent = "Selecione seu nome";
-    selPeople.appendChild(opt0);
-
-    peopleNames.forEach(name=>{
-      const opt = document.createElement("option");
-      opt.value = name;
-      opt.textContent = name;
-      selPeople.appendChild(opt);
-    });
-
-    if (preselect){
-      const found = peopleNames.find(n => norm(n) === norm(preselect));
-      if (found) selPeople.value = found;
-    }
-  }
-
-  function showPick(){
-    panelTasks.style.display = "none";
-    panelPick.style.display = "block";
-    who.textContent = "Selecione seu nome";
-  }
-
-  function showTasksFor(name){
-    panelPick.style.display = "none";
-    panelTasks.style.display = "block";
-    who.textContent = "Você: " + name;
-
-    // evita acumular listeners ao trocar
-    db.ref("tasks").off();
-
-    db.ref("tasks").on("value", snap=>{
-      const data = snap.val() || {};
-      const rows = Object.entries(data).map(([id,t]) => ({ id, ...t }));
-
-      const me = norm(name);
-      const mine = rows.filter(t => getTaskPeople(t).some(p => norm(p) === me));
-
-      const statusOrder = { todo: 1, doing: 2, pending: 3, done: 4 };
-      const prioOrder = { high: 1, med: 2, low: 3 };
-
-      mine.sort((a,b)=>{
-        const sa = statusOrder[a.status] || 9;
-        const sb = statusOrder[b.status] || 9;
-        if (sa !== sb) return sa - sb;
-
-        const pa = prioOrder[a.priority] || 9;
-        const pb = prioOrder[b.priority] || 9;
-        if (pa !== pb) return pa - pb;
-
-        const da = getDueMs(a) ?? 9e18;
-        const dbb = getDueMs(b) ?? 9e18;
-        if (da !== dbb) return da - dbb;
-
-        return (a.created || 0) - (b.created || 0);
-      });
-
-      cards.innerHTML = "";
-      empty.style.display = mine.length ? "none" : "block";
-
-      mine.forEach(t=>{
-        const status = t.status || "todo";
-        const prio = t.priority || "low";
-        const di = dueInfo(t);
-
-        const card = document.createElement("div");
-        card.className = "card " + (di.card || "");
-
-        card.innerHTML = `
-          <div class="card-top">
-            <div class="task-name">${t.name || ""}</div>
-            <div class="badges">
-              <span class="badge ${statusBadgeClass(status)}">${statusLabel(status)}</span>
-              <span class="badge ${prioClass(prio)}">${prioLabel(prio)}</span>
-            </div>
-          </div>
-
-          <div class="meta">
-            Responsáveis: ${getTaskPeople(t).join(", ")}
-            ${t.pendingBy ? `<br>Marcada por: <b>${t.pendingBy}</b>` : ``}
-            ${(status==='done' && (t.durationMs || (t.startedAt && t.approvedAt))) ? `<br>Tempo: <b>${formatDuration(t.durationMs || (t.approvedAt - t.startedAt))}</b>` : ``}
-            ${di.text ? `<div class="due-badge ${di.badge || ""}">${di.text}</div>` : ``}
-          </div>
-
-          <div class="action">
-            <button ${status==="todo" || status==="doing" ? "" : "disabled"} class="${status==="todo" || status==="doing" ? "btn btn-green" : "btn-done"}">
-              ${status==="todo" || status==="doing" ? "Marcar como concluída" : (status==="pending" ? "Aguardando aprovação" : "Concluída")}
-            </button>
-          </div>
-        `;
-
-        const btn = card.querySelector("button");
-        if (status==="todo" || status==="doing"){
-          btn.onclick = async ()=>{
-            try{ await markPending(t.id, name); }
-            catch(e){ console.log(e); alert("Falha ao marcar. Verifique sua internet."); }
-          };
-        }
-
-        cards.appendChild(card);
-      });
-
-      foot.textContent = "Dica: após marcar, a tarefa fica em “Aguardando aprovação” até o Admin aprovar.";
-    });
-  }
-
-  const { u } = qs();
-  const saved = getSessionName();
-
-  db.ref("people").on("value", snap=>{
-    const data = snap.val() || {};
-    const names = Object.values(data).map(p => (p && p.name ? String(p.name).trim() : "")).filter(Boolean);
-
-    names.sort((a,b)=> a.localeCompare(b, "pt-BR", { sensitivity:"base" }));
-
-    const pre = u || saved;
-    fillPeopleSelect(names, pre);
-
-    const selected = selPeople.value;
-    if (selected){
-      setSessionName(selected);
-      showTasksFor(selected);
-    } else {
-      showPick();
-    }
+function load(){
+  const list=document.getElementById("list");
+  list.innerHTML="";
+  const team=JSON.parse(localStorage.getItem(KEY)||"[]");
+  team.forEach((n,i)=>{
+    const link = location.origin + location.pathname.replace("equipe","requisicao") + "?u=" + encodeURIComponent(n);
+    const div=document.createElement("div");
+    div.className="card member";
+    div.innerHTML=`
+      <div class="name">${n}</div>
+      <div class="small">${link}</div>
+      <div class="actions">
+        <button class="btn-qr" onclick="alert('Use este link no QR:\n${link}')">QR</button>
+        <button class="btn-req" onclick="openReq('${n}')">Requisição</button>
+        <button class="btn-copy" onclick="copy('${link}')">Copiar</button>
+        <button class="btn-del" onclick="del(${i})">🗑️</button>
+      </div>
+    `;
+    list.appendChild(div);
   });
+}
 
-  btnEntrar.onclick = ()=>{
-    const name = selPeople.value;
-    if (!name) return alert("Selecione seu nome.");
-    setSessionName(name);
-    showTasksFor(name);
-  };
+function add(){
+  const n=document.getElementById("name").value.trim();
+  if(!n) return;
+  const team=JSON.parse(localStorage.getItem(KEY)||"[]");
+  team.push(n);
+  localStorage.setItem(KEY,JSON.stringify(team));
+  document.getElementById("name").value="";
+  load();
+}
 
-  btnTrocar.onclick = ()=>{
-    if (confirm("Trocar de nome?")) {
-      clearSession();
-      const url = new URL(window.location.href);
-      url.search = "";
-      window.location.href = url.toString();
-    }
-  };
+function del(i){
+  const team=JSON.parse(localStorage.getItem(KEY)||"[]");
+  team.splice(i,1);
+  localStorage.setItem(KEY,JSON.stringify(team));
+  load();
+}
+
+function copy(t){ navigator.clipboard.writeText(t); }
+
+function openReq(name){
+  localStorage.setItem("tmg_member_name",name);
+  window.open("requisicao.html?u="+encodeURIComponent(name),"_blank");
+}
+
+function openReqTop(){
+  const last=localStorage.getItem("tmg_member_name");
+  if(last){
+    window.open("requisicao.html?u="+encodeURIComponent(last),"_blank");
+  }else{
+    window.open("requisicao.html","_blank");
+  }
+}
+
+load();
 </script>
 </body>
 </html>
