@@ -38,7 +38,7 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
           <th>Item</th>
           <th>Fornecedor</th>
           <th>Valores</th>
-          <th>Previsão</th>
+          <th>Previsão de entrega</th>
           <th>Ações</th>
         </tr>
       </thead>
@@ -60,36 +60,42 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
-function fmt(ts){return new Date(ts).toLocaleString("pt-BR");}
+function fmt(ts){
+  if(!ts) return "-";
+  return new Date(ts).toLocaleString("pt-BR");
+}
 
 db.ref("purchaseRequests").on("value",snap=>{
   const data=snap.val()||{};
   const tbody=document.getElementById("rows");
   tbody.innerHTML="";
+
   Object.entries(data).forEach(([id,r])=>{
     if(r.status!=="authorized" && r.status!=="purchased") return;
 
     const tr=document.createElement("tr");
+
     tr.innerHTML=`
       <td>
-        <b>${r.member}</b><br>
+        <b>${r.member || "-"}</b><br>
         <span class="small">${fmt(r.requestedAt)}</span><br>
-        ${r.cost}
+        ${r.cost || "-"}
       </td>
       <td>
-        ${r.item}<br>
-        <span class="small">${r.qty} ${r.unit}</span>
+        ${r.item || "-"}<br>
+        <span class="small">${r.qty || 0} ${r.unit || ""}</span>
       </td>
       <td>
-        <input placeholder="Fornecedor" value="${r.supplier?.name||""}" onchange="upd('${id}','supplier/name',this.value)">
-        <input placeholder="Contato" value="${r.supplier?.contact||""}" onchange="upd('${id}','supplier/contact',this.value)">
-        <input placeholder="Link" value="${r.supplier?.link||""}" onchange="upd('${id}','supplier/link',this.value)">
+        <input placeholder="Fornecedor" value="${r.supplier?.name||""}" onblur="upd('${id}','supplier/name',this.value)">
+        <input placeholder="Contato" value="${r.supplier?.contact||""}" onblur="upd('${id}','supplier/contact',this.value)">
+        <input placeholder="Link" value="${r.supplier?.link||""}" onblur="upd('${id}','supplier/link',this.value)">
       </td>
       <td>
-        <input type="number" step="any" placeholder="Valor total" value="${r.total||""}" onchange="upd('${id}','total',Number(this.value))">
+        <input type="number" step="any" placeholder="Valor total" value="${r.total||""}" onblur="upd('${id}','total',Number(this.value))">
       </td>
       <td>
-        <input type="datetime-local" onchange="upd('${id}','expectedDelivery',new Date(this.value).getTime())">
+        <input type="datetime-local" value="${r.expectedDelivery ? new Date(r.expectedDelivery).toISOString().slice(0,16) : ""}"
+               onblur="upd('${id}','expectedDelivery', this.value ? new Date(this.value).getTime() : null)">
         ${r.expectedDelivery?'<div class="small">'+fmt(r.expectedDelivery)+'</div>':''}
       </td>
       <td>
