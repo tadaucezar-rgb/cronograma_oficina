@@ -52,7 +52,7 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
       <tbody id="rows"></tbody>
     </table>
     <div class="small muted" style="margin-top:10px;">
-      Mostra itens com status <b>authorized</b> (autorizado) e <b>purchased</b> (comprado).<br>
+      Mostra itens com status <b>authorized</b>, <b>purchased</b> e <b>received</b> (para ajustes se necessário).<br>
       Autocomplete baseado em <b>todos os registros</b>.
     </div>
   </div>
@@ -144,7 +144,7 @@ db.ref("purchaseRequests").on("value",snap=>{
 
   Object.entries(data).forEach(([id,r])=>{
     const st = (r.status||"");
-    if(st!=="authorized" && st!=="purchased") return;
+    if(st!=="authorized" && st!=="purchased" && st!=="received") return;
     count++;
 
     const member = getMember(r);
@@ -193,7 +193,7 @@ db.ref("purchaseRequests").on("value",snap=>{
       <td>
         ${st==="authorized"?
           `<button class="btn-blue" onclick="markPurchased('${id}')">Comprar</button>`:
-          `<button class="btn-ok" onclick="markReceived('${id}')">Dar entrada</button>`
+          (st==="purchased"? `<button class="btn-ok" onclick="markReceived('${id}')">Dar entrada</button>` : `<span class="small">Finalizado</span>`)
         }
       </td>
     `;
