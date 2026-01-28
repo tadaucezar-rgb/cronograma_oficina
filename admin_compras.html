@@ -24,6 +24,21 @@ input{padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.2);back
 .pin{max-width:320px;margin:60px auto;}
 .small{font-size:.75rem;opacity:.8;}
 .note{font-size:.78rem;opacity:.85;text-align:center;margin-top:10px;color:rgba(255,255,255,.75);}
+
+.overdue-row td{
+  background: rgba(255,23,68,.10);
+}
+.overdue-tag{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,23,68,.35);
+  background: rgba(255,23,68,.16);
+  color:#fff;
+  font-size:.72rem;
+  font-weight:900;
+  margin-left:8px;
+}
 </style>
 </head>
 
@@ -149,7 +164,9 @@ function load(){
 
       // Pendentes (requested)
       if(status==="requested"){
+        const isOverdue = r.expectedDelivery && (Date.now() > r.expectedDelivery) && status!=="received";
         const tr=document.createElement("tr");
+        if(isOverdue) tr.className = "overdue-row";
         tr.innerHTML=`
           <td>${fmt(reqAt)}</td>
           <td>${escapeHtml(member)}</td>
@@ -172,9 +189,11 @@ function load(){
                       : status==="purchased" ? "Comprado"
                       : "Chegou";
 
+        const isOverdue = r.expectedDelivery && (Date.now() > r.expectedDelivery) && status!=="received";
         const tr=document.createElement("tr");
+        if(isOverdue) tr.className = "overdue-row";
         tr.innerHTML=`
-          <td><b>${stLabel}</b></td>
+          <td><b>${stLabel}</b>${isOverdue ? `<span class="overdue-tag">ATRASADO</span>` : ``}</td>
           <td>${escapeHtml(member)}</td>
           <td>${escapeHtml(cost)}</td>
           <td>${escapeHtml(item)}<div class="small">${escapeHtml(qtd)}</div></td>
@@ -187,13 +206,17 @@ function load(){
     });
 
     if(!tbody.children.length){
-      const tr=document.createElement("tr");
+      const isOverdue = r.expectedDelivery && (Date.now() > r.expectedDelivery) && status!=="received";
+        const tr=document.createElement("tr");
+        if(isOverdue) tr.className = "overdue-row";
       tr.innerHTML = `<td colspan="6" class="small">Nenhuma requisição pendente.</td>`;
       tbody.appendChild(tr);
     }
 
     if(trackCount===0){
-      const tr=document.createElement("tr");
+      const isOverdue = r.expectedDelivery && (Date.now() > r.expectedDelivery) && status!=="received";
+        const tr=document.createElement("tr");
+        if(isOverdue) tr.className = "overdue-row";
       tr.innerHTML = `<td colspan="7" class="small">Nenhum item em acompanhamento no momento.</td>`;
       tbodyTrack.appendChild(tr);
     }
