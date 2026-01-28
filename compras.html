@@ -6,8 +6,52 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
+let currentFilter = "all";
+function setFilter(f){
+  currentFilter=f;
+  document.querySelectorAll(".filters .fbtn").forEach(b=>b.classList.remove("active"));
+  event.target.classList.add("active");
+  render();
+}
+function isToday(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  return d.toDateString()===n.toDateString();
+}
+function isThisWeek(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  const onejan=new Date(n.getFullYear(),0,1);
+  const week=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
+  const curw=Math.ceil((((n-onejan)/86400000)+onejan.getDay()+1)/7);
+  return d.getFullYear()===n.getFullYear() && week===curw;
+}
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js">
+let currentFilter = "all";
+function setFilter(f){
+  currentFilter=f;
+  document.querySelectorAll(".filters .fbtn").forEach(b=>b.classList.remove("active"));
+  event.target.classList.add("active");
+  render();
+}
+function isToday(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  return d.toDateString()===n.toDateString();
+}
+function isThisWeek(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  const onejan=new Date(n.getFullYear(),0,1);
+  const week=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
+  const curw=Math.ceil((((n-onejan)/86400000)+onejan.getDay()+1)/7);
+  return d.getFullYear()===n.getFullYear() && week===curw;
+}
+
+</script>
 
 <style>
 *{box-sizing:border-box;}
@@ -27,6 +71,24 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .grid2 > *{min-width:0;}
 @media (max-width:760px){ .grid2{grid-template-columns:1fr;} }
+
+.filters .fbtn{
+  padding:6px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-family:'Orbitron';
+  font-weight:800;
+  cursor:pointer;
+}
+.filters .fbtn.active{
+  background:linear-gradient(90deg,#00c853,#64dd17);
+  color:#000;
+}
+.filters .fbtn-warn{
+  border-color:rgba(255,23,68,.6);
+}
 </style>
 </head>
 
@@ -40,6 +102,14 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
 <div class="container">
   <div class="card">
     <h2>Compras Autorizadas</h2>
+    
+    <div class="filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="fbtn active" onclick="setFilter('all')">Todos</button>
+      <button class="fbtn" onclick="setFilter('today')">Hoje</button>
+      <button class="fbtn" onclick="setFilter('week')">Semana</button>
+      <button class="fbtn fbtn-warn" onclick="setFilter('overdue')">Atrasados</button>
+    </div>
+
     <table>
       <thead>
         <tr>
@@ -199,13 +269,21 @@ db.ref("purchaseRequests").on("value",snap=>{
         }
       </td>
     `;
-    tbody.appendChild(tr);
+    let show=true;
+       if(currentFilter==="today") show=isToday(r.expectedDelivery);
+       if(currentFilter==="week") show=isThisWeek(r.expectedDelivery);
+       if(currentFilter==="overdue") show=isOverdue;
+       if(show) tbody.appendChild(tr);
   });
 
   if(count===0){
     const tr=document.createElement("tr");
     tr.innerHTML = `<td colspan="6" class="small">Nenhuma compra autorizada no momento.</td>`;
-    tbody.appendChild(tr);
+    let show=true;
+       if(currentFilter==="today") show=isToday(r.expectedDelivery);
+       if(currentFilter==="week") show=isThisWeek(r.expectedDelivery);
+       if(currentFilter==="overdue") show=isOverdue;
+       if(show) tbody.appendChild(tr);
   }
 });
 
@@ -246,6 +324,28 @@ function escapeHtml(s){
 function escapeAttr(s){
   return escapeHtml(s).replace(/\n/g," ");
 }
+
+let currentFilter = "all";
+function setFilter(f){
+  currentFilter=f;
+  document.querySelectorAll(".filters .fbtn").forEach(b=>b.classList.remove("active"));
+  event.target.classList.add("active");
+  render();
+}
+function isToday(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  return d.toDateString()===n.toDateString();
+}
+function isThisWeek(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  const onejan=new Date(n.getFullYear(),0,1);
+  const week=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
+  const curw=Math.ceil((((n-onejan)/86400000)+onejan.getDay()+1)/7);
+  return d.getFullYear()===n.getFullYear() && week===curw;
+}
+
 </script>
 </body>
 </html>
