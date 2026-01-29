@@ -89,6 +89,31 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
 .filters .fbtn-warn{
   border-color:rgba(255,23,68,.6);
 }
+
+.money{
+  display:flex;
+  align-items:center;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:10px;
+  overflow:hidden;
+}
+.money .currency{
+  padding:8px 10px;
+  font-weight:900;
+  color:#00e5ff;
+  background:rgba(0,0,0,.35);
+  border-right:1px solid rgba(255,255,255,.15);
+  white-space:nowrap;
+}
+.money input{
+  border:none;
+  background:transparent;
+  padding:8px;
+  color:#fff;
+  width:100%;
+  font-family:'Orbitron';
+}
 </style>
 </head>
 
@@ -252,12 +277,8 @@ db.ref("purchaseRequests").on("value",snap=>{
       </td>
 
       <td style="min-width:160px;">
-        <div style="display:flex;align-items:center;gap:6px;">
-  <span style="font-weight:800;">R$</span>
-  <input type="number" step="0.01" min="0" placeholder="0,00"
-         value="${escapeAttr(r.total??"")}"
-         onblur="updNumber('${id}','total',this.value)">
-</div>
+        <input type="number" step="any" placeholder="Valor total" value="${escapeAttr(r.total??"")}"
+               onblur="updNumber('${id}','total',this.value)"></div>
       </td>
 
       <td style="min-width:240px;">
