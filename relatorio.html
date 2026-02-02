@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Relatórios de Compras</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+  :root{
+    --c-cyan:#00e5ff;
+    --c-orange:#ff3d00;
+    --c-green:#64dd17;
+    --c-red:#ff1744;
+    --bg1:#0a0a0a;
+    --bg2:#000;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Orbitron',Arial,sans-serif;
+    background:radial-gradient(circle at top,var(--bg1),var(--bg2));
+    color:var(--c-cyan);
+  }
+  header{
+    padding:14px;
+    background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
+    color:#000;
+    font-weight:900;
+    text-align:center;
+    letter-spacing:.5px;
+  }
+  .wrap{max-width:1200px;margin:0 auto;padding:14px;}
+  .card{
+    background:rgba(0,0,0,.78);
+    border-radius:18px;
+    padding:16px;
+    border:2px solid rgba(0,229,255,.22);
+    box-shadow:0 0 26px rgba(0,229,255,.22);
+    margin-bottom:12px;
+  }
+  h2{margin:0 0 12px 0;color:var(--c-orange);text-align:center;}
+  label{display:block;font-size:.8rem;opacity:.9;margin-bottom:6px;}
+  input,button,select{
+    font-family:'Orbitron',Arial,sans-serif;
+  }
+  input{
+    width:100%;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+  }
+  .row{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;}
+  @media (max-width:760px){ .row{grid-template-columns:1fr; } }
+  button{
+    padding:10px 14px;
+    border-radius:14px;
+    border:none;
+    cursor:pointer;
+    font-weight:900;
+  }
+  .btn{
+    background:linear-gradient(90deg,#00c853,#64dd17);
+    color:#000;
+  }
+  .btn2{
+    background:linear-gradient(90deg,#2979ff,#00e5ff);
+    color:#000;
+  }
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;}
+  @media (max-width:980px){ .kpis{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:520px){ .kpis{grid-template-columns:1fr;} }
+  .kpi{
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:16px;
+    padding:12px;
+  }
+  .kpi .t{font-size:.72rem;opacity:.85;}
+  .kpi .v{font-size:1.15rem;font-weight:900;margin-top:6px;color:#fff;}
+  .grid2{display:grid;grid-template-columns:1.1fr .9fr;gap:12px;align-items:start;}
+  @media (max-width:980px){ .grid2{grid-template-columns:1fr;} }
+  table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.82rem;}
+  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.14);vertical-align:top;overflow:hidden;word-break:break-word;}
+  th{color:var(--c-cyan);text-transform:uppercase;font-size:.72rem;letter-spacing:.8px;}
+  .muted{opacity:.78;font-size:.78rem;}
+  .pill{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.08);
+    font-size:.72rem;
+    white-space:nowrap;
+  }
+  .up{border-color:rgba(255,23,68,.55);background:rgba(255,23,68,.14);}
+  .ok{border-color:rgba(100,221,23,.45);background:rgba(100,221,23,.12);}
+  .pin-wrap{max-width:420px;margin:40px auto;padding:14px;}
+  .pin-card{padding:18px;}
+</style>
+</head>
+
+<body>
+<header>Relatórios - Compras / Serviços</header>
+
+<div class="wrap" id="pinScreen">
+  <div class="card pin-card">
+    <h2>PIN</h2>
+    <label>Digite o PIN para acessar</label>
+    <input id="pin" type="password" placeholder="PIN" />
+    <button class="btn" style="margin-top:12px;width:100%;" onclick="unlock()">Entrar</button>
+    <div class="muted" style="margin-top:10px;">PIN simples (igual os outros): padrão <b>1234</b>.</div>
+  </div>
+</div>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="card">
+    <h2>Filtro por data</h2>
+    <div class="row">
+      <div>
+        <label>Data inicial</label>
+        <input id="dateFrom" type="date" />
+      </div>
+      <div>
+        <label>Data final</label>
+        <input id="dateTo" type="date" />
+      </div>
+      <div>
+        <button class="btn" style="width:100%;" onclick="applyFilter()">Aplicar</button>
+      </div>
+    </div>
+    <div class="muted" style="margin-top:10px;">
+      Critério de data: usa <b>purchasedAt</b> (se existir), senão <b>receivedAt</b>, senão <b>requestedAt</b>.
+      Só entra no relatório o que tem <b>valor</b> preenchido.
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="t">Gasto total (período)</div>
+        <div class="v" id="kpiTotal">R$ 0,00</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Registros com valor</div>
+        <div class="v" id="kpiCount">0</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Centros de custo</div>
+        <div class="v" id="kpiCosts">0</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Itens únicos</div>
+        <div class="v" id="kpiItems">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>1) Valor por centro de custo</h2>
+    <div class="grid2">
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:52%;">Centro de custo</th>
+              <th style="width:24%;">Total</th>
+              <th style="width:24%;">% do total</th>
+            </tr>
+          </thead>
+          <tbody id="tbCosts"></tbody>
+        </table>
+      </div>
+      <div>
+        <canvas id="pieCosts" height="260"></canvas>
+        <div class="muted" style="margin-top:8px;">Pizza considera somente registros com valor.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2) Valor gasto por item</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:44%;">Item / Serviço</th>
+          <th style="width:18%;">Total</th>
+          <th style="width:18%;">Qtd registros</th>
+          <th style="width:20%;">Média</th>
+        </tr>
+      </thead>
+      <tbody id="tbItems"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>3) Itens com valor aumentando</h2>
+    <div class="muted" style="margin-bottom:10px;">
+      Regra simples: compara os <b>2 últimos preços unitários</b> do mesmo item (quando tiver quantidade &gt; 0).
+      Se o último for maior, entra na lista.
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:46%;">Item</th>
+          <th style="width:18%;">Antes</th>
+          <th style="width:18%;">Agora</th>
+          <th style="width:18%;">Variação</th>
+        </tr>
+      </thead>
+      <tbody id="tbUp"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ===== PIN =====
+const PIN = "1234";
+function unlock(){
+  const v = (document.getElementById("pin").value||"").trim();
+  if(v!==PIN){ alert("PIN incorreto"); return; }
+  document.getElementById("pinScreen").style.display="none";
+  document.getElementById("app").style.display="block";
+  boot();
+}
+
+// ===== Firebase =====
+const firebaseConfig={
+  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+  authDomain:"tmg-painel.firebaseapp.com",
+  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com",
+  projectId:"tmg-painel",
+  storageBucket:"tmg-painel.firebasestorage.app",
+  messagingSenderId:"877912378151",
+  appId:"1:877912378151:web:88af3a4f8f551acd603702"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+// ===== Helpers =====
+function norm(s){ return (s||"").toString().trim(); }
+function money(n){
+  const v = (typeof n==="number" && isFinite(n)) ? n : Number(n);
+  if(!isFinite(v)) return "R$ 0,00";
+  return "R$ " + v.toLocaleString("pt-BR",{minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function safeNum(n){
+  const v = (typeof n==="number" && isFinite(n)) ? n : Number(n);
+  return isFinite(v) ? v : 0;
+}
+function getItem(r){ return norm(r.item || r.description || r.descricao || "-"); }
+function getCost(r){ return norm(r.cost || r.centroCusto || r.costCenter || r.cc || "Sem centro"); }
+function getQty(r){
+  const q = safeNum(r.qty);
+  return q>0 ? q : 0;
+}
+function getDateMs(r){
+  return r.purchasedAt || r.receivedAt || r.requestedAt || 0;
+}
+function msFromDateInput(v){
+  if(!v) return null;
+  const [y,m,d] = v.split("-").map(Number);
+  return new Date(y, m-1, d, 0,0,0,0).getTime();
+}
+function msToDateInput(ms){
+  const d = new Date(ms);
+  const pad = (n)=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+// ===== State =====
+let raw = [];
+let filtered = [];
+let pieChart = null;
+
+function boot(){
+  // Default: últimos 30 dias
+  const now = Date.now();
+  const from = now - 30*24*60*60*1000;
+  document.getElementById("dateFrom").value = msToDateInput(from);
+  document.getElementById("dateTo").value = msToDateInput(now);
+
+  db.ref("purchaseRequests").on("value", snap=>{
+    const data = snap.val() || {};
+    raw = Object.entries(data).map(([id,r])=>({id, ...(r||{})}));
+    applyFilter();
+  });
+}
+
+function applyFilter(){
+  const from = msFromDateInput(document.getElementById("dateFrom").value);
+  const to = msFromDateInput(document.getElementById("dateTo").value);
+  const toEnd = (to!==null) ? (to + 24*60*60*1000 - 1) : null;
+
+  filtered = raw
+    .map(r=>({ ...r, _ms: getDateMs(r), _item: getItem(r), _cost: getCost(r), _total: safeNum(r.total), _qty: getQty(r) }))
+    .filter(r=> r._total>0 )
+    .filter(r=> from===null || r._ms>=from )
+    .filter(r=> toEnd===null || r._ms<=toEnd );
+
+  renderAll();
+}
+
+function renderAll(){
+  // KPIs
+  const total = filtered.reduce((a,r)=>a+r._total, 0);
+  const costs = new Set(filtered.map(r=>r._cost)).size;
+  const items = new Set(filtered.map(r=>r._item)).size;
+
+  document.getElementById("kpiTotal").textContent = money(total);
+  document.getElementById("kpiCount").textContent = String(filtered.length);
+  document.getElementById("kpiCosts").textContent = String(costs);
+  document.getElementById("kpiItems").textContent = String(items);
+
+  renderCosts(total);
+  renderItems();
+  renderUp();
+}
+
+function renderCosts(grandTotal){
+  const by = new Map();
+  filtered.forEach(r=>{
+    by.set(r._cost, (by.get(r._cost)||0) + r._total);
+  });
+
+  const rows = Array.from(by.entries())
+    .sort((a,b)=>b[1]-a[1]);
+
+  const tb = document.getElementById("tbCosts");
+  tb.innerHTML = "";
+  rows.forEach(([cost,tot])=>{
+    const pct = grandTotal>0 ? (tot/grandTotal*100) : 0;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(cost)}</td>
+      <td><b>${money(tot)}</b></td>
+      <td>${pct.toLocaleString("pt-BR",{minimumFractionDigits:1, maximumFractionDigits:1})}%</td>
+    `;
+    tb.appendChild(tr);
+  });
+
+  // Pie
+  const labels = rows.map(r=>r[0]);
+  const data = rows.map(r=>Number(r[1].toFixed(2)));
+
+  const ctx = document.getElementById("pieCosts");
+  if(pieChart) pieChart.destroy();
+  pieChart = new Chart(ctx,{
+    type:"pie",
+    data:{
+      labels,
+      datasets:[{ data }]
+    },
+    options:{
+      plugins:{
+        legend:{ position:"bottom", labels:{ color:"#fff", boxWidth:12 } },
+        tooltip:{
+          callbacks:{
+            label:(it)=>{
+              const v = it.raw || 0;
+              const pct = grandTotal>0 ? (v/grandTotal*100) : 0;
+              return ` ${money(v)} (${pct.toFixed(1)}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderItems(){
+  const by = new Map();
+  filtered.forEach(r=>{
+    const key = r._item || "-";
+    if(!by.has(key)) by.set(key, { total:0, count:0 });
+    const o = by.get(key);
+    o.total += r._total;
+    o.count += 1;
+  });
+
+  const rows = Array.from(by.entries())
+    .map(([item,o])=>({ item, total:o.total, count:o.count, avg: o.total/o.count }))
+    .sort((a,b)=>b.total-a.total);
+
+  const tb = document.getElementById("tbItems");
+  tb.innerHTML = "";
+  rows.forEach(r=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(r.item)}</td>
+      <td><b>${money(r.total)}</b></td>
+      <td>${r.count}</td>
+      <td>${money(r.avg)}</td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+function renderUp(){
+  // Para cada item, pega lista (ordenada por data) com preço unitário
+  const map = new Map();
+  filtered.forEach(r=>{
+    const q = r._qty;
+    const unitPrice = (q>0) ? (r._total / q) : null;
+    if(unitPrice===null || !isFinite(unitPrice) || unitPrice<=0) return;
+    if(!map.has(r._item)) map.set(r._item, []);
+    map.get(r._item).push({ ms:r._ms, unit:unitPrice });
+  });
+
+  const ups = [];
+  map.forEach((arr,item)=>{
+    arr.sort((a,b)=>a.ms-b.ms);
+    if(arr.length<2) return;
+    const prev = arr[arr.length-2].unit;
+    const last = arr[arr.length-1].unit;
+    if(last > prev){
+      const pct = (last/prev - 1) * 100;
+      ups.push({ item, prev, last, pct });
+    }
+  });
+
+  ups.sort((a,b)=>b.pct-a.pct);
+
+  const tb = document.getElementById("tbUp");
+  tb.innerHTML = "";
+  if(!ups.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="4" class="muted">Nenhum item com aumento detectado no período.</td>`;
+    tb.appendChild(tr);
+    return;
+  }
+
+  ups.forEach(r=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(r.item)}</td>
+      <td>${money(r.prev)}</td>
+      <td>${money(r.last)}</td>
+      <td><span class="pill up">+${r.pct.toFixed(1)}%</span></td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+}
+</script>
+</body>
+</html>
