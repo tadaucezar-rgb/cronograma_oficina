@@ -199,7 +199,7 @@
       <div class="row">
         <div>
           <label>Nome</label>
-          <input id="mName" placeholder="Ex: Davi" />
+          <input id="mName" placeholder="Ex: RENÊ" />
         </div>
         <div>
           <label>Função (opcional)</label>
@@ -218,7 +218,7 @@
       </div>
 
       <div class="muted" style="margin-top:10px;">
-        Cada membro tem um <b>QR Code individual</b> que abre direto: <span class="pill">equipe.html?m=Nome</span>
+        Cada membro tem um <b>QR Code individual</b> que abre direto: <span class="pill">/equipe?m=Nome</span>
       </div>
 
       <table style="margin-top:10px;">
@@ -321,8 +321,7 @@
       <h2>Zerar tudo</h2>
       <div class="card dangerBox">
         <div class="muted" style="margin-bottom:10px;">
-          Isso apaga <b>membros</b>, <b>tarefas</b> e <b>datas importantes</b>.
-          É <b>irreversível</b>.
+          Isso apaga <b>membros</b>, <b>tarefas</b> e <b>datas importantes</b>. <b>Irreversível</b>.
         </div>
 
         <div class="row" style="grid-template-columns:1fr 1fr auto;">
@@ -429,18 +428,50 @@ function dueToMs(dateStr, timeStr){
   }
   return new Date(y, m-1, d, hh, mm, 0, 0).getTime();
 }
-function baseEquipeUrl(){
-  // troca admin.html por equipe.html mantendo path
-  const path = window.location.pathname;
-  const basePath = path.replace(/admin\.html$/i, "equipe.html");
-  return window.location.origin + basePath;
+
+/* ======= FIX DO LINK DO QR (URL LIMPA /admin -> /equipe) ======= */
+function siblingUrl(targetSlug){
+  const u = new URL(window.location.href);
+  let p = u.pathname;
+
+  // remove trailing slash (exceto se for só "/")
+  if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
+
+  // pega o último segmento
+  const parts = p.split("/").filter(Boolean);
+
+  // se a página atual for ".../admin" ou ".../admin.html" ou ".../admin_compras" etc
+  if (parts.length){
+    let last = parts[parts.length - 1];
+
+    // remove .html se tiver
+    last = last.replace(/\.html$/i, "");
+
+    // troca se o último for "admin"
+    if (last.toLowerCase() === "admin"){
+      parts[parts.length - 1] = targetSlug; // "equipe"
+    } else {
+      // se não der match, apenas substitui o último mesmo (mais seguro)
+      parts[parts.length - 1] = targetSlug;
+    }
+  } else {
+    // se for raiz
+    parts.push(targetSlug);
+  }
+
+  u.pathname = "/" + parts.join("/");
+  return u.toString();
 }
+
 function memberLink(name){
-  return baseEquipeUrl() + "?m=" + encodeURIComponent(String(name||"").trim());
+  const base = siblingUrl("equipe"); // <<< aqui é /equipe (igual seu site)
+  const u = new URL(base);
+  u.searchParams.set("m", String(name||"").trim());
+  return u.toString();
 }
 
 /* ===== State caches ===== */
-let membersCache = []; // [{id,name,role,active}]
+let membersCache = [];
 let tasksCache = [];
 let datesCache = [];
 
@@ -519,7 +550,6 @@ function openQR(memberName){
 
   const box = document.getElementById("qrCanvas");
   box.innerHTML = "";
-  // QR grande (ótimo pra TV)
   new QRCode(box, {
     text: currentQRLink,
     width: 280,
@@ -532,7 +562,6 @@ function openQR(memberName){
   document.getElementById("qrModalBack").style.display = "flex";
 }
 function closeQR(ev){
-  // clique no fundo fecha
   if(ev && ev.target && ev.target.id !== "qrModalBack") return;
   document.getElementById("qrModalBack").style.display = "none";
 }
@@ -541,7 +570,6 @@ async function copyText(txt){
     await navigator.clipboard.writeText(txt);
     alert("Link copiado ✅");
   }catch(e){
-    // fallback
     const ta=document.createElement("textarea");
     ta.value=txt; document.body.appendChild(ta);
     ta.select(); document.execCommand("copy");
