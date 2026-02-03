@@ -11,228 +11,718 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:'Orbitron',Arial,sans-serif;
-  background:radial-gradient(circle at top,#0a0a0a,#000);
-  color:#00e5ff;
-}
-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:12px 16px;
-  background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
-  color:#000;
-  font-weight:900;
-}
-header img{height:36px}
-.wrap{max-width:1200px;margin:auto;padding:14px}
-.card{
-  background:rgba(0,0,0,.78);
-  border-radius:18px;
-  padding:16px;
-  border:2px solid rgba(0,229,255,.22);
-  box-shadow:0 0 26px rgba(0,229,255,.22);
-  margin-bottom:14px;
-}
-h2{text-align:center;color:#ff3d00;margin-top:0}
-button,input,select,textarea{
-  font-family:'Orbitron';
-}
-button{
-  padding:8px 14px;
-  border-radius:14px;
-  border:none;
-  font-weight:900;
-  cursor:pointer;
-}
-.btn{background:#00c853;color:#000}
-.btn2{background:#2979ff;color:#000}
-.btnDanger{background:#ff1744;color:#000}
-.tabs{
-  display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;
-}
-.tab{
-  padding:8px 14px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.25);
-  background:rgba(255,255,255,.08);
-  color:#fff;
-  font-weight:900;
-  cursor:pointer;
-}
-.tab.active{background:#00c853;color:#000}
-input,select,textarea{
-  width:100%;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.2);
-  background:rgba(255,255,255,.08);
-  color:#fff;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:.82rem;
-}
-th,td{
-  padding:10px;
-  border-bottom:1px solid rgba(255,255,255,.15);
-}
-th{text-transform:uppercase;font-size:.7rem}
-.muted{opacity:.7;font-size:.75rem}
-.pinBox{max-width:420px;margin:60px auto}
+  :root{
+    --c-cyan:#00e5ff;
+    --c-orange:#ff3d00;
+    --c-green:#64dd17;
+    --c-blue:#2979ff;
+    --c-red:#ff1744;
+    --bg1:#0a0a0a;
+    --bg2:#000;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Orbitron',Arial,sans-serif;
+    background:radial-gradient(circle at top,var(--bg1),var(--bg2));
+    color:var(--c-cyan);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 16px;
+    background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
+    color:#000;
+    font-weight:900;
+  }
+  header img{height:64px; width:auto;}
+  .wrap{max-width:1200px;margin:auto;padding:14px;}
+  .card{
+    background:rgba(0,0,0,.78);
+    border-radius:18px;
+    padding:16px;
+    border:2px solid rgba(0,229,255,.22);
+    box-shadow:0 0 26px rgba(0,229,255,.22);
+    margin-bottom:12px;
+  }
+  h2{margin:0 0 12px 0;color:var(--c-orange);text-align:center;}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
+  .tab{
+    padding:8px 14px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .tab.active{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
+  label{display:block;font-size:.78rem;opacity:.9;margin-bottom:6px;}
+  input, select, textarea{
+    width:100%;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    font-family:'Orbitron',Arial,sans-serif;
+  }
+  textarea{min-height:90px;resize:vertical;}
+  .row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;}
+  @media(max-width:900px){ .row{grid-template-columns:1fr; } }
+  button{
+    padding:10px 14px;border-radius:14px;border:none;
+    cursor:pointer;font-weight:900;font-family:'Orbitron',Arial,sans-serif;
+    white-space:nowrap;
+  }
+  .btn{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
+  .btn2{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
+  .btnDanger{background:linear-gradient(90deg,#ff1744,#ff3d00);color:#000;}
+  .btnGhost{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.20);
+    color:#fff;
+  }
+  table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.82rem;}
+  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.14);vertical-align:top;word-break:break-word;}
+  th{color:var(--c-cyan);text-transform:uppercase;font-size:.7rem;letter-spacing:.8px;}
+  .muted{opacity:.78;font-size:.78rem;}
+  .pill{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.08);
+    font-size:.72rem;
+    white-space:nowrap;
+  }
+  .pinCard{max-width:420px;margin:50px auto;}
+  .dangerBox{
+    border:2px solid rgba(255,23,68,.35);
+    box-shadow:0 0 26px rgba(255,23,68,.18);
+  }
+
+  /* MODAL QR */
+  .modalBack{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.72);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    z-index:9999;
+  }
+  .modal{
+    width:min(820px, 100%);
+    background:rgba(0,0,0,.92);
+    border-radius:18px;
+    border:2px solid rgba(0,229,255,.25);
+    box-shadow:0 0 34px rgba(0,229,255,.25);
+    padding:16px;
+  }
+  .modalTop{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;
+  }
+  .modalTitle{color:var(--c-orange);font-weight:900;font-size:1.1rem;}
+  .modalClose{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.22);
+    color:#fff;
+  }
+  .qrGrid{
+    display:grid;
+    grid-template-columns: 320px 1fr;
+    gap:14px;
+    align-items:start;
+  }
+  @media(max-width:820px){
+    .qrGrid{grid-template-columns:1fr;}
+  }
+  .qrBox{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:16px;
+    padding:14px;
+    min-height:320px;
+  }
+  .linkBox{
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:16px;
+    padding:14px;
+  }
+  .linkMono{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size:.85rem;
+    word-break:break-all;
+    color:#fff;
+  }
+  .actionsRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
 </style>
 </head>
 
 <body>
 <header>
-  <img src="logo_tmg_clean.png">
+  <img src="logo_tmg_clean.png" alt="TMG" />
   <div>Admin</div>
 </header>
 
 <!-- PIN -->
-<div class="wrap pinBox" id="pinBox">
-  <div class="card">
+<div class="wrap" id="pinScreen">
+  <div class="card pinCard">
     <h2>PIN</h2>
-    <input id="pin" type="password" placeholder="PIN">
-    <button class="btn" style="width:100%;margin-top:10px" onclick="unlock()">Entrar</button>
-    <div class="muted" style="margin-top:8px">PIN padrão: <b>1234</b></div>
+    <div class="muted" style="margin-bottom:10px;">Digite o PIN para acessar.</div>
+    <input id="pin" type="password" placeholder="PIN" />
+    <button class="btn" style="width:100%;margin-top:12px" onclick="unlock()">Entrar</button>
+    <div class="muted" style="margin-top:10px;">PIN padrão: <b>1234</b></div>
   </div>
 </div>
 
 <!-- APP -->
-<div id="app" style="display:none">
-
-<!-- QR CODE -->
-<div class="wrap">
-  <div class="card" style="text-align:center">
-    <h2>QR Code – Equipe</h2>
-    <div class="muted">Escaneie para abrir a tela da equipe</div>
-    <div id="qrcode" style="margin:16px auto"></div>
-    <div class="muted">Link: <span id="qrLink"></span></div>
-  </div>
-</div>
-
-<div class="wrap">
+<div class="wrap" id="app" style="display:none;">
   <div class="card">
     <div class="tabs">
-      <button class="tab active" onclick="showTab('members',this)">Membros</button>
-      <button class="tab" onclick="showTab('tasks',this)">Tarefas</button>
-      <button class="tab" onclick="showTab('dates',this)">Datas</button>
-      <button class="tab" onclick="showTab('danger',this)">Zerar tudo</button>
+      <button class="tab active" data-tab="members" onclick="showTab('members', this)">Membros</button>
+      <button class="tab" data-tab="tasks" onclick="showTab('tasks', this)">Tarefas</button>
+      <button class="tab" data-tab="dates" onclick="showTab('dates', this)">Datas importantes</button>
+      <button class="tab" data-tab="danger" onclick="showTab('danger', this)">Zerar tudo</button>
     </div>
 
-    <div id="members">
+    <!-- MEMBERS -->
+    <div id="tab_members">
       <h2>Membros</h2>
-      <input id="mName" placeholder="Nome">
-      <button class="btn" style="margin-top:10px" onclick="addMember()">Adicionar</button>
-      <table><tbody id="tbMembers"></tbody></table>
+      <div class="row">
+        <div>
+          <label>Nome</label>
+          <input id="mName" placeholder="Ex: Davi" />
+        </div>
+        <div>
+          <label>Função (opcional)</label>
+          <input id="mRole" placeholder="Ex: Montagem" />
+        </div>
+        <div>
+          <label>Ativo?</label>
+          <select id="mActive">
+            <option value="true" selected>Sim</option>
+            <option value="false">Não</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn" style="width:100%" onclick="addMember()">Adicionar</button>
+        </div>
+      </div>
+
+      <div class="muted" style="margin-top:10px;">
+        Cada membro tem um <b>QR Code individual</b> que abre direto: <span class="pill">equipe.html?m=Nome</span>
+      </div>
+
+      <table style="margin-top:10px;">
+        <thead>
+          <tr>
+            <th style="width:22%;">Nome</th>
+            <th style="width:20%;">Função</th>
+            <th style="width:10%;">Ativo</th>
+            <th style="width:48%;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbMembers"></tbody>
+      </table>
     </div>
 
-    <div id="tasks" style="display:none">
+    <!-- TASKS -->
+    <div id="tab_tasks" style="display:none;">
       <h2>Tarefas</h2>
-      <input id="tTitle" placeholder="Título">
-      <button class="btn" style="margin-top:10px" onclick="addTask()">Adicionar</button>
-      <table><tbody id="tbTasks"></tbody></table>
+      <div class="row" style="grid-template-columns:1fr 1fr 1fr 1fr auto;">
+        <div>
+          <label>Título</label>
+          <input id="tTitle" placeholder="Ex: Montar asa" />
+        </div>
+        <div>
+          <label>Responsável</label>
+          <select id="tOwner"></select>
+        </div>
+        <div>
+          <label>Prazo (data)</label>
+          <input id="tDueDate" type="date" />
+        </div>
+        <div>
+          <label>Prazo (hora)</label>
+          <input id="tDueTime" type="time" />
+        </div>
+        <div>
+          <button class="btn" style="width:100%" onclick="addTask()">Adicionar</button>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <label>Descrição (opcional)</label>
+        <textarea id="tDesc" placeholder="Detalhes da tarefa..."></textarea>
+      </div>
+
+      <table style="margin-top:12px;">
+        <thead>
+          <tr>
+            <th style="width:22%;">Tarefa</th>
+            <th style="width:18%;">Responsável</th>
+            <th style="width:18%;">Prazo</th>
+            <th style="width:14%;">Status</th>
+            <th style="width:28%;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbTasks"></tbody>
+      </table>
     </div>
 
-    <div id="dates" style="display:none">
+    <!-- DATES -->
+    <div id="tab_dates" style="display:none;">
       <h2>Datas importantes</h2>
-      <input id="dTitle" placeholder="Título">
-      <input id="dDate" type="date">
-      <button class="btn" style="margin-top:10px" onclick="addDate()">Adicionar</button>
-      <table><tbody id="tbDates"></tbody></table>
+      <div class="row" style="grid-template-columns:1fr 1fr 1fr auto;">
+        <div>
+          <label>Título</label>
+          <input id="dTitle" placeholder="Ex: Prazo inscrição" />
+        </div>
+        <div>
+          <label>Data</label>
+          <input id="dDate" type="date" />
+        </div>
+        <div>
+          <label>Hora (opcional)</label>
+          <input id="dTime" type="time" />
+        </div>
+        <div>
+          <button class="btn" style="width:100%" onclick="addDate()">Adicionar</button>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <label>Observação (opcional)</label>
+        <input id="dObs" placeholder="Ex: Enviar docs, pagar taxa..." />
+      </div>
+
+      <table style="margin-top:12px;">
+        <thead>
+          <tr>
+            <th style="width:28%;">Título</th>
+            <th style="width:22%;">Quando</th>
+            <th style="width:34%;">Obs</th>
+            <th style="width:16%;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbDates"></tbody>
+      </table>
     </div>
 
-    <div id="danger" style="display:none">
+    <!-- DANGER -->
+    <div id="tab_danger" style="display:none;">
       <h2>Zerar tudo</h2>
-      <input id="wipeText" placeholder="Digite ZERAR">
-      <input id="wipePin" type="password" placeholder="PIN">
-      <button class="btnDanger" style="margin-top:10px" onclick="wipe()">APAGAR TUDO</button>
+      <div class="card dangerBox">
+        <div class="muted" style="margin-bottom:10px;">
+          Isso apaga <b>membros</b>, <b>tarefas</b> e <b>datas importantes</b>.
+          É <b>irreversível</b>.
+        </div>
+
+        <div class="row" style="grid-template-columns:1fr 1fr auto;">
+          <div>
+            <label>Digite ZERAR para confirmar</label>
+            <input id="wipeText" placeholder="ZERAR" />
+          </div>
+          <div>
+            <label>PIN</label>
+            <input id="wipePin" type="password" placeholder="PIN" />
+          </div>
+          <div>
+            <button class="btnDanger" style="width:100%" onclick="wipeAll()">APAGAR TUDO</button>
+          </div>
+        </div>
+
+        <div class="muted" style="margin-top:10px;">
+          Apaga os nós: <span class="pill">people</span> <span class="pill">tasks</span> <span class="pill">dates</span>
+        </div>
+      </div>
     </div>
+
   </div>
 </div>
+
+<!-- MODAL QR -->
+<div class="modalBack" id="qrModalBack" onclick="closeQR(event)">
+  <div class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+    <div class="modalTop">
+      <div class="modalTitle" id="qrTitle">QR Code</div>
+      <button class="modalClose" onclick="closeQR()">Fechar</button>
+    </div>
+
+    <div class="qrGrid">
+      <div class="qrBox">
+        <div id="qrCanvas"></div>
+      </div>
+      <div class="linkBox">
+        <div class="muted">Link do membro</div>
+        <div class="linkMono" id="qrLinkText" style="margin-top:8px;"></div>
+        <div class="actionsRow">
+          <button class="btn2" onclick="copyQRLink()">Copiar link</button>
+          <button class="btnGhost" onclick="openQRLink()">Abrir link</button>
+        </div>
+        <div class="muted" style="margin-top:12px;">
+          Dica: esse QR abre direto a tela da equipe já no membro.
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-const PIN="1234";
+/* ===== PIN ===== */
+const PIN = "1234";
 function unlock(){
-  if(pin.value!==PIN){alert("PIN incorreto");return;}
-  pinBox.style.display="none";
-  app.style.display="block";
-  gerarQR();
+  const v = (document.getElementById("pin").value||"").trim();
+  if(v !== PIN){ alert("PIN incorreto"); return; }
+  document.getElementById("pinScreen").style.display="none";
+  document.getElementById("app").style.display="block";
+  boot();
 }
 
-function showTab(id,btn){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  btn.classList.add("active");
-  ["members","tasks","dates","danger"].forEach(x=>{
-    document.getElementById(x).style.display = (x===id)?"block":"none";
-  });
-}
-
+/* ===== Firebase ===== */
 const firebaseConfig={
- apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
- databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com"
+  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+  authDomain:"tmg-painel.firebaseapp.com",
+  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com",
+  projectId:"tmg-painel",
+  storageBucket:"tmg-painel.firebasestorage.app",
+  messagingSenderId:"877912378151",
+  appId:"1:877912378151:web:88af3a4f8f551acd603702"
 };
 firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+const db = firebase.database();
 
-db.ref("people").on("value",s=>{
-  tbMembers.innerHTML="";
-  Object.entries(s.val()||{}).forEach(([id,m])=>{
-    tbMembers.innerHTML+=`<tr><td>${m.name}</td></tr>`;
+/* ===== Tabs ===== */
+function showTab(key, btn){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  ["members","tasks","dates","danger"].forEach(k=>{
+    document.getElementById("tab_"+k).style.display = (k===key) ? "block" : "none";
   });
-});
+}
+
+/* ===== Helpers ===== */
+function esc(s){
+  return String(s||"").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+function toBool(v){ return String(v)==="true"; }
+function fmtDateTime(ms){
+  if(!ms) return "-";
+  return new Date(Number(ms)).toLocaleString("pt-BR");
+}
+function dueToMs(dateStr, timeStr){
+  if(!dateStr) return null;
+  const [y,m,d] = dateStr.split("-").map(Number);
+  let hh=0, mm=0;
+  if(timeStr){
+    const p = timeStr.split(":").map(Number);
+    hh = p[0]||0; mm = p[1]||0;
+  }
+  return new Date(y, m-1, d, hh, mm, 0, 0).getTime();
+}
+function baseEquipeUrl(){
+  // troca admin.html por equipe.html mantendo path
+  const path = window.location.pathname;
+  const basePath = path.replace(/admin\.html$/i, "equipe.html");
+  return window.location.origin + basePath;
+}
+function memberLink(name){
+  return baseEquipeUrl() + "?m=" + encodeURIComponent(String(name||"").trim());
+}
+
+/* ===== State caches ===== */
+let membersCache = []; // [{id,name,role,active}]
+let tasksCache = [];
+let datesCache = [];
+
+/* ===== Boot ===== */
+function boot(){
+  watchMembers();
+  watchTasks();
+  watchDates();
+}
+
+/* ===== MEMBERS ===== */
+function watchMembers(){
+  db.ref("people").on("value", snap=>{
+    const data = snap.val() || {};
+    membersCache = Object.entries(data).map(([id,r])=>({id, ...(r||{})}));
+    renderMembers();
+    fillOwners();
+  });
+}
 
 function addMember(){
-  if(!mName.value) return;
-  db.ref("people").push({name:mName.value});
-  mName.value="";
+  const name = (document.getElementById("mName").value||"").trim();
+  const role = (document.getElementById("mRole").value||"").trim();
+  const active = toBool(document.getElementById("mActive").value);
+  if(!name){ alert("Nome obrigatório"); return; }
+  const ref = db.ref("people").push();
+  ref.set({ name, role, active, createdAt: Date.now() });
+  document.getElementById("mName").value="";
+  document.getElementById("mRole").value="";
+  document.getElementById("mActive").value="true";
 }
 
-db.ref("tasks").on("value",s=>{
-  tbTasks.innerHTML="";
-  Object.values(s.val()||{}).forEach(t=>{
-    tbTasks.innerHTML+=`<tr><td>${t.title}</td></tr>`;
+function toggleMember(id, active){
+  db.ref("people/"+id).update({ active: !!active });
+}
+function delMember(id){
+  if(!confirm("Apagar este membro?")) return;
+  db.ref("people/"+id).remove();
+}
+
+function renderMembers(){
+  const tb = document.getElementById("tbMembers");
+  tb.innerHTML="";
+  const rows = membersCache
+    .slice()
+    .sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"pt-BR"));
+
+  rows.forEach(m=>{
+    const isActive = (m.active !== false);
+    const link = memberLink(m.name||"");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><b>${esc(m.name||"-")}</b></td>
+      <td>${esc(m.role||"")}</td>
+      <td>${isActive ? '<span class="pill">Sim</span>' : '<span class="pill" style="border-color:rgba(255,23,68,.35);background:rgba(255,23,68,.12)">Não</span>'}</td>
+      <td style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn2" onclick="openQR('${esc(m.name||"").replace(/'/g,"&#39;")}')">QR</button>
+        <button class="btnGhost" onclick="copyText('${link.replace(/'/g,"%27")}')">Copiar link</button>
+        <button class="btnGhost" onclick="toggleMember('${m.id}', ${!isActive})">${isActive ? "Desativar" : "Ativar"}</button>
+        <button class="btnDanger" onclick="delMember('${m.id}')">Apagar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
   });
-});
+}
+
+/* ===== QR MODAL ===== */
+let currentQRLink = "";
+function openQR(memberName){
+  const name = String(memberName||"").trim();
+  if(!name){ alert("Membro inválido"); return; }
+
+  currentQRLink = memberLink(name);
+  document.getElementById("qrTitle").innerText = "QR Code – " + name;
+  document.getElementById("qrLinkText").innerText = currentQRLink;
+
+  const box = document.getElementById("qrCanvas");
+  box.innerHTML = "";
+  // QR grande (ótimo pra TV)
+  new QRCode(box, {
+    text: currentQRLink,
+    width: 280,
+    height: 280,
+    colorDark : "#00e5ff",
+    colorLight : "#000000",
+    correctLevel : QRCode.CorrectLevel.H
+  });
+
+  document.getElementById("qrModalBack").style.display = "flex";
+}
+function closeQR(ev){
+  // clique no fundo fecha
+  if(ev && ev.target && ev.target.id !== "qrModalBack") return;
+  document.getElementById("qrModalBack").style.display = "none";
+}
+async function copyText(txt){
+  try{
+    await navigator.clipboard.writeText(txt);
+    alert("Link copiado ✅");
+  }catch(e){
+    // fallback
+    const ta=document.createElement("textarea");
+    ta.value=txt; document.body.appendChild(ta);
+    ta.select(); document.execCommand("copy");
+    document.body.removeChild(ta);
+    alert("Link copiado ✅");
+  }
+}
+function copyQRLink(){
+  if(!currentQRLink) return;
+  copyText(currentQRLink);
+}
+function openQRLink(){
+  if(!currentQRLink) return;
+  window.open(currentQRLink, "_blank");
+}
+
+/* ===== TASKS ===== */
+function watchTasks(){
+  db.ref("tasks").on("value", snap=>{
+    const data = snap.val() || {};
+    tasksCache = Object.entries(data).map(([id,r])=>({id, ...(r||{})}));
+    renderTasks();
+  });
+}
+
+function fillOwners(){
+  const sel = document.getElementById("tOwner");
+  sel.innerHTML = "";
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = "Selecione";
+  sel.appendChild(opt0);
+
+  membersCache
+    .filter(m=>m.active!==false)
+    .slice()
+    .sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"pt-BR"))
+    .forEach(m=>{
+      const op = document.createElement("option");
+      op.value = m.name || "";
+      op.textContent = m.name || "-";
+      sel.appendChild(op);
+    });
+}
 
 function addTask(){
-  if(!tTitle.value) return;
-  db.ref("tasks").push({title:tTitle.value});
-  tTitle.value="";
+  const title = (document.getElementById("tTitle").value||"").trim();
+  const owner = (document.getElementById("tOwner").value||"").trim();
+  const dueDate = document.getElementById("tDueDate").value;
+  const dueTime = document.getElementById("tDueTime").value;
+  const desc = (document.getElementById("tDesc").value||"").trim();
+
+  if(!title){ alert("Título obrigatório"); return; }
+  const dueAt = dueToMs(dueDate, dueTime);
+
+  const ref = db.ref("tasks").push();
+  ref.set({
+    title,
+    owner,
+    desc,
+    status: "a fazer",
+    dueAt: dueAt || null,
+    createdAt: Date.now()
+  });
+
+  document.getElementById("tTitle").value="";
+  document.getElementById("tDesc").value="";
+  document.getElementById("tDueDate").value="";
+  document.getElementById("tDueTime").value="";
 }
 
-db.ref("dates").on("value",s=>{
-  tbDates.innerHTML="";
-  Object.values(s.val()||{}).forEach(d=>{
-    tbDates.innerHTML+=`<tr><td>${d.title}</td><td>${new Date(d.when||0).toLocaleDateString()}</td></tr>`;
+function setTaskStatus(id, status){
+  db.ref("tasks/"+id).update({ status });
+}
+function delTask(id){
+  if(!confirm("Apagar esta tarefa?")) return;
+  db.ref("tasks/"+id).remove();
+}
+
+function renderTasks(){
+  const tb = document.getElementById("tbTasks");
+  tb.innerHTML="";
+  const rows = tasksCache
+    .slice()
+    .sort((a,b)=>(a.dueAt||9999999999999)-(b.dueAt||9999999999999));
+
+  rows.forEach(t=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <b>${esc(t.title||"-")}</b>
+        ${t.desc ? `<div class="muted" style="margin-top:6px">${esc(t.desc)}</div>` : ``}
+      </td>
+      <td>${esc(t.owner||"-")}</td>
+      <td>${t.dueAt ? fmtDateTime(t.dueAt) : "-"}</td>
+      <td><span class="pill">${esc(t.status||"-")}</span></td>
+      <td style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btnGhost" onclick="setTaskStatus('${t.id}','a fazer')">A fazer</button>
+        <button class="btnGhost" onclick="setTaskStatus('${t.id}','em andamento')">Em andamento</button>
+        <button class="btn" onclick="setTaskStatus('${t.id}','concluída')">Concluída</button>
+        <button class="btnDanger" onclick="delTask('${t.id}')">Apagar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
   });
-});
+}
+
+/* ===== DATES ===== */
+function watchDates(){
+  db.ref("dates").on("value", snap=>{
+    const data = snap.val() || {};
+    datesCache = Object.entries(data).map(([id,r])=>({id, ...(r||{})}));
+    renderDates();
+  });
+}
 
 function addDate(){
-  if(!dTitle.value||!dDate.value) return;
-  db.ref("dates").push({title:dTitle.value,when:new Date(dDate.value).getTime()});
-  dTitle.value=""; dDate.value="";
+  const title = (document.getElementById("dTitle").value||"").trim();
+  const date = document.getElementById("dDate").value;
+  const time = document.getElementById("dTime").value;
+  const obs = (document.getElementById("dObs").value||"").trim();
+  if(!title || !date){ alert("Título e data são obrigatórios"); return; }
+  const when = dueToMs(date, time);
+
+  const ref = db.ref("dates").push();
+  ref.set({
+    title,
+    when: when || null,
+    obs,
+    createdAt: Date.now()
+  });
+
+  document.getElementById("dTitle").value="";
+  document.getElementById("dDate").value="";
+  document.getElementById("dTime").value="";
+  document.getElementById("dObs").value="";
 }
 
-function gerarQR(){
-  const url = window.location.origin + window.location.pathname.replace("admin.html","equipe.html");
-  qrLink.innerText=url;
-  qrcode.innerHTML="";
-  new QRCode(qrcode,{text:url,width:220,height:220,colorDark:"#00e5ff",colorLight:"#000"});
+function delDate(id){
+  if(!confirm("Apagar esta data importante?")) return;
+  db.ref("dates/"+id).remove();
 }
 
-function wipe(){
-  if(wipeText.value!=="ZERAR"||wipePin.value!==PIN){alert("Confirmação incorreta");return;}
-  if(!confirm("Irreversível. Confirmar?")) return;
-  db.ref().update({people:null,tasks:null,dates:null});
-  alert("Tudo apagado");
+function renderDates(){
+  const tb = document.getElementById("tbDates");
+  tb.innerHTML="";
+  const rows = datesCache
+    .slice()
+    .sort((a,b)=>(a.when||9999999999999)-(b.when||9999999999999));
+
+  rows.forEach(d=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><b>${esc(d.title||"-")}</b></td>
+      <td>${d.when ? fmtDateTime(d.when) : "-"}</td>
+      <td>${esc(d.obs||"")}</td>
+      <td><button class="btnDanger" onclick="delDate('${d.id}')">Apagar</button></td>
+    `;
+    tb.appendChild(tr);
+  });
 }
+
+/* ===== WIPE ALL ===== */
+function wipeAll(){
+  const t = (document.getElementById("wipeText").value||"").trim().toUpperCase();
+  const p = (document.getElementById("wipePin").value||"").trim();
+  if(t !== "ZERAR"){ alert("Digite ZERAR para confirmar."); return; }
+  if(p !== PIN){ alert("PIN incorreto."); return; }
+  if(!confirm("IRREVERSÍVEL: apagar membros + tarefas + datas. Confirmar?")) return;
+
+  const updates = { people: null, tasks: null, dates: null };
+  db.ref().update(updates)
+    .then(()=>alert("Tudo zerado ✅"))
+    .catch(e=>alert("Erro ao apagar: " + (e?.message||e)));
+}
+
+/* ===== UX: ESC fecha modal ===== */
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Escape") document.getElementById("qrModalBack").style.display="none";
+});
 </script>
+
 </body>
 </html>
