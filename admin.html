@@ -37,7 +37,7 @@
     color:#000;
     font-weight:900;
   }
-  header img{height:64px; width:auto;}
+  header img{height:84px; width:auto;}
   .wrap{max-width:1200px;margin:auto;padding:14px;}
   .card{
     background:rgba(0,0,0,.78);
@@ -437,25 +437,21 @@ function siblingUrl(targetSlug){
   // remove trailing slash (exceto se for só "/")
   if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
 
-  // pega o último segmento
   const parts = p.split("/").filter(Boolean);
+  let hadHtml = false;
 
-  // se a página atual for ".../admin" ou ".../admin.html" ou ".../admin_compras" etc
   if (parts.length){
     let last = parts[parts.length - 1];
 
-    // remove .html se tiver
-    last = last.replace(/\.html$/i, "");
-
-    // troca se o último for "admin"
-    if (last.toLowerCase() === "admin"){
-      parts[parts.length - 1] = targetSlug; // "equipe"
-    } else {
-      // se não der match, apenas substitui o último mesmo (mais seguro)
-      parts[parts.length - 1] = targetSlug;
+    // detecta .html
+    if (/\.html$/i.test(last)) {
+      hadHtml = true;
+      last = last.replace(/\.html$/i, "");
     }
+
+    // substitui o último segmento pelo destino
+    parts[parts.length - 1] = targetSlug + (hadHtml ? ".html" : "");
   } else {
-    // se for raiz
     parts.push(targetSlug);
   }
 
@@ -464,13 +460,11 @@ function siblingUrl(targetSlug){
 }
 
 function memberLink(name){
-  const base = siblingUrl("equipe"); // /equipe
+  const base = siblingUrl("equipe"); // vai para a tela da equipe
   const u = new URL(base);
-  const n = String(name || "").trim();
-  // Compatível com o seu equipe (usa ?u=)
-  u.searchParams.set("u", n);
-  // extra: compatibilidade com versões antigas que usem ?m=
-  u.searchParams.set("m", n);
+  // compatibilidade: alguns arquivos antigos usam ?m=, os novos usam ?u=
+  u.searchParams.set("u", name);
+  u.searchParams.set("m", name);
   return u.toString();
 }
 
