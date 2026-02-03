@@ -197,6 +197,10 @@
   .btnMini:hover{transform:translateY(-1px)}
   .hintSmall{opacity:.7; font-size:0.85rem; margin-top:6px}
 
+
+  .dueGrid{display:flex;gap:8px;align-items:center;}
+  .dueGrid input{min-width:140px;}
+  .tdPrio select{min-width:120px;}
 </style>
 </head>
 
@@ -612,54 +616,43 @@ function delMember(id){
 }
 
 function renderMembers(){
-  const tb = document.getElementById("tbMembers");
-  tb.innerHTML="";
-  const rows = membersCache
-    .slice()
-    .sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"pt-BR"));
+  const tb = document.getElementById('tbMembers');
+  if(!tb) return;
+  tb.innerHTML = '';
 
-  rows.forEach(m=>{
-    const isActive = (m.active !== false);
-    const link = memberLink(m.name||"");
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>
-        <b>${esc(t.title||"-")}</b>
-        ${t.desc ? `<div class="muted" style="margin-top:6px">${esc(t.desc)}</div>` : ``}
-      </td>
-      <td>${esc(t.owner||"-")}</td>
-      <td>
-        <div class="inlineEdit">
-          <input class="miniInput" type="date" id="dueDate_${t.id}" value="${toInputDate(t.dueAt)}">
-          <input class="miniInput" type="time" id="dueTime_${t.id}" value="${toInputTime(t.dueAt)}">
-          <button class="btnMini" onclick="saveTaskDue('${t.id}')">Salvar</button>
-        </div>
-        <div class="hintSmall">Atual: ${t.dueAt ? fmtDateTime(t.dueAt) : "-"}</div>
-      </td>
-      <td>
-        <div class="inlineEdit">
-          <select class="miniSelect" id="prio_${t.id}" onchange="saveTaskPriority('${t.id}')">
-            <option value="baixa" ${String((t.priority||'baixa')).toLowerCase()==='baixa'?'selected':''}>Baixa</option>
-            <option value="media" ${String((t.priority||'baixa')).toLowerCase()==='media'?'selected':''}>Média</option>
-            <option value="alta" ${String((t.priority||'baixa')).toLowerCase()==='alta'?'selected':''}>Alta</option>
-          </select>
-          ${(()=>{const pm=prioMeta(t.priority);return `<span class="pill ${pm.cls}">${pm.label}</span>`;})()}
-        </div>
-      </td>
-      <td><span class="pill">${esc(t.status||"-")}</span></td>
-      <td style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btnGhost" onclick="setTaskStatus('${t.id}','a fazer')">A fazer</button>
-        <button class="btnGhost" onclick="setTaskStatus('${t.id}','em andamento')">Em andamento</button>
-        <button class="btn" onclick="setTaskStatus('${t.id}','concluída')">Concluída</button>
-        <button class="btnDanger" onclick="delTask('${t.id}')">Apagar</button>
-      </td>
-    `;
-    tb.appendChild(tr);
-  });
+  if(!membersCache || membersCache.length===0){
+    tb.innerHTML = `<tr><td colspan="4" class="muted">Nenhum membro cadastrado.</td></tr>`;
+    return;
+  }
+
+  membersCache
+    .slice()
+    .sort((a,b)=> (a.name||'').localeCompare(b.name||''))
+    .forEach(m=>{
+      const name = m.name || '(sem nome)';
+      const active = (m.active !== false); // default true
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td class="tdName">${esc(name)}</td>
+        <td class="tdLink">
+          <button class="btnSmall btnBlue" onclick="openQR('${m.id}')">QR</button>
+          <button class="btnSmall" onclick="copyMemberLink('${m.id}')">Copiar link</button>
+        </td>
+        <td class="tdStatus">
+          <span class="pill ${active?'pillOk':'pillOff'}">${active?'Ativo':'Inativo'}</span>
+        </td>
+        <td class="tdActions">
+          <button class="btnSmall ${active?'btnGray':'btnGreen'}" onclick="toggleMemberActive('${m.id}', ${active?'false':'true'})">
+            ${active?'Desativar':'Ativar'}
+          </button>
+          <button class="btnSmall btnRed" onclick="deleteMember('${m.id}')">Apagar</button>
+        </td>
+      `;
+      tb.appendChild(tr);
+    });
 }
 
-/* ===== QR MODAL ===== */
-let currentQRLink = "";
 function openQR(memberName){
   const name = String(memberName||"").trim();
   if(!name){ alert("Membro inválido"); return; }
@@ -770,33 +763,59 @@ function delTask(id){
 }
 
 function renderTasks(){
-  const tb = document.getElementById("tbTasks");
-  tb.innerHTML="";
-  const rows = tasksCache
-    .slice()
-    .sort((a,b)=>(a.dueAt||9999999999999)-(b.dueAt||9999999999999));
+  const tb = document.getElementById('tbTasks');
+  if(!tb) return;
+  tb.innerHTML = '';
 
-  rows.forEach(t=>{
-    const tr = document.createElement("tr");
+  if(!tasksCache || tasksCache.length===0){
+    tb.innerHTML = `<tr><td colspan="6" class="muted">Nenhuma tarefa cadastrada.</td></tr>`;
+    return;
+  }
+
+  const sorted = tasksCache.slice().sort((a,b)=>{
+    const da = (a.dueAt||'');
+    const db = (b.dueAt||'');
+    return String(da).localeCompare(String(db));
+  });
+
+  sorted.forEach(t=>{
+    const id = t.id;
+    const title = t.title || '(sem título)';
+    const memberName = t.memberName || '(sem responsável)';
+    const dueDate = t.dueAt ? toInputDate(t.dueAt) : '';
+    const dueTime = t.dueAt ? toInputTime(t.dueAt) : '';
+    const prio = (t.priority || 'Baixa');
+    const status = (t.status || 'a fazer');
+
+    const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>
-        <b>${esc(t.title||"-")}</b>
-        ${t.desc ? `<div class="muted" style="margin-top:6px">${esc(t.desc)}</div>` : ``}
+      <td>${esc(title)}</td>
+      <td>${esc(memberName)}</td>
+      <td class="tdDue">
+        <div class="dueGrid">
+          <input id="dueDate_${id}" type="date" value="${dueDate}" onchange="saveTaskDue('${id}')" />
+          <input id="dueTime_${id}" type="time" value="${dueTime}" onchange="saveTaskDue('${id}')" />
+        </div>
       </td>
-      <td>${esc(t.owner||"-")}</td>
-      <td>${t.dueAt ? fmtDateTime(t.dueAt) : "-"}</td>
-      <td>${(()=>{const pm=prioMeta(t.priority);return `<span class="pill ${pm.cls}">${pm.label}</span>`;})()}</td>
-      <td><span class="pill">${esc(t.status||"-")}</span></td>
-      <td style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btnGhost" onclick="setTaskStatus('${t.id}','a fazer')">A fazer</button>
-        <button class="btnGhost" onclick="setTaskStatus('${t.id}','em andamento')">Em andamento</button>
-        <button class="btn" onclick="setTaskStatus('${t.id}','concluída')">Concluída</button>
-        <button class="btnDanger" onclick="delTask('${t.id}')">Apagar</button>
+      <td class="tdPrio">
+        <select id="prio_${id}" onchange="saveTaskPriority('${id}')">
+          <option ${prio==='Baixa'?'selected':''}>Baixa</option>
+          <option ${prio==='Média'?'selected':''}>Média</option>
+          <option ${prio==='Alta'?'selected':''}>Alta</option>
+        </select>
+      </td>
+      <td><span class="pill pillStatus">${esc(status)}</span></td>
+      <td class="tdActions">
+        <button class="btnSmall" onclick="setTaskStatus('${id}','a fazer')">A fazer</button>
+        <button class="btnSmall" onclick="setTaskStatus('${id}','em andamento')">Em andamento</button>
+        <button class="btnSmall btnGreen" onclick="setTaskStatus('${id}','concluída')">Concluída</button>
+        <button class="btnSmall btnRed" onclick="delTask('${id}')">Apagar</button>
       </td>
     `;
     tb.appendChild(tr);
   });
 }
+
 
 /* ===== DATES ===== */
 function watchDates(){
