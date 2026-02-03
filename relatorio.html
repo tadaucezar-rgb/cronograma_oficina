@@ -11,195 +11,595 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <style>
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:'Orbitron',Arial,sans-serif;
-  background:radial-gradient(circle at top,#0a0a0a,#000);
-  color:#00e5ff;
-}
-header{
-  padding:14px;
-  background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
-  color:#000;
-  font-weight:900;
-  text-align:center;
-}
-.wrap{max-width:1200px;margin:auto;padding:14px}
-.card{
-  background:rgba(0,0,0,.78);
-  border-radius:18px;
-  padding:16px;
-  border:2px solid rgba(0,229,255,.22);
-  box-shadow:0 0 26px rgba(0,229,255,.22);
-  margin-bottom:14px;
-}
-h2{color:#ff3d00;text-align:center;margin-top:0}
-input,select,button{
-  font-family:'Orbitron';
-  padding:10px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.2);
-  background:rgba(255,255,255,.08);
-  color:#fff;
-}
-button{
-  cursor:pointer;
-  font-weight:900;
-}
-.btn{background:linear-gradient(90deg,#00c853,#64dd17);color:#000}
-.btn2{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000}
-.row{display:grid;grid-template-columns:1fr 1fr 1.2fr auto auto;gap:10px}
-@media(max-width:900px){.row{grid-template-columns:1fr}}
-table{width:100%;border-collapse:collapse;font-size:.82rem}
-th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.14)}
-th{text-transform:uppercase;font-size:.7rem}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.kpi{background:rgba(255,255,255,.06);border-radius:14px;padding:12px}
-.kpi .v{font-size:1.2rem;font-weight:900;color:#fff}
-.pin{max-width:420px;margin:60px auto}
+  :root{
+    --c-cyan:#00e5ff;
+    --c-orange:#ff3d00;
+    --c-green:#64dd17;
+    --c-red:#ff1744;
+    --bg1:#0a0a0a;
+    --bg2:#000;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Orbitron',Arial,sans-serif;
+    background:radial-gradient(circle at top,var(--bg1),var(--bg2));
+    color:var(--c-cyan);
+  }
+  header{
+    padding:14px;
+    background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
+    color:#000;
+    font-weight:900;
+    text-align:center;
+    letter-spacing:.5px;
+  }
+  .wrap{max-width:1200px;margin:0 auto;padding:14px;}
+  .card{
+    background:rgba(0,0,0,.78);
+    border-radius:18px;
+    padding:16px;
+    border:2px solid rgba(0,229,255,.22);
+    box-shadow:0 0 26px rgba(0,229,255,.22);
+    margin-bottom:12px;
+  }
+  h2{margin:0 0 12px 0;color:var(--c-orange);text-align:center;}
+  label{display:block;font-size:.8rem;opacity:.9;margin-bottom:6px;}
+  input,button,select{font-family:'Orbitron',Arial,sans-serif;}
+  input,select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+  }
+  .row{display:grid;grid-template-columns:1fr 1fr 1.2fr auto auto;gap:10px;align-items:end;}
+  @media (max-width:980px){ .row{grid-template-columns:1fr 1fr 1fr; } }
+  @media (max-width:680px){ .row{grid-template-columns:1fr; } }
+  button{
+    padding:10px 14px;
+    border-radius:14px;
+    border:none;
+    cursor:pointer;
+    font-weight:900;
+    white-space:nowrap;
+  }
+  .btn{
+    background:linear-gradient(90deg,#00c853,#64dd17);
+    color:#000;
+  }
+  .btn2{
+    background:linear-gradient(90deg,#2979ff,#00e5ff);
+    color:#000;
+  }
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;}
+  @media (max-width:980px){ .kpis{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:520px){ .kpis{grid-template-columns:1fr;} }
+  .kpi{
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:16px;
+    padding:12px;
+  }
+  .kpi .t{font-size:.72rem;opacity:.85;}
+  .kpi .v{font-size:1.15rem;font-weight:900;margin-top:6px;color:#fff;}
+  .grid2{display:grid;grid-template-columns:1.1fr .9fr;gap:12px;align-items:start;}
+  @media (max-width:980px){ .grid2{grid-template-columns:1fr;} }
+  table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.82rem;}
+  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.14);vertical-align:top;overflow:hidden;word-break:break-word;}
+  th{color:var(--c-cyan);text-transform:uppercase;font-size:.72rem;letter-spacing:.8px;}
+  .muted{opacity:.78;font-size:.78rem;}
+  .pill{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.08);
+    font-size:.72rem;
+    white-space:nowrap;
+  }
+  .up{border-color:rgba(255,23,68,.55);background:rgba(255,23,68,.14);}
+  .pin-card{max-width:420px;margin:40px auto;}
+
+  .chartBox{
+    position:relative;
+    height:360px;
+    max-height:52vh;
+    width:100%;
+  }
+  .chartBox canvas{
+    width:100% !important;
+    height:100% !important;
+  }
+  @media(max-width:700px){
+    .chartBox{height:300px; max-height:48vh;}
+  }
+
 </style>
 </head>
 
 <body>
-<header>Relatórios de Compras / Serviços</header>
+<header>Relatórios - Compras / Serviços</header>
 
-<div class="wrap pin" id="pinBox">
-  <div class="card">
+<div class="wrap" id="pinScreen">
+  <div class="card pin-card">
     <h2>PIN</h2>
-    <input id="pin" type="password" placeholder="PIN">
-    <button class="btn" style="width:100%;margin-top:10px" onclick="unlock()">Entrar</button>
-    <div style="opacity:.7;margin-top:8px">PIN padrão: <b>1234</b></div>
+    <label>Digite o PIN para acessar</label>
+    <input id="pin" type="password" placeholder="PIN" />
+    <button class="btn" style="margin-top:12px;width:100%;" onclick="unlock()">Entrar</button>
+    <div class="muted" style="margin-top:10px;">PIN simples: padrão <b>1234</b>.</div>
   </div>
 </div>
 
-<div class="wrap" id="app" style="display:none">
+<div class="wrap" id="app" style="display:none;">
   <div class="card">
-    <h2>Filtro por Data</h2>
+    <h2>Filtro por data + Exportação</h2>
+
     <div class="row">
-      <input id="from" type="date">
-      <input id="to" type="date">
-      <select id="mode">
-        <option value="auto">Automático</option>
-        <option value="requestedAt">Solicitação</option>
-        <option value="purchasedAt">Compra</option>
-        <option value="receivedAt">Entrada</option>
-      </select>
-      <button class="btn" onclick="apply()">Aplicar</button>
-      <button class="btn2" onclick="csv()">Exportar CSV</button>
+      <div>
+        <label>Data inicial</label>
+        <input id="dateFrom" type="date" />
+      </div>
+      <div>
+        <label>Data final</label>
+        <input id="dateTo" type="date" />
+      </div>
+
+      <div>
+        <label>Tipo de data</label>
+        <select id="dateMode" onchange="applyFilter()">
+          <option value="auto" selected>Automático (compra → entrada → solicitação)</option>
+          <option value="requestedAt">Data da solicitação</option>
+          <option value="purchasedAt">Data da compra</option>
+          <option value="receivedAt">Data da entrada</option>
+        </select>
+      </div>
+
+      <div>
+        <button class="btn" style="width:100%;" onclick="applyFilter()">Aplicar</button>
+      </div>
+      <div>
+        <button class="btn2" style="width:100%;" onclick="exportCSV()">Exportar CSV</button>
+      </div>
     </div>
+
+    <div class="muted" style="margin-top:10px;">
+      Só entra no relatório o que tem <b>valor</b> preenchido. Exportação: itens filtrados (com valor).
+    </div>
+
     <div class="kpis">
-      <div class="kpi"><div>Total</div><div class="v" id="kTotal">R$ 0,00</div></div>
-      <div class="kpi"><div>Registros</div><div class="v" id="kCount">0</div></div>
-      <div class="kpi"><div>Centros</div><div class="v" id="kCC">0</div></div>
-      <div class="kpi"><div>Fornecedores</div><div class="v" id="kSup">0</div></div>
+      <div class="kpi">
+        <div class="t">Gasto total (período)</div>
+        <div class="v" id="kpiTotal">R$ 0,00</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Registros com valor</div>
+        <div class="v" id="kpiCount">0</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Centros de custo</div>
+        <div class="v" id="kpiCosts">0</div>
+      </div>
+      <div class="kpi">
+        <div class="t">Fornecedores</div>
+        <div class="v" id="kpiSup">0</div>
+      </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>Valor por Centro de Custo</h2>
-    <canvas id="pieCC"></canvas>
+    <h2>1) Valor por centro de custo</h2>
+    <div class="grid2">
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:52%;">Centro de custo</th>
+              <th style="width:24%;">Total</th>
+              <th style="width:24%;">% do total</th>
+            </tr>
+          </thead>
+          <tbody id="tbCosts"></tbody>
+        </table>
+      </div>
+      <div>
+        <div class="chartBox"><canvas id="pieCosts"></canvas></div>
+        <div class="muted" style="margin-top:8px;">Pizza considera somente registros com valor.</div>
+      </div>
+    </div>
   </div>
 
   <div class="card">
-    <h2>Valor por Item</h2>
+    <h2>2) Valor gasto por item</h2>
     <table>
-      <thead><tr><th>Item</th><th>Total</th></tr></thead>
-      <tbody id="tbItem"></tbody>
+      <thead>
+        <tr>
+          <th style="width:44%;">Item / Serviço</th>
+          <th style="width:18%;">Total</th>
+          <th style="width:18%;">Qtd registros</th>
+          <th style="width:20%;">Média</th>
+        </tr>
+      </thead>
+      <tbody id="tbItems"></tbody>
     </table>
   </div>
 
   <div class="card">
-    <h2>Itens com Aumento</h2>
+    <h2>3) Itens com valor aumentando</h2>
+    <div class="muted" style="margin-bottom:10px;">
+      Regra: compara os <b>2 últimos preços unitários</b> do mesmo item (quando tiver quantidade &gt; 0).
+      Se o último for maior, entra na lista.
+    </div>
     <table>
-      <thead><tr><th>Item</th><th>Antes</th><th>Agora</th></tr></thead>
+      <thead>
+        <tr>
+          <th style="width:46%;">Item</th>
+          <th style="width:18%;">Antes</th>
+          <th style="width:18%;">Agora</th>
+          <th style="width:18%;">Variação</th>
+        </tr>
+      </thead>
       <tbody id="tbUp"></tbody>
     </table>
+  </div>
+
+  <div class="card">
+    <h2>4) Valor por fornecedor</h2>
+    <div class="grid2">
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:52%;">Fornecedor</th>
+              <th style="width:24%;">Total</th>
+              <th style="width:24%;">% do total</th>
+            </tr>
+          </thead>
+          <tbody id="tbSup"></tbody>
+        </table>
+      </div>
+      <div>
+        <canvas id="pieSup" height="260"></canvas>
+        <div class="muted" style="margin-top:8px;">Útil para ver concentração de gastos por fornecedor.</div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-const PIN="1234";
+// ===== PIN =====
+const PIN = "1234";
 function unlock(){
-  if(pin.value!==PIN){alert("PIN incorreto");return;}
-  pinBox.style.display="none";
-  app.style.display="block";
+  const v = (document.getElementById("pin").value||"").trim();
+  if(v!==PIN){ alert("PIN incorreto"); return; }
+  document.getElementById("pinScreen").style.display="none";
+  document.getElementById("app").style.display="block";
   boot();
 }
 
+// ===== Firebase =====
 const firebaseConfig={
- apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
- databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com"
+  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+  authDomain:"tmg-painel.firebaseapp.com",
+  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com",
+  projectId:"tmg-painel",
+  storageBucket:"tmg-painel.firebasestorage.app",
+  messagingSenderId:"877912378151",
+  appId:"1:877912378151:web:88af3a4f8f551acd603702"
 };
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
-let raw=[], filtered=[], chart=null;
+// ===== Helpers =====
+function norm(s){ return (s||"").toString().trim(); }
+function money(n){
+  const v = (typeof n==="number" && isFinite(n)) ? n : Number(n);
+  if(!isFinite(v)) return "R$ 0,00";
+  return "R$ " + v.toLocaleString("pt-BR",{minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function safeNum(n){
+  const v = (typeof n==="number" && isFinite(n)) ? n : Number(n);
+  return isFinite(v) ? v : 0;
+}
+function getItem(r){ return norm(r.item || r.description || r.descricao || "-"); }
+function getCost(r){ return norm(r.cost || r.centroCusto || r.costCenter || r.cc || "Sem centro"); }
+function getSupplier(r){
+  const s = r.supplier && r.supplier.name ? r.supplier.name : (r.fornecedor || r.supplierName || "");
+  return norm(s) || "Sem fornecedor";
+}
+function getQty(r){
+  const q = safeNum(r.qty);
+  return q>0 ? q : 0;
+}
+function getDateMs(r, mode){
+  if(mode==="requestedAt") return r.requestedAt || 0;
+  if(mode==="purchasedAt") return r.purchasedAt || 0;
+  if(mode==="receivedAt") return r.receivedAt || 0;
+  return r.purchasedAt || r.receivedAt || r.requestedAt || 0;
+}
+function msFromDateInput(v){
+  if(!v) return null;
+  const parts = v.split("-").map(Number);
+  if(parts.length!==3) return null;
+  const [y,m,d] = parts;
+  return new Date(y, m-1, d, 0,0,0,0).getTime();
+}
+function msToDateInput(ms){
+  const d = new Date(ms);
+  const pad = (n)=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+// ===== State =====
+let raw = [];
+let filtered = [];
+let pieCosts = null;
+let pieSup = null;
 
 function boot(){
-  db.ref("purchaseRequests").on("value",s=>{
-    raw=Object.values(s.val()||{});
-    apply();
+  const now = Date.now();
+  const from = now - 30*24*60*60*1000;
+  document.getElementById("dateFrom").value = msToDateInput(from);
+  document.getElementById("dateTo").value = msToDateInput(now);
+
+  db.ref("purchaseRequests").on("value", snap=>{
+    const data = snap.val() || {};
+    raw = Object.entries(data).map(([id,r])=>({id, ...(r||{})}));
+    applyFilter();
   });
 }
 
-function apply(){
-  const f=from.value?new Date(from.value).getTime():0;
-  const t=to.value?new Date(to.value).getTime()+86400000:Date.now();
-  const m=mode.value;
+function applyFilter(){
+  const from = msFromDateInput(document.getElementById("dateFrom").value);
+  const to = msFromDateInput(document.getElementById("dateTo").value);
+  const toEnd = (to!==null) ? (to + 24*60*60*1000 - 1) : null;
 
-  filtered=raw.filter(r=>{
-    const d=r[m]||r.purchasedAt||r.receivedAt||r.requestedAt||0;
-    return r.total>0 && d>=f && d<=t;
-  });
+  const mode = document.getElementById("dateMode").value;
 
-  render();
+  filtered = raw
+    .map(r=>{
+      const total = safeNum(r.total);
+      return ({
+        ...r,
+        _ms: getDateMs(r, mode),
+        _item: getItem(r),
+        _cost: getCost(r),
+        _sup: getSupplier(r),
+        _total: total,
+        _qty: getQty(r)
+      });
+    })
+    .filter(r=> r._total>0 )
+    .filter(r=> from===null || r._ms>=from )
+    .filter(r=> toEnd===null || r._ms<=toEnd );
+
+  renderAll();
 }
 
-function money(v){
-  return "R$ "+Number(v||0).toLocaleString("pt-BR",{minimumFractionDigits:2});
+function renderAll(){
+  const total = filtered.reduce((a,r)=>a+r._total, 0);
+  const costs = new Set(filtered.map(r=>r._cost)).size;
+  const sup = new Set(filtered.map(r=>r._sup)).size;
+
+  document.getElementById("kpiTotal").textContent = money(total);
+  document.getElementById("kpiCount").textContent = String(filtered.length);
+  document.getElementById("kpiCosts").textContent = String(costs);
+  document.getElementById("kpiSup").textContent = String(sup);
+
+  renderCosts(total);
+  renderItems();
+  renderUp();
+  renderSup(total);
 }
 
-function render(){
-  let total=0;
-  const cc={}, items={}, sup=new Set();
+function renderCosts(grandTotal){
+  const by = new Map();
   filtered.forEach(r=>{
-    total+=Number(r.total||0);
-    const c=r.cost||"Sem centro";
-    cc[c]=(cc[c]||0)+Number(r.total);
-    const it=r.item||"-";
-    items[it]=(items[it]||0)+Number(r.total);
-    if(r.supplier?.name) sup.add(r.supplier.name);
+    by.set(r._cost, (by.get(r._cost)||0) + r._total);
+  });
+  const rows = Array.from(by.entries()).sort((a,b)=>b[1]-a[1]);
+
+  const tb = document.getElementById("tbCosts");
+  tb.innerHTML = "";
+  rows.forEach(([cost,tot])=>{
+    const pct = grandTotal>0 ? (tot/grandTotal*100) : 0;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(cost)}</td>
+      <td><b>${money(tot)}</b></td>
+      <td>${pct.toLocaleString("pt-BR",{minimumFractionDigits:1, maximumFractionDigits:1})}%</td>
+    `;
+    tb.appendChild(tr);
   });
 
-  kTotal.innerText=money(total);
-  kCount.innerText=filtered.length;
-  kCC.innerText=Object.keys(cc).length;
-  kSup.innerText=sup.size;
+  const labels = rows.map(r=>r[0]);
+  const data = rows.map(r=>Number(r[1].toFixed(2)));
 
-  tbItem.innerHTML="";
-  Object.entries(items).forEach(([i,v])=>{
-    tbItem.innerHTML+=`<tr><td>${i}</td><td>${money(v)}</td></tr>`;
-  });
-
-  if(chart)chart.destroy();
-  chart=new Chart(pieCC,{
+  const ctx = document.getElementById("pieCosts");
+  if(pieCosts) pieCosts.destroy();
+  pieCosts = new Chart(ctx,{
     type:"pie",
-    data:{labels:Object.keys(cc),datasets:[{data:Object.values(cc)}]},
-    options:{plugins:{legend:{position:"bottom"}}}
+    data:{ labels, datasets:[{ data }] },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:"bottom", labels:{ color:"#fff", boxWidth:12 } },
+        tooltip:{ callbacks:{ label:(it)=>{
+          const v = it.raw || 0;
+          const pct = grandTotal>0 ? (v/grandTotal*100) : 0;
+          return ` ${money(v)} (${pct.toFixed(1)}%)`;
+        } } }
+      }
+    }
   });
 }
 
-function csv(){
-  let out="Item;Valor\n";
+function renderSup(grandTotal){
+  const by = new Map();
   filtered.forEach(r=>{
-    out+=`${r.item||""};${r.total||0}\n`;
+    by.set(r._sup, (by.get(r._sup)||0) + r._total);
   });
-  const b=new Blob([out],{type:"text/csv"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(b);
-  a.download="relatorio.csv";
+  const rows = Array.from(by.entries()).sort((a,b)=>b[1]-a[1]);
+
+  const tb = document.getElementById("tbSup");
+  tb.innerHTML = "";
+  rows.forEach(([sup,tot])=>{
+    const pct = grandTotal>0 ? (tot/grandTotal*100) : 0;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(sup)}</td>
+      <td><b>${money(tot)}</b></td>
+      <td>${pct.toLocaleString("pt-BR",{minimumFractionDigits:1, maximumFractionDigits:1})}%</td>
+    `;
+    tb.appendChild(tr);
+  });
+
+  const labels = rows.map(r=>r[0]);
+  const data = rows.map(r=>Number(r[1].toFixed(2)));
+
+  const ctx = document.getElementById("pieSup");
+  if(pieSup) pieSup.destroy();
+  pieSup = new Chart(ctx,{
+    type:"pie",
+    data:{ labels, datasets:[{ data }] },
+    options:{
+      plugins:{
+        legend:{ position:"bottom", labels:{ color:"#fff", boxWidth:12 } },
+        tooltip:{ callbacks:{ label:(it)=>{
+          const v = it.raw || 0;
+          const pct = grandTotal>0 ? (v/grandTotal*100) : 0;
+          return ` ${money(v)} (${pct.toFixed(1)}%)`;
+        } } }
+      }
+    }
+  });
+}
+
+function renderItems(){
+  const by = new Map();
+  filtered.forEach(r=>{
+    const key = r._item || "-";
+    if(!by.has(key)) by.set(key, { total:0, count:0 });
+    const o = by.get(key);
+    o.total += r._total;
+    o.count += 1;
+  });
+
+  const rows = Array.from(by.entries())
+    .map(([item,o])=>({ item, total:o.total, count:o.count, avg:o.total/o.count }))
+    .sort((a,b)=>b.total-a.total);
+
+  const tb = document.getElementById("tbItems");
+  tb.innerHTML = "";
+  rows.forEach(r=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(r.item)}</td>
+      <td><b>${money(r.total)}</b></td>
+      <td>${r.count}</td>
+      <td>${money(r.avg)}</td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+function renderUp(){
+  const map = new Map();
+  filtered.forEach(r=>{
+    const q = r._qty;
+    const unitPrice = (q>0) ? (r._total / q) : null;
+    if(unitPrice===null || !isFinite(unitPrice) || unitPrice<=0) return;
+    if(!map.has(r._item)) map.set(r._item, []);
+    map.get(r._item).push({ ms:r._ms, unit:unitPrice });
+  });
+
+  const ups = [];
+  map.forEach((arr,item)=>{
+    arr.sort((a,b)=>a.ms-b.ms);
+    if(arr.length<2) return;
+    const prev = arr[arr.length-2].unit;
+    const last = arr[arr.length-1].unit;
+    if(last > prev){
+      const pct = (last/prev - 1) * 100;
+      ups.push({ item, prev, last, pct });
+    }
+  });
+
+  ups.sort((a,b)=>b.pct-a.pct);
+
+  const tb = document.getElementById("tbUp");
+  tb.innerHTML = "";
+  if(!ups.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="4" class="muted">Nenhum item com aumento detectado no período.</td>`;
+    tb.appendChild(tr);
+    return;
+  }
+
+  ups.forEach(r=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(r.item)}</td>
+      <td>${money(r.prev)}</td>
+      <td>${money(r.last)}</td>
+      <td><span class="pill up">+${r.pct.toFixed(1)}%</span></td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+// ===== CSV =====
+function csvEscape(s){
+  const v = (s===null || s===undefined) ? "" : String(s);
+  const needs = /["\n;]/.test(v) || v.includes(",");
+  const fixed = v.replace(/"/g,'""');
+  return needs ? `"${fixed}"` : fixed;
+}
+function exportCSV(){
+  if(!filtered.length){
+    alert("Nenhum registro com valor no filtro atual.");
+    return;
+  }
+  const mode = document.getElementById("dateMode").value;
+  const header = ["Data(ms)","Data","Status","Centro de custo","Item","Fornecedor","Qtd","Unidade","Valor total","Obs","ID"];
+  const lines = [header.join(";")];
+
+  filtered.slice().sort((a,b)=>a._ms-b._ms).forEach(r=>{
+    const dt = new Date(r._ms || 0);
+    const dateStr = (r._ms?dt.toLocaleString("pt-BR"):"-");
+    const status = r.status || "";
+    const unit = r.unit || r.un || r.unidade || "";
+    const obs = r.obs || "";
+    const row = [
+      r._ms||"",
+      dateStr,
+      status,
+      r._cost,
+      r._item,
+      r._sup,
+      (r.qty ?? ""),
+      unit,
+      (r._total||0).toFixed(2),
+      obs,
+      r.id
+    ].map(csvEscape).join(";");
+    lines.push(row);
+  });
+
+  const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  const from = document.getElementById("dateFrom").value || "ini";
+  const to = document.getElementById("dateTo").value || "fim";
+  a.download = `relatorio_${mode}_${from}_a_${to}.csv`;
+  a.href = URL.createObjectURL(blob);
   a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
 </script>
 </body>
