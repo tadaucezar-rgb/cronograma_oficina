@@ -98,6 +98,12 @@
     font-size:.72rem;
     white-space:nowrap;
   }
+
+  .prio-baixa{ border-color:rgba(0,255,255,.25); background:rgba(0,255,255,.07); }
+  .prio-media{ border-color:rgba(255,215,0,.30); background:rgba(255,215,0,.08); }
+  .prio-alta{ border-color:rgba(255,140,0,.35); background:rgba(255,140,0,.09); }
+  .prio-urgente{ border-color:rgba(255,0,0,.45); background:rgba(255,0,0,.10); }
+
   .pinCard{max-width:420px;margin:50px auto;}
   .dangerBox{
     border:2px solid rgba(255,23,68,.35);
@@ -237,7 +243,7 @@
     <!-- TASKS -->
     <div id="tab_tasks" style="display:none;">
       <h2>Tarefas</h2>
-      <div class="row" style="grid-template-columns:1fr 1fr 1fr 1fr auto;">
+      <div class="row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;">
         <div>
           <label>Título</label>
           <input id="tTitle" placeholder="Ex: Montar asa" />
@@ -254,7 +260,17 @@
           <label>Prazo (hora)</label>
           <input id="tDueTime" type="time" />
         </div>
+        
         <div>
+          <label>Prioridade</label>
+          <select id="tPriority">
+            <option value="baixa">Baixa</option>
+            <option value="media">Média</option>
+            <option value="alta">Alta</option>
+            <option value="urgente">Urgente</option>
+          </select>
+        </div>
+<div>
           <button class="btn" style="width:100%" onclick="addTask()">Adicionar</button>
         </div>
       </div>
@@ -270,7 +286,8 @@
             <th style="width:22%;">Tarefa</th>
             <th style="width:18%;">Responsável</th>
             <th style="width:18%;">Prazo</th>
-            <th style="width:14%;">Status</th>
+            <th style="width:10%;">Prioridade</th>
+            <th style="width:12%;">Status</th>
             <th style="width:28%;">Ações</th>
           </tr>
         </thead>
@@ -414,6 +431,15 @@ function esc(s){
   }[m]));
 }
 function toBool(v){ return String(v)==="true"; }
+
+function prioMeta(p){
+  const v = String(p||"baixa").toLowerCase();
+  if(v==="urgente") return {label:"URGENTE", cls:"prio-urgente"};
+  if(v==="alta") return {label:"ALTA", cls:"prio-alta"};
+  if(v==="media" || v==="média") return {label:"MÉDIA", cls:"prio-media"};
+  return {label:"BAIXA", cls:"prio-baixa"};
+}
+
 function fmtDateTime(ms){
   if(!ms) return "-";
   return new Date(Number(ms)).toLocaleString("pt-BR");
@@ -664,6 +690,7 @@ function renderTasks(){
       </td>
       <td>${esc(t.owner||"-")}</td>
       <td>${t.dueAt ? fmtDateTime(t.dueAt) : "-"}</td>
+      <td>${(()=>{const pm=prioMeta(t.priority);return `<span class="pill ${pm.cls}">${pm.label}</span>`;})()}</td>
       <td><span class="pill">${esc(t.status||"-")}</span></td>
       <td style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btnGhost" onclick="setTaskStatus('${t.id}','a fazer')">A fazer</button>
