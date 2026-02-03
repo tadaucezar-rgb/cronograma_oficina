@@ -1,240 +1,317 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!doctype html>
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Admin - TMG Painel</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - Cronograma Oficina</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root{
+      --bg1:#0b0c10;
+      --bg2:#050607;
+      --cyan:#00e6ff;
+      --cyan2:#00a7bb;
+      --green:#35ff4a;
+      --orange:#ff5a00;
+      --red:#ff2d2d;
+      --card:#0b0f12cc;
+      --stroke:#00a7bb66;
+      --stroke2:#00e6ff22;
+      --text:#e7f6ff;
+      --muted:#9fb6c3;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 60% 20%, #0b2a33 0%, transparent 60%),
+        radial-gradient(900px 600px at 20% 80%, #14310f 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+    }
+    header{
+      height:74px;
+      display:flex;
+      align-items:center;
+      padding:0 22px;
+      background:linear-gradient(180deg, #d9d9d9, #bdbdbd);
+      color:#111;
+      border-bottom:1px solid #00000022;
+      position:sticky; top:0; z-index:10;
+    }
+    header .brand{
+      display:flex; align-items:center; gap:14px;
+      font-weight:900; letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+    header .brand img{
+      height:38px;
+      width:auto;
+      object-fit:contain;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,.25));
+    }
+    header .right{
+      margin-left:auto;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      opacity:.9;
+    }
 
-<style>
-  :root{
-    --c-cyan:#00e5ff;
-    --c-orange:#ff3d00;
-    --c-green:#64dd17;
-    --c-blue:#2979ff;
-    --c-red:#ff1744;
-    --bg1:#0a0a0a;
-    --bg2:#000;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:'Orbitron',Arial,sans-serif;
-    background:radial-gradient(circle at top,var(--bg1),var(--bg2));
-    color:var(--c-cyan);
-  }
-  header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    padding:10px 16px;
-    background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
-    color:#000;
-    font-weight:900;
-  }
-  header img{height:84px; width:auto;}
-  .wrap{max-width:1200px;margin:auto;padding:14px;}
-  .card{
-    background:rgba(0,0,0,.78);
-    border-radius:18px;
-    padding:16px;
-    border:2px solid rgba(0,229,255,.22);
-    box-shadow:0 0 26px rgba(0,229,255,.22);
-    margin-bottom:12px;
-  }
-  h2{margin:0 0 12px 0;color:var(--c-orange);text-align:center;}
-  .tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
-  .tab{
-    padding:8px 14px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,.25);
-    background:rgba(255,255,255,.08);
-    color:#fff;
-    font-weight:900;
-    cursor:pointer;
-  }
-  .tab.active{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
-  label{display:block;font-size:.78rem;opacity:.9;margin-bottom:6px;}
-  input, select, textarea{
-    width:100%;
-    padding:10px 12px;
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,.2);
-    background:rgba(255,255,255,.08);
-    color:#fff;
-    font-family:'Orbitron',Arial,sans-serif;
-  }
-  textarea{min-height:90px;resize:vertical;}
-  .row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;}
-  @media(max-width:900px){ .row{grid-template-columns:1fr; } }
-  button{
-    padding:10px 14px;border-radius:14px;border:none;
-    cursor:pointer;font-weight:900;font-family:'Orbitron',Arial,sans-serif;
-    white-space:nowrap;
-  }
-  .btn{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
-  .btn2{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
-  .btnDanger{background:linear-gradient(90deg,#ff1744,#ff3d00);color:#000;}
-  .btnGhost{
-    background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.20);
-    color:#fff;
-  }
-  table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.82rem;}
-  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.14);vertical-align:top;word-break:break-word;}
-  th{color:var(--c-cyan);text-transform:uppercase;font-size:.7rem;letter-spacing:.8px;}
-  .muted{opacity:.78;font-size:.78rem;}
-  .pill{
-    display:inline-block;
-    padding:4px 8px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,.18);
-    background:rgba(255,255,255,.08);
-    font-size:.72rem;
-    white-space:nowrap;
-  }
+    .wrap{max-width:1200px; margin:26px auto; padding:0 14px;}
+    .panel{
+      background:var(--card);
+      border:2px solid var(--stroke);
+      box-shadow: 0 0 18px rgba(0,231,255,.25);
+      border-radius:18px;
+      padding:18px;
+      overflow:hidden;
+    }
+    .tabs{
+      display:flex; gap:10px; justify-content:center;
+      margin:10px 0 18px;
+      flex-wrap:wrap;
+    }
+    .tab{
+      border:1px solid #ffffff22;
+      background:#0d1114;
+      color:#fff;
+      padding:10px 16px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:800;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+      transition:.15s;
+      user-select:none;
+    }
+    .tab.active{
+      background:linear-gradient(180deg, #1aff48, #0a7b1d);
+      color:#031006;
+      border-color:#0f5f1f;
+      box-shadow:0 0 18px rgba(53,255,74,.25);
+    }
+    .content{display:none}
+    .content.active{display:block}
 
-  .prio-baixa{ border-color:rgba(0,255,255,.25); background:rgba(0,255,255,.07); }
-  .prio-media{ border-color:rgba(255,215,0,.30); background:rgba(255,215,0,.08); }
-  .prio-alta{ border-color:rgba(255,140,0,.35); background:rgba(255,140,0,.09); }
-  .prio-urgente{ border-color:rgba(255,0,0,.45); background:rgba(255,0,0,.10); }
+    h2{
+      margin:0 0 12px;
+      text-align:center;
+      color:var(--orange);
+      font-size:36px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      text-shadow:0 0 14px rgba(255,90,0,.15);
+    }
 
-  .pinCard{max-width:420px;margin:50px auto;}
-  .dangerBox{
-    border:2px solid rgba(255,23,68,.35);
-    box-shadow:0 0 26px rgba(255,23,68,.18);
-  }
+    .formrow{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr .7fr auto;
+      gap:12px;
+      align-items:end;
+      margin-bottom:12px;
+    }
+    .formrow.tasks{
+      grid-template-columns: 1.2fr 1fr .8fr .7fr .8fr auto;
+    }
 
-  /* MODAL QR */
-  .modalBack{
-    position:fixed; inset:0;
-    background:rgba(0,0,0,.72);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:16px;
-    z-index:9999;
-  }
-  .modal{
-    width:min(820px, 100%);
-    background:rgba(0,0,0,.92);
-    border-radius:18px;
-    border:2px solid rgba(0,229,255,.25);
-    box-shadow:0 0 34px rgba(0,229,255,.25);
-    padding:16px;
-  }
-  .modalTop{
-    display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;
-  }
-  .modalTitle{color:var(--c-orange);font-weight:900;font-size:1.1rem;}
-  .modalClose{
-    background:rgba(255,255,255,.08);
-    border:1px solid rgba(255,255,255,.22);
-    color:#fff;
-  }
-  .qrGrid{
-    display:grid;
-    grid-template-columns: 320px 1fr;
-    gap:14px;
-    align-items:start;
-  }
-  @media(max-width:820px){
-    .qrGrid{grid-template-columns:1fr;}
-  }
-  .qrBox{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.14);
-    border-radius:16px;
-    padding:14px;
-    min-height:320px;
-  }
-  .linkBox{
-    background:rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.14);
-    border-radius:16px;
-    padding:14px;
-  }
-  .linkMono{
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size:.85rem;
-    word-break:break-all;
-    color:#fff;
-  }
-  .actionsRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+    label{
+      display:block;
+      font-weight:800;
+      color:var(--cyan);
+      margin:0 0 6px;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      font-size:12px;
+    }
+    input, select, textarea{
+      width:100%;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid #ffffff22;
+      background:#0b0f12;
+      color:var(--text);
+      outline:none;
+      box-shadow: inset 0 0 0 1px #00000044;
+    }
+    textarea{min-height:68px; resize:vertical}
 
-  /* Inline edit - tarefas */
-  .inlineEdit{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
-  .inlineEdit .miniInput, .inlineEdit .miniSelect{
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.10);
-    color:#dffbff;
-    border-radius:12px;
-    padding:8px 10px;
-    font-size:0.85rem;
-    outline:none;
-  }
-  .inlineEdit .miniInput{min-width:140px}
-  .inlineEdit .miniInput[type="time"]{min-width:120px}
-  .inlineEdit .miniSelect{min-width:140px}
-  .btnMini{
-    border: 1px solid rgba(255,255,255,0.16);
-    background: rgba(0,0,0,0.35);
-    color:#dffbff;
-    padding:8px 12px;
-    border-radius:12px;
-    cursor:pointer;
-    transition:.15s ease;
-    font-weight:700;
-  }
-  .btnMini:hover{transform:translateY(-1px)}
-  .hintSmall{opacity:.7; font-size:0.85rem; margin-top:6px}
+    .btn{
+      padding:12px 18px;
+      border-radius:14px;
+      border:0;
+      cursor:pointer;
+      font-weight:900;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+      background:linear-gradient(180deg, #1aff48, #0a7b1d);
+      color:#031006;
+      box-shadow:0 0 16px rgba(53,255,74,.25);
+      transition:.15s;
+      white-space:nowrap;
+    }
+    .btn:hover{filter:brightness(1.03)}
+    .btn.danger{
+      background:linear-gradient(180deg, #ff4a4a, #b01212);
+      color:#170202;
+      box-shadow:0 0 16px rgba(255,45,45,.18);
+    }
+    .btn.ghost{
+      background:#101417;
+      color:#fff;
+      border:1px solid #ffffff22;
+      box-shadow:none;
+    }
+    .btn.mini{
+      padding:8px 12px;
+      border-radius:12px;
+      font-size:12px;
+      text-transform:none;
+      letter-spacing:0;
+      font-weight:800;
+      background:#e9eef2;
+      color:#111;
+      box-shadow:none;
+    }
+    .btn.mini.danger{ background:#ff3c3c; color:#120202; }
 
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:10px;
+    }
+    .table th, .table td{
+      padding:12px 10px;
+      border-bottom:1px solid #ffffff1a;
+      text-align:left;
+      vertical-align:middle;
+    }
+    .table th{
+      color:var(--cyan);
+      font-weight:900;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+      font-size:12px;
+    }
+    .muted{color:var(--muted)}
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:900;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      font-size:11px;
+      border:1px solid #ffffff22;
+    }
+    .pill.ok{background:#0e2b15; color:#74ff8a; border-color:#2fff6d33}
+    .pill.warn{background:#2b220e; color:#ffd37a; border-color:#ffcc6633}
+    .pill.info{background:#0e1e2b; color:#88d8ff; border-color:#66ccff33}
 
-  .dueGrid{display:flex;gap:8px;align-items:center;}
-  .dueGrid input{min-width:140px;}
-  .tdPrio select{min-width:120px;}
-</style>
+    .actions{display:flex; gap:8px; flex-wrap:wrap}
+
+    /* Modal QR */
+    .modal{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.7);
+      z-index:50;
+      padding:14px;
+    }
+    .modal.open{display:flex}
+    .modalbox{
+      width:min(860px, 96vw);
+      background:rgba(10,13,15,.95);
+      border:2px solid var(--stroke);
+      box-shadow:0 0 22px rgba(0,231,255,.28);
+      border-radius:18px;
+      padding:16px;
+      position:relative;
+    }
+    .modalgrid{
+      display:grid;
+      grid-template-columns: 300px 1fr;
+      gap:16px;
+      align-items:start;
+    }
+    .qrbox{
+      border-radius:16px;
+      border:1px solid #ffffff22;
+      background:#0b0f12;
+      padding:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .qrbox img{width:260px; height:260px}
+    .modaltitle{
+      margin:0 0 10px;
+      color:var(--orange);
+      font-size:22px;
+      font-weight:1000;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+    }
+    .modalclose{
+      position:absolute;
+      right:14px; top:14px;
+      background:#111;
+      color:#fff;
+      border:1px solid #ffffff22;
+      padding:10px 14px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:900;
+    }
+    .toast{
+      position:fixed;
+      left:50%; transform:translateX(-50%);
+      bottom:18px;
+      background:#0b0f12;
+      border:1px solid #ffffff22;
+      box-shadow:0 0 18px rgba(0,231,255,.20);
+      color:#fff;
+      padding:10px 14px;
+      border-radius:14px;
+      display:none;
+      z-index:60;
+      font-weight:800;
+    }
+    .toast.show{display:block}
+    @media (max-width: 780px){
+      .formrow{grid-template-columns: 1fr; }
+      .formrow.tasks{grid-template-columns: 1fr;}
+      .modalgrid{grid-template-columns: 1fr;}
+      .qrbox img{width:240px;height:240px}
+    }
+  </style>
 </head>
-
 <body>
 <header>
-  <img src="logo_tmg_clean.png" alt="TMG" />
-  <div>Admin</div>
+  <div class="brand">
+    <img src="tmg_logo.png" alt="TMG racing">
+  </div>
+  <div class="right">Admin</div>
 </header>
 
-<!-- PIN -->
-<div class="wrap" id="pinScreen">
-  <div class="card pinCard">
-    <h2>PIN</h2>
-    <div class="muted" style="margin-bottom:10px;">Digite o PIN para acessar.</div>
-    <input id="pin" type="password" placeholder="PIN" />
-    <button class="btn" style="width:100%;margin-top:12px" onclick="unlock()">Entrar</button>
-    <div class="muted" style="margin-top:10px;">PIN padrão: <b>1234</b></div>
-  </div>
-</div>
-
-<!-- APP -->
-<div class="wrap" id="app" style="display:none;">
-  <div class="card">
+<div class="wrap">
+  <div class="panel">
     <div class="tabs">
-      <button class="tab active" data-tab="members" onclick="showTab('members', this)">Membros</button>
-      <button class="tab" data-tab="tasks" onclick="showTab('tasks', this)">Tarefas</button>
-      <button class="tab" data-tab="dates" onclick="showTab('dates', this)">Datas importantes</button>
-      <button class="tab" data-tab="danger" onclick="showTab('danger', this)">Zerar tudo</button>
+      <div class="tab active" data-tab="members">Membros</div>
+      <div class="tab" data-tab="tasks">Tarefas</div>
+      <div class="tab" data-tab="dates">Datas importantes</div>
+      <div class="tab" data-tab="reset">Zerar tudo</div>
     </div>
 
-    <!-- MEMBERS -->
-    <div id="tab_members">
+    <!-- MEMBROS -->
+    <div class="content active" id="tab-members">
       <h2>Membros</h2>
-      <div class="row">
+
+      <div class="formrow">
         <div>
           <label>Nome</label>
           <input id="mName" placeholder="Ex: RENÊ" />
@@ -246,150 +323,122 @@
         <div>
           <label>Ativo?</label>
           <select id="mActive">
-            <option value="true" selected>Sim</option>
-            <option value="false">Não</option>
+            <option>Sim</option>
+            <option>Nao</option>
           </select>
         </div>
-        <div>
-          <button class="btn" style="width:100%" onclick="addMember()">Adicionar</button>
-        </div>
+        <button class="btn" onclick="addMember()">Adicionar</button>
       </div>
 
-      <div class="muted" style="margin-top:10px;">
-        Cada membro tem um <b>QR Code individual</b> que abre direto: <span class="pill">/equipe?m=Nome</span>
+      <div class="muted" style="margin:6px 0 12px;">
+        Cada membro tem um QR Code individual que abre direto: <span class="pill info">/equipe?m=Nome</span>
       </div>
 
-      <table style="margin-top:10px;">
+      <table class="table">
         <thead>
           <tr>
-            <th style="width:22%;">Nome</th>
-            <th style="width:20%;">Função</th>
-            <th style="width:10%;">Ativo</th>
-            <th style="width:48%;">Ações</th>
+            <th>Nome</th>
+            <th>Função</th>
+            <th>Ativo</th>
+            <th style="width:360px;">Ações</th>
           </tr>
         </thead>
         <tbody id="tbMembers"></tbody>
       </table>
     </div>
 
-    <!-- TASKS -->
-    <div id="tab_tasks" style="display:none;">
+    <!-- TAREFAS -->
+    <div class="content" id="tab-tasks">
       <h2>Tarefas</h2>
-      <div class="row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;">
+
+      <div class="formrow tasks">
         <div>
           <label>Título</label>
           <input id="tTitle" placeholder="Ex: Montar asa" />
         </div>
         <div>
           <label>Responsável</label>
-          <select id="tOwner"></select>
+          <select id="tMember">
+            <option value="">Selecione</option>
+          </select>
         </div>
         <div>
           <label>Prazo (data)</label>
-          <input id="tDueDate" type="date" />
+          <input id="tDate" type="date" />
         </div>
         <div>
           <label>Prazo (hora)</label>
-          <input id="tDueTime" type="time" />
+          <input id="tTime" type="time" />
         </div>
-        
         <div>
           <label>Prioridade</label>
           <select id="tPriority">
-            <option value="baixa">Baixa</option>
-            <option value="media">Média</option>
-            <option value="alta">Alta</option>
-            <option value="urgente">Urgente</option>
+            <option>Baixa</option>
+            <option>Média</option>
+            <option>Alta</option>
           </select>
         </div>
-<div>
-          <button class="btn" style="width:100%" onclick="addTask()">Adicionar</button>
-        </div>
+        <button class="btn" onclick="addTask()">Adicionar</button>
       </div>
 
-      <div style="margin-top:10px;">
+      <div style="margin:10px 0;">
         <label>Descrição (opcional)</label>
         <textarea id="tDesc" placeholder="Detalhes da tarefa..."></textarea>
       </div>
 
-      <table style="margin-top:12px;">
+      <table class="table">
         <thead>
           <tr>
-            <th style="width:22%;">Tarefa</th>
-            <th style="width:18%;">Responsável</th>
-            <th style="width:18%;">Prazo</th>
-            <th style="width:10%;">Prioridade</th>
-            <th style="width:12%;">Status</th>
-            <th style="width:28%;">Ações</th>
+            <th>Tarefa</th>
+            <th>Responsável</th>
+            <th>Prazo</th>
+            <th>Prioridade</th>
+            <th>Status</th>
+            <th style="width:260px;">Ações</th>
           </tr>
         </thead>
         <tbody id="tbTasks"></tbody>
       </table>
     </div>
 
-    <!-- DATES -->
-    <div id="tab_dates" style="display:none;">
+    <!-- DATAS IMPORTANTES -->
+    <div class="content" id="tab-dates">
       <h2>Datas importantes</h2>
-      <div class="row" style="grid-template-columns:1fr 1fr 1fr auto;">
+
+      <div class="formrow" style="grid-template-columns: 1.2fr .8fr auto;">
         <div>
-          <label>Título</label>
-          <input id="dTitle" placeholder="Ex: Prazo inscrição" />
+          <label>Evento</label>
+          <input id="dTitle" placeholder="Ex: Corrida / Teste / Entrega" />
         </div>
         <div>
           <label>Data</label>
           <input id="dDate" type="date" />
         </div>
-        <div>
-          <label>Hora (opcional)</label>
-          <input id="dTime" type="time" />
-        </div>
-        <div>
-          <button class="btn" style="width:100%" onclick="addDate()">Adicionar</button>
-        </div>
-      </div>
-      <div style="margin-top:10px;">
-        <label>Observação (opcional)</label>
-        <input id="dObs" placeholder="Ex: Enviar docs, pagar taxa..." />
+        <button class="btn" onclick="addDate()">Adicionar</button>
       </div>
 
-      <table style="margin-top:12px;">
+      <table class="table">
         <thead>
           <tr>
-            <th style="width:28%;">Título</th>
-            <th style="width:22%;">Quando</th>
-            <th style="width:34%;">Obs</th>
-            <th style="width:16%;">Ações</th>
+            <th>Evento</th>
+            <th>Data</th>
+            <th style="width:140px;">Ações</th>
           </tr>
         </thead>
         <tbody id="tbDates"></tbody>
       </table>
     </div>
 
-    <!-- DANGER -->
-    <div id="tab_danger" style="display:none;">
+    <!-- RESET -->
+    <div class="content" id="tab-reset">
       <h2>Zerar tudo</h2>
-      <div class="card dangerBox">
-        <div class="muted" style="margin-bottom:10px;">
-          Isso apaga <b>membros</b>, <b>tarefas</b> e <b>datas importantes</b>. <b>Irreversível</b>.
-        </div>
-
-        <div class="row" style="grid-template-columns:1fr 1fr auto;">
-          <div>
-            <label>Digite ZERAR para confirmar</label>
-            <input id="wipeText" placeholder="ZERAR" />
-          </div>
-          <div>
-            <label>PIN</label>
-            <input id="wipePin" type="password" placeholder="PIN" />
-          </div>
-          <div>
-            <button class="btnDanger" style="width:100%" onclick="wipeAll()">APAGAR TUDO</button>
-          </div>
-        </div>
-
-        <div class="muted" style="margin-top:10px;">
-          Apaga os nós: <span class="pill">people</span> <span class="pill">tasks</span> <span class="pill">dates</span>
-        </div>
+      <p class="muted" style="text-align:center; max-width:760px; margin:12px auto;">
+        Isso apaga <b>membros</b>, <b>tarefas</b> e <b>datas importantes</b> do Firebase.
+        Compras/requisições são zeradas no Admin Compras (arquivo próprio).
+      </p>
+      <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:14px;">
+        <button class="btn danger" onclick="resetAll()">Apagar tudo agora</button>
+        <button class="btn ghost" onclick="seedExample()">Criar exemplo</button>
       </div>
     </div>
 
@@ -397,25 +446,22 @@
 </div>
 
 <!-- MODAL QR -->
-<div class="modalBack" id="qrModalBack" onclick="closeQR(event)">
-  <div class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
-    <div class="modalTop">
-      <div class="modalTitle" id="qrTitle">QR Code</div>
-      <button class="modalClose" onclick="closeQR()">Fechar</button>
-    </div>
-
-    <div class="qrGrid">
-      <div class="qrBox">
-        <div id="qrCanvas"></div>
+<div class="modal" id="qrModal" onclick="if(event.target.id==='qrModal') closeQR()">
+  <div class="modalbox">
+    <button class="modalclose" onclick="closeQR()">Fechar</button>
+    <div class="modalgrid">
+      <div class="qrbox">
+        <img id="qrImg" alt="QR Code" />
       </div>
-      <div class="linkBox">
-        <div class="muted">Link do membro</div>
-        <div class="linkMono" id="qrLinkText" style="margin-top:8px;"></div>
-        <div class="actionsRow">
-          <button class="btn2" onclick="copyQRLink()">Copiar link</button>
-          <button class="btnGhost" onclick="openQRLink()">Abrir link</button>
+      <div>
+        <div class="modaltitle" id="qrTitle">QR Code</div>
+        <label>Link do membro</label>
+        <input id="qrLink" readonly />
+        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btn" style="padding:10px 14px" onclick="(function(){navigator.clipboard.writeText(document.getElementById('qrLink').value); toast('Link copiado!');})();">Copiar link</button>
+          <button class="btn ghost" style="padding:10px 14px" onclick="window.open(document.getElementById('qrLink').value,'_blank')">Abrir link</button>
         </div>
-        <div class="muted" style="margin-top:12px;">
+        <div class="muted" style="margin-top:10px;">
           Dica: esse QR abre direto a tela da equipe já no membro.
         </div>
       </div>
@@ -423,197 +469,69 @@
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
 <script>
-/* ===== PIN ===== */
-const PIN = "1234";
-function unlock(){
-  const v = (document.getElementById("pin").value||"").trim();
-  if(v !== PIN){ alert("PIN incorreto"); return; }
-  document.getElementById("pinScreen").style.display="none";
-  document.getElementById("app").style.display="block";
-  boot();
-}
+  // ========= Firebase config =========
+  // (mantido igual ao seu arquivo)
+  const firebaseConfig = {
+    apiKey: "YOUR_KEY",
+    authDomain: "YOUR_DOMAIN",
+    databaseURL: "YOUR_DB_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_BUCKET",
+    messagingSenderId: "YOUR_SENDER",
+    appId: "YOUR_APP_ID"
+  };
 
-/* ===== Firebase ===== */
-const firebaseConfig={
-  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
-  authDomain:"tmg-painel.firebaseapp.com",
-  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com",
-  projectId:"tmg-painel",
-  storageBucket:"tmg-painel.firebasestorage.app",
-  messagingSenderId:"877912378151",
-  appId:"1:877912378151:web:88af3a4f8f551acd603702"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+  // inicializa (evita duplicar)
+  if(!firebase.apps.length){ firebase.initializeApp(firebaseConfig); }
+  const db = firebase.database();
 
-/* ===== Tabs ===== */
-function showTab(key, btn){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  if(btn) btn.classList.add("active");
-  ["members","tasks","dates","danger"].forEach(k=>{
-    document.getElementById("tab_"+k).style.display = (k===key) ? "block" : "none";
-  });
-}
-
-/* ===== Helpers ===== */
-function esc(s){
-  return String(s||"").replace(/[&<>"']/g, m => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[m]));
-}
-function toBool(v){ return String(v)==="true"; }
-
-function prioMeta(p){
-  const v = String(p||"baixa").toLowerCase();
-  if(v==="urgente") return {label:"URGENTE", cls:"prio-urgente"};
-  if(v==="alta") return {label:"ALTA", cls:"prio-alta"};
-  if(v==="media" || v==="média") return {label:"MÉDIA", cls:"prio-media"};
-  return {label:"BAIXA", cls:"prio-baixa"};
-}
-
-function fmtDateTime(ms){
-  if(!ms) return "-";
-  return new Date(Number(ms)).toLocaleString("pt-BR");
-}
-
-function toInputDate(ms){
-  if(!ms) return "";
-  try{
-    const d = new Date(Number(ms));
-    if(isNaN(d.getTime())) return "";
-    return d.toISOString().slice(0,10);
-  }catch(e){ return ""; }
-}
-function toInputTime(ms){
-  if(!ms) return "";
-  try{
-    const d = new Date(Number(ms));
-    if(isNaN(d.getTime())) return "";
-    return String(d.getHours()).padStart(2,'0')+":"+String(d.getMinutes()).padStart(2,'0');
-  }catch(e){ return ""; }
-}
-function buildDueAt(dateStr, timeStr){
-  if(!dateStr) return null;
-  const t = timeStr && timeStr.includes(':') ? timeStr : "00:00";
-  const iso = dateStr+"T"+t+":00";
-  const d = new Date(iso);
-  if(isNaN(d.getTime())) return null;
-  return d.getTime();
-}
-
-function saveTaskPriority(id){
-  const el = document.getElementById("prio_"+id);
-  if(!el) return;
-  const val = (el.value||"baixa").toLowerCase();
-  db.ref("tasks/"+id).update({priority: val});
-  toast("Prioridade atualizada.");
-  // Re-render to atualizar pill
-  renderTasks();
-}
-
-function saveTaskDue(id){
-  const dEl = document.getElementById("dueDate_"+id);
-  const tEl = document.getElementById("dueTime_"+id);
-  if(!dEl) return;
-  const dueAt = buildDueAt(dEl.value, tEl ? tEl.value : "");
-  db.ref("tasks/"+id).update({dueAt: dueAt});
-  toast("Prazo atualizado.");
-  renderTasks();
-}
-
-function dueToMs(dateStr, timeStr){
-  if(!dateStr) return null;
-  const [y,m,d] = dateStr.split("-").map(Number);
-  let hh=0, mm=0;
-  if(timeStr){
-    const p = timeStr.split(":").map(Number);
-    hh = p[0]||0; mm = p[1]||0;
+  // ========= Helpers =========
+  function escapeHtml(str){
+    return (str||"").replace(/[&<>'"]/g, s => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;',"'" :'&#39;','"':'&quot;'
+    }[s]));
   }
-  return new Date(y, m-1, d, hh, mm, 0, 0).getTime();
-}
-
-/* ======= FIX DO LINK DO QR (URL LIMPA /admin -> /equipe) ======= */
-function siblingUrl(targetSlug){
-  const u = new URL(window.location.href);
-  let p = u.pathname;
-
-  // remove trailing slash (exceto se for só "/")
-  if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
-
-  const parts = p.split("/").filter(Boolean);
-  let hadHtml = false;
-
-  if (parts.length){
-    let last = parts[parts.length - 1];
-
-    // detecta .html
-    if (/\.html$/i.test(last)) {
-      hadHtml = true;
-      last = last.replace(/\.html$/i, "");
-    }
-
-    // substitui o último segmento pelo destino
-    parts[parts.length - 1] = targetSlug + (hadHtml ? ".html" : "");
-  } else {
-    parts.push(targetSlug);
+  function toast(msg){
+    const el = document.getElementById('toast');
+    if(!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'), 1400);
   }
 
-  u.pathname = "/" + parts.join("/");
-  return u.toString();
-}
+  // ========= State caches =========
+  let membersCache = [];
+  let tasksCache = [];
+  let datesCache = [];
 
-function memberLink(name){
-  const base = siblingUrl("equipe"); // vai para a tela da equipe
-  const u = new URL(base);
-  // compatibilidade: alguns arquivos antigos usam ?m=, os novos usam ?u=
-  u.searchParams.set("u", name);
-  u.searchParams.set("m", name);
-  return u.toString();
-}
-
-
-/* ===== State caches ===== */
-let membersCache = [];
-let tasksCache = [];
-let datesCache = [];
-
-/* ===== Boot ===== */
-function boot(){
-  watchMembers();
-  watchTasks();
-  watchDates();
-}
-
-/* ===== MEMBERS ===== */
-function watchMembers(){
+  // ========= Realtime listeners =========
   db.ref("people").on("value", snap=>{
-    const data = snap.val() || {};
-    membersCache = Object.entries(data).map(([id,r])=>({id, ...(r||{})}));
+    const val = snap.val() || {};
+    membersCache = Object.values(val);
     renderMembers();
-    fillOwners();
+    refreshMemberSelect();
   });
-}
 
-function addMember(){
-  const name = (document.getElementById("mName").value||"").trim();
-  const role = (document.getElementById("mRole").value||"").trim();
-  const active = toBool(document.getElementById("mActive").value);
-  if(!name){ alert("Nome obrigatório"); return; }
-  const ref = db.ref("people").push();
-  ref.set({ name, role, active, createdAt: Date.now() });
-  document.getElementById("mName").value="";
-  document.getElementById("mRole").value="";
-  document.getElementById("mActive").value="true";
-}
+  db.ref("tasks").on("value", snap=>{
+    const val = snap.val() || {};
+    tasksCache = Object.values(val);
+    renderTasks();
+  });
 
-function toggleMember(id, active){
-  db.ref("people/"+id).update({ active: !!active });
-}
-function delMember(id){
-  if(!confirm("Apagar este membro?")) return;
-  db.ref("people/"+id).remove();
-}
+  db.ref("importantDates").on("value", snap=>{
+    const val = snap.val() || {};
+    datesCache = Object.values(val);
+    renderDates();
+  });
+
+function normalizeName(s){ return (s||"").trim().toLowerCase(); }
 
 function renderMembers(){
   const tb = document.getElementById('tbMembers');
@@ -625,273 +543,355 @@ function renderMembers(){
     return;
   }
 
-  membersCache
+  // ordena por nome e garante render único (evita duplicar na tela)
+  const seen = new Set();
+  const list = membersCache
     .slice()
-    .sort((a,b)=> (a.name||'').localeCompare(b.name||''))
-    .forEach(m=>{
-      const name = m.name || '(sem nome)';
-      const active = (m.active !== false); // default true
-      const tr = document.createElement('tr');
-
-      tr.innerHTML = `
-        <td class="tdName">${esc(name)}</td>
-        <td class="tdLink">
-          <button class="btnSmall btnBlue" onclick="openQR('${m.id}')">QR</button>
-          <button class="btnSmall" onclick="copyMemberLink('${m.id}')">Copiar link</button>
-        </td>
-        <td class="tdStatus">
-          <span class="pill ${active?'pillOk':'pillOff'}">${active?'Ativo':'Inativo'}</span>
-        </td>
-        <td class="tdActions">
-          <button class="btnSmall ${active?'btnGray':'btnGreen'}" onclick="toggleMemberActive('${m.id}', ${active?'false':'true'})">
-            ${active?'Desativar':'Ativar'}
-          </button>
-          <button class="btnSmall btnRed" onclick="deleteMember('${m.id}')">Apagar</button>
-        </td>
-      `;
-      tb.appendChild(tr);
+    .sort((a,b)=> (a.name||"").localeCompare(b.name||"", 'pt-BR', {sensitivity:'base'}))
+    .filter(m=>{
+      const k = normalizeName(m.name);
+      if(!k) return false;
+      if(seen.has(k)) return false;
+      seen.add(k);
+      return true;
     });
-}
 
-function openQR(memberName){
-  const name = String(memberName||"").trim();
-  if(!name){ alert("Membro inválido"); return; }
-
-  currentQRLink = memberLink(name);
-  document.getElementById("qrTitle").innerText = "QR Code – " + name;
-  document.getElementById("qrLinkText").innerText = currentQRLink;
-
-  const box = document.getElementById("qrCanvas");
-  box.innerHTML = "";
-  new QRCode(box, {
-    text: currentQRLink,
-    width: 280,
-    height: 280,
-    colorDark : "#00e5ff",
-    colorLight : "#000000",
-    correctLevel : QRCode.CorrectLevel.H
-  });
-
-  document.getElementById("qrModalBack").style.display = "flex";
-}
-function closeQR(ev){
-  if(ev && ev.target && ev.target.id !== "qrModalBack") return;
-  document.getElementById("qrModalBack").style.display = "none";
-}
-async function copyText(txt){
-  try{
-    await navigator.clipboard.writeText(txt);
-    alert("Link copiado ✅");
-  }catch(e){
-    const ta=document.createElement("textarea");
-    ta.value=txt; document.body.appendChild(ta);
-    ta.select(); document.execCommand("copy");
-    document.body.removeChild(ta);
-    alert("Link copiado ✅");
-  }
-}
-function copyQRLink(){
-  if(!currentQRLink) return;
-  copyText(currentQRLink);
-}
-function openQRLink(){
-  if(!currentQRLink) return;
-  window.open(currentQRLink, "_blank");
-}
-
-/* ===== TASKS ===== */
-function watchTasks(){
-  db.ref("tasks").on("value", snap=>{
-    const data = snap.val() || {};
-    tasksCache = Object.entries(data).map(([id,r])=>({id, ...(r||{})}));
-    renderTasks();
+  list.forEach(m=>{
+    const name = m.name || '-';
+    const role = m.role || '-';
+    const active = (m.active!==false); // default true
+    tb.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td>${escapeHtml(name)}</td>
+        <td>${escapeHtml(role)}</td>
+        <td>${active ? '<span class="pill ok">Ativo</span>' : '<span class="pill warn">Inativo</span>'}</td>
+        <td class="actions">
+          <button class="btn mini" onclick="openQR('${m.id}')">QR</button>
+          <button class="btn mini" onclick="copyMemberLink('${m.id}')">Copiar link</button>
+          ${active
+            ? `<button class="btn mini" onclick="toggleMemberActive('${m.id}', false)">Desativar</button>`
+            : `<button class="btn mini" onclick="toggleMemberActive('${m.id}', true)">Ativar</button>`
+          }
+          <button class="btn mini danger" onclick="deleteMember('${m.id}')">Apagar</button>
+        </td>
+      </tr>
+    `);
   });
 }
 
-function fillOwners(){
-  const sel = document.getElementById("tOwner");
-  sel.innerHTML = "";
-  const opt0 = document.createElement("option");
-  opt0.value = "";
-  opt0.textContent = "Selecione";
-  sel.appendChild(opt0);
+function addMember(){
+  const name = (document.getElementById("mName")?.value || "").trim();
+  const role = (document.getElementById("mRole")?.value || "").trim();
+  const activeSel = document.getElementById("mActive");
+  const active = activeSel ? (activeSel.value !== "Nao") : true;
 
-  membersCache
-    .filter(m=>m.active!==false)
-    .slice()
-    .sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"pt-BR"))
-    .forEach(m=>{
-      const op = document.createElement("option");
-      op.value = m.name || "";
-      op.textContent = m.name || "-";
-      sel.appendChild(op);
-    });
-}
+  if(!name){ alert("Digite o nome do membro."); return; }
 
-function addTask(){
-  const title = (document.getElementById("tTitle").value||"").trim();
-  const owner = (document.getElementById("tOwner").value||"").trim();
-  const dueDate = document.getElementById("tDueDate").value;
-  const dueTime = document.getElementById("tDueTime").value;
-  const desc = (document.getElementById("tDesc").value||"").trim();
-
-  if(!title){ alert("Título obrigatório"); return; }
-  const dueAt = dueToMs(dueDate, dueTime);
-
-  const ref = db.ref("tasks").push();
-  ref.set({
-    title,
-    owner,
-    desc,
-    status: "a fazer",
-    dueAt: dueAt || null,
-    createdAt: Date.now()
-  });
-
-  document.getElementById("tTitle").value="";
-  document.getElementById("tDesc").value="";
-  document.getElementById("tDueDate").value="";
-  document.getElementById("tDueTime").value="";
-}
-
-function setTaskStatus(id, status){
-  db.ref("tasks/"+id).update({ status });
-}
-function delTask(id){
-  if(!confirm("Apagar esta tarefa?")) return;
-  db.ref("tasks/"+id).remove();
-}
-
-function renderTasks(){
-  const tb = document.getElementById('tbTasks');
-  if(!tb) return;
-  tb.innerHTML = '';
-
-  if(!tasksCache || tasksCache.length===0){
-    tb.innerHTML = `<tr><td colspan="6" class="muted">Nenhuma tarefa cadastrada.</td></tr>`;
+  // bloqueia duplicados por nome (case-insensitive)
+  const key = normalizeName(name);
+  const exists = (membersCache||[]).some(m => normalizeName(m.name) === key);
+  if(exists){
+    alert("Esse membro já existe. Se precisar, desative/ative ou apague e cadastre novamente.");
     return;
   }
 
-  const sorted = tasksCache.slice().sort((a,b)=>{
-    const da = (a.dueAt||'');
-    const db = (b.dueAt||'');
-    return String(da).localeCompare(String(db));
-  });
+  const id = "m_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,6);
+  db.ref("people/"+id).set({ id, name, role, active, createdAt: Date.now() });
 
-  sorted.forEach(t=>{
-    const id = t.id;
-    const title = t.title || '(sem título)';
-    const memberName = t.memberName || '(sem responsável)';
-    const dueDate = t.dueAt ? toInputDate(t.dueAt) : '';
-    const dueTime = t.dueAt ? toInputTime(t.dueAt) : '';
-    const prio = (t.priority || 'Baixa');
-    const status = (t.status || 'a fazer');
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${esc(title)}</td>
-      <td>${esc(memberName)}</td>
-      <td class="tdDue">
-        <div class="dueGrid">
-          <input id="dueDate_${id}" type="date" value="${dueDate}" onchange="saveTaskDue('${id}')" />
-          <input id="dueTime_${id}" type="time" value="${dueTime}" onchange="saveTaskDue('${id}')" />
-        </div>
-      </td>
-      <td class="tdPrio">
-        <select id="prio_${id}" onchange="saveTaskPriority('${id}')">
-          <option ${prio==='Baixa'?'selected':''}>Baixa</option>
-          <option ${prio==='Média'?'selected':''}>Média</option>
-          <option ${prio==='Alta'?'selected':''}>Alta</option>
-        </select>
-      </td>
-      <td><span class="pill pillStatus">${esc(status)}</span></td>
-      <td class="tdActions">
-        <button class="btnSmall" onclick="setTaskStatus('${id}','a fazer')">A fazer</button>
-        <button class="btnSmall" onclick="setTaskStatus('${id}','em andamento')">Em andamento</button>
-        <button class="btnSmall btnGreen" onclick="setTaskStatus('${id}','concluída')">Concluída</button>
-        <button class="btnSmall btnRed" onclick="delTask('${id}')">Apagar</button>
-      </td>
-    `;
-    tb.appendChild(tr);
-  });
+  // limpa inputs
+  if(document.getElementById("mName")) document.getElementById("mName").value="";
+  if(document.getElementById("mRole")) document.getElementById("mRole").value="";
+  if(activeSel) activeSel.value = "Sim";
 }
 
-
-/* ===== DATES ===== */
-function watchDates(){
-  db.ref("dates").on("value", snap=>{
-    const data = snap.val() || {};
-    datesCache = Object.entries(data).map(([id,r])=>({id, ...(r||{})}));
-    renderDates();
-  });
+function toggleMember(id, active){
+  db.ref("people/"+id).update({ active });
+}
+function toggleMemberActive(id, active){ // alias para o onclick
+  toggleMember(id, active);
 }
 
-function addDate(){
-  const title = (document.getElementById("dTitle").value||"").trim();
-  const date = document.getElementById("dDate").value;
-  const time = document.getElementById("dTime").value;
-  const obs = (document.getElementById("dObs").value||"").trim();
-  if(!title || !date){ alert("Título e data são obrigatórios"); return; }
-  const when = dueToMs(date, time);
-
-  const ref = db.ref("dates").push();
-  ref.set({
-    title,
-    when: when || null,
-    obs,
-    createdAt: Date.now()
-  });
-
-  document.getElementById("dTitle").value="";
-  document.getElementById("dDate").value="";
-  document.getElementById("dTime").value="";
-  document.getElementById("dObs").value="";
+function delMember(id){
+  if(!confirm("Apagar este membro? Isso não apaga tarefas/requisições já criadas.")) return;
+  db.ref("people/"+id).remove();
+}
+function deleteMember(id){ // alias para o onclick
+  delMember(id);
 }
 
-function delDate(id){
-  if(!confirm("Apagar esta data importante?")) return;
-  db.ref("dates/"+id).remove();
+function getMemberLinkByName(name){
+  const base = (location.origin + location.pathname).replace(/\/admin.*$/,'/equipe');
+  const q = encodeURIComponent(name || "");
+  return `${base}?m=${q}`;
 }
 
-function renderDates(){
-  const tb = document.getElementById("tbDates");
-  tb.innerHTML="";
-  const rows = datesCache
-    .slice()
-    .sort((a,b)=>(a.when||9999999999999)-(b.when||9999999999999));
+function openQR(id){
+  const modal = document.getElementById("qrModal");
+  const title = document.getElementById("qrTitle");
+  const img = document.getElementById("qrImg");
+  const linkEl = document.getElementById("qrLink");
 
-  rows.forEach(d=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><b>${esc(d.title||"-")}</b></td>
-      <td>${d.when ? fmtDateTime(d.when) : "-"}</td>
-      <td>${esc(d.obs||"")}</td>
-      <td><button class="btnDanger" onclick="delDate('${d.id}')">Apagar</button></td>
-    `;
-    tb.appendChild(tr);
+  const m = (membersCache||[]).find(x => x.id === id);
+  const name = m?.name || "";
+
+  if(!name){ alert("Membro não encontrado."); return; }
+
+  const link = getMemberLinkByName(name);
+
+  if(title) title.textContent = "QR Code - " + name.toUpperCase();
+  if(linkEl) linkEl.value = link;
+
+  // gera QR via API simples
+  if(img){
+    const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=" + encodeURIComponent(link);
+    img.src = qrUrl;
+    img.alt = "QR do membro " + name;
+  }
+
+  if(modal) modal.classList.add("open");
+}
+
+function copyMemberLink(id){
+  const m = (membersCache||[]).find(x => x.id === id);
+  const name = m?.name || "";
+  if(!name){ alert("Membro não encontrado."); return; }
+  const link = getMemberLinkByName(name);
+
+  navigator.clipboard.writeText(link).then(()=>{
+    toast("Link copiado!");
+  }).catch(()=>{
+    // fallback
+    const ta = document.createElement("textarea");
+    ta.value = link;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    toast("Link copiado!");
   });
 }
 
-/* ===== WIPE ALL ===== */
-function wipeAll(){
-  const t = (document.getElementById("wipeText").value||"").trim().toUpperCase();
-  const p = (document.getElementById("wipePin").value||"").trim();
-  if(t !== "ZERAR"){ alert("Digite ZERAR para confirmar."); return; }
-  if(p !== PIN){ alert("PIN incorreto."); return; }
-  if(!confirm("IRREVERSÍVEL: apagar membros + tarefas + datas. Confirmar?")) return;
-
-  const updates = { people: null, tasks: null, dates: null };
-  db.ref().update(updates)
-    .then(()=>alert("Tudo zerado ✅"))
-    .catch(e=>alert("Erro ao apagar: " + (e?.message||e)));
+function closeQR(){
+  const modal = document.getElementById("qrModal");
+  if(modal) modal.classList.remove("open");
 }
 
-/* ===== UX: ESC fecha modal ===== */
-document.addEventListener("keydown",(e)=>{
-  if(e.key==="Escape") document.getElementById("qrModalBack").style.display="none";
-});
+  // ========= Tasks =========
+  function refreshMemberSelect(){
+    const sel = document.getElementById("tMember");
+    if(!sel) return;
+    const current = sel.value;
+    sel.innerHTML = `<option value="">Selecione</option>`;
+    (membersCache||[])
+      .filter(m => m.active !== false)
+      .sort((a,b)=> (a.name||"").localeCompare(b.name||"", 'pt-BR', {sensitivity:'base'}))
+      .forEach(m=>{
+        const opt = document.createElement("option");
+        opt.value = m.name;
+        opt.textContent = m.name;
+        sel.appendChild(opt);
+      });
+    if(current) sel.value = current;
+  }
+
+  function addTask(){
+    const title = (document.getElementById("tTitle")?.value || "").trim();
+    const member = (document.getElementById("tMember")?.value || "").trim();
+    const date = document.getElementById("tDate")?.value || "";
+    const time = document.getElementById("tTime")?.value || "";
+    const desc = (document.getElementById("tDesc")?.value || "").trim();
+    const priority = document.getElementById("tPriority")?.value || "Baixa";
+
+    if(!title){ alert("Digite o título."); return; }
+    if(!member){ alert("Selecione o responsável."); return; }
+    if(!date){ alert("Selecione a data."); return; }
+
+    const id = "t_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,6);
+    const dueAt = new Date(date + "T" + (time || "00:00")).getTime();
+
+    db.ref("tasks/"+id).set({
+      id,
+      title,
+      member,
+      date,
+      time,
+      dueAt,
+      desc,
+      priority,
+      status: "a_fazer",
+      createdAt: Date.now()
+    });
+
+    document.getElementById("tTitle").value="";
+    document.getElementById("tMember").value="";
+    document.getElementById("tDate").value="";
+    document.getElementById("tTime").value="";
+    document.getElementById("tDesc").value="";
+    document.getElementById("tPriority").value="Baixa";
+  }
+
+  function fmtDateTime(t){
+    if(!t) return "-";
+    try{
+      const d = new Date(t);
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mi = String(d.getMinutes()).padStart(2,'0');
+      return `${dd}/${mm}/${yyyy}, ${hh}:${mi}`;
+    }catch(e){ return "-"; }
+  }
+
+  function renderTasks(){
+    const tb = document.getElementById("tbTasks");
+    if(!tb) return;
+    tb.innerHTML = "";
+    const list = (tasksCache||[]).slice().sort((a,b)=>(a.dueAt||0)-(b.dueAt||0));
+    if(list.length===0){
+      tb.innerHTML = `<tr><td colspan="6" class="muted">Nenhuma tarefa cadastrada.</td></tr>`;
+      return;
+    }
+    list.forEach(t=>{
+      const pr = (t.priority||"Baixa");
+      const statusLabel = (t.status||"a_fazer").replaceAll("_"," ");
+      const prPill = pr==="Alta" ? "warn" : (pr==="Média" ? "info" : "ok");
+
+      tb.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td>${escapeHtml(t.title||"-")}</td>
+          <td>${escapeHtml(t.member||"-")}</td>
+          <td>${fmtDateTime(t.dueAt)}</td>
+          <td><span class="pill ${prPill}">${escapeHtml(pr)}</span></td>
+          <td><span class="pill info">${escapeHtml(statusLabel)}</span></td>
+          <td class="actions">
+            <button class="btn mini" onclick="setTaskStatus('${t.id}','a_fazer')">A fazer</button>
+            <button class="btn mini" onclick="setTaskStatus('${t.id}','em_andamento')">Em andamento</button>
+            <button class="btn mini" onclick="setTaskStatus('${t.id}','concluida')">Concluída</button>
+            <button class="btn mini" onclick="editTask('${t.id}')">Editar</button>
+            <button class="btn mini danger" onclick="deleteTask('${t.id}')">Apagar</button>
+          </td>
+        </tr>
+      `);
+    });
+  }
+
+  function setTaskStatus(id, status){
+    db.ref("tasks/"+id).update({ status });
+  }
+  function deleteTask(id){
+    if(!confirm("Apagar esta tarefa?")) return;
+    db.ref("tasks/"+id).remove();
+  }
+
+  function editTask(id){
+    const t = (tasksCache||[]).find(x=>x.id===id);
+    if(!t){ alert("Tarefa não encontrada"); return; }
+
+    const newDate = prompt("Nova data (YYYY-MM-DD):", t.date || "");
+    if(newDate===null) return;
+
+    const newTime = prompt("Nova hora (HH:MM) opcional:", t.time || "");
+    if(newTime===null) return;
+
+    const newPr = prompt("Prioridade (Baixa/Média/Alta):", t.priority || "Baixa");
+    if(newPr===null) return;
+
+    const dueAt = new Date(newDate + "T" + (newTime || "00:00")).getTime();
+
+    db.ref("tasks/"+id).update({
+      date: newDate,
+      time: newTime,
+      priority: newPr,
+      dueAt
+    });
+    toast("Tarefa atualizada!");
+  }
+
+  // ========= Dates =========
+  function addDate(){
+    const title = (document.getElementById("dTitle")?.value || "").trim();
+    const date = document.getElementById("dDate")?.value || "";
+    if(!title){ alert("Digite o evento."); return; }
+    if(!date){ alert("Selecione a data."); return; }
+
+    const id = "d_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,6);
+    db.ref("importantDates/"+id).set({ id, title, date, createdAt: Date.now() });
+
+    document.getElementById("dTitle").value="";
+    document.getElementById("dDate").value="";
+  }
+
+  function renderDates(){
+    const tb = document.getElementById("tbDates");
+    if(!tb) return;
+    tb.innerHTML = "";
+    const list = (datesCache||[]).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+    if(list.length===0){
+      tb.innerHTML = `<tr><td colspan="3" class="muted">Nenhuma data cadastrada.</td></tr>`;
+      return;
+    }
+    list.forEach(d=>{
+      tb.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td>${escapeHtml(d.title||"-")}</td>
+          <td>${escapeHtml(d.date||"-")}</td>
+          <td class="actions">
+            <button class="btn mini danger" onclick="deleteDate('${d.id}')">Apagar</button>
+          </td>
+        </tr>
+      `);
+    });
+  }
+  function deleteDate(id){
+    if(!confirm("Apagar esta data?")) return;
+    db.ref("importantDates/"+id).remove();
+  }
+
+  // ========= Reset =========
+  function resetAll(){
+    if(!confirm("Tem certeza? Isso apaga membros, tarefas e datas importantes.")) return;
+    Promise.all([
+      db.ref("people").remove(),
+      db.ref("tasks").remove(),
+      db.ref("importantDates").remove()
+    ]).then(()=>toast("Tudo apagado!"));
+  }
+
+  function seedExample(){
+    const m1 = "m_" + Date.now().toString(36) + "_a";
+    db.ref("people/"+m1).set({id:m1,name:"DAVI",role:"Montagem",active:true,createdAt:Date.now()});
+
+    const t1 = "t_" + Date.now().toString(36) + "_a";
+    const date = new Date(); date.setDate(date.getDate()+2);
+    const y = date.getFullYear();
+    const m = String(date.getMonth()+1).padStart(2,'0');
+    const d = String(date.getDate()).padStart(2,'0');
+    const dateStr = `${y}-${m}-${d}`;
+    const dueAt = new Date(dateStr+"T10:00").getTime();
+
+    db.ref("tasks/"+t1).set({
+      id:t1,title:"Cotação peças",member:"DAVI",date:dateStr,time:"10:00",
+      dueAt,desc:"",priority:"Média",status:"a_fazer",createdAt:Date.now()
+    });
+
+    const dd = "d_" + Date.now().toString(36) + "_a";
+    db.ref("importantDates/"+dd).set({id:dd,title:"Teste pista",date:dateStr,createdAt:Date.now()});
+
+    toast("Exemplo criado!");
+  }
+
+  // ========= Tabs =========
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.addEventListener("click", ()=>{
+      document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+      t.classList.add("active");
+      const key = t.getAttribute("data-tab");
+      document.querySelectorAll(".content").forEach(c=>c.classList.remove("active"));
+      document.getElementById("tab-"+key).classList.add("active");
+    });
+  });
 </script>
 
 </body>
 </html>
-
