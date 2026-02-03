@@ -2,94 +2,73 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Compras - Execução</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compras</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
-let currentFilter = "all";
-function setFilter(f){
-  currentFilter=f;
-  document.querySelectorAll(".filters .fbtn").forEach(b=>b.classList.remove("active"));
-  event.target.classList.add("active");
-  render();
-}
-function isToday(ms){
-  if(!ms) return false;
-  const d=new Date(ms), n=new Date();
-  return d.toDateString()===n.toDateString();
-}
-function isThisWeek(ms){
-  if(!ms) return false;
-  const d=new Date(ms), n=new Date();
-  const onejan=new Date(n.getFullYear(),0,1);
-  const week=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
-  const curw=Math.ceil((((n-onejan)/86400000)+onejan.getDay()+1)/7);
-  return d.getFullYear()===n.getFullYear() && week===curw;
-}
-
-</script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js">
-let currentFilter = "all";
-function setFilter(f){
-  currentFilter=f;
-  document.querySelectorAll(".filters .fbtn").forEach(b=>b.classList.remove("active"));
-  event.target.classList.add("active");
-  render();
-}
-function isToday(ms){
-  if(!ms) return false;
-  const d=new Date(ms), n=new Date();
-  return d.toDateString()===n.toDateString();
-}
-function isThisWeek(ms){
-  if(!ms) return false;
-  const d=new Date(ms), n=new Date();
-  const onejan=new Date(n.getFullYear(),0,1);
-  const week=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
-  const curw=Math.ceil((((n-onejan)/86400000)+onejan.getDay()+1)/7);
-  return d.getFullYear()===n.getFullYear() && week===curw;
-}
-
-</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-*{box-sizing:border-box;}
-body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff;}
-header{padding:14px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900;text-align:center;}
-.container{padding:14px;max-width:1200px;margin:auto;}
-.card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22);margin-bottom:12px;}
-h2{margin-top:0;color:#ff3d00;text-align:center;}
-table{width:100%;border-collapse:collapse;font-size:.85rem;table-layout:fixed;}
-th,td{padding:8px;word-break:break-word;;border-bottom:1px solid rgba(255,255,255,.15);text-align:left;vertical-align:top;overflow:hidden;}
-input{width:100%;max-width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:'Orbitron';}
-button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Arial,sans-serif;font-weight:900;cursor:pointer;white-space:nowrap;}
-.btn-ok{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
-.btn-blue{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
-.small{font-size:.75rem;opacity:.8;}
-.muted{opacity:.75;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.grid2 > *{min-width:0;}
-@media (max-width:760px){ .grid2{grid-template-columns:1fr;} }
-
-.filters .fbtn{
-  padding:6px 12px;
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:'Orbitron',Arial,sans-serif;
+  background:radial-gradient(circle at top,#0a0a0a,#000);
+  color:#00e5ff;
+}
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 16px;
+  background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
+  color:#000;
+  font-weight:900;
+}
+header img{height:36px}
+.wrap{padding:14px;max-width:1200px;margin:auto}
+.card{
+  background:rgba(0,0,0,.78);
+  border-radius:18px;
+  padding:16px;
+  border:2px solid rgba(0,229,255,.22);
+  box-shadow:0 0 26px rgba(0,229,255,.22);
+}
+.filters{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.fbtn{
+  padding:6px 14px;
   border-radius:999px;
   border:1px solid rgba(255,255,255,.25);
   background:rgba(255,255,255,.08);
   color:#fff;
-  font-family:'Orbitron';
   font-weight:800;
   cursor:pointer;
 }
-.filters .fbtn.active{
+.fbtn.active{
   background:linear-gradient(90deg,#00c853,#64dd17);
   color:#000;
 }
-.filters .fbtn-warn{
-  border-color:rgba(255,23,68,.6);
+table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+  font-size:.82rem;
 }
-
+th,td{
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,.15);
+  vertical-align:top;
+}
+th{
+  text-transform:uppercase;
+  font-size:.7rem;
+}
 .money{
   display:flex;
   align-items:center;
@@ -98,13 +77,11 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
   border-radius:10px;
   overflow:hidden;
 }
-.money .currency{
+.money span{
   padding:8px 10px;
   font-weight:900;
-  color:#00e5ff;
   background:rgba(0,0,0,.35);
   border-right:1px solid rgba(255,255,255,.15);
-  white-space:nowrap;
 }
 .money input{
   border:none;
@@ -114,263 +91,137 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
   width:100%;
   font-family:'Orbitron';
 }
+input,select{
+  width:100%;
+  padding:8px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+}
+button{
+  padding:8px 12px;
+  border-radius:12px;
+  border:none;
+  font-family:'Orbitron';
+  font-weight:900;
+  cursor:pointer;
+}
+.buy{background:#00c853;color:#000}
+.recv{background:#2979ff;color:#000}
+.overdue{background:rgba(255,23,68,.18)}
 </style>
 </head>
 
 <body>
-<header>Setor de Compras</header>
+<header>
+  <img src="logo_tmg_clean.png">
+  <div>Compras / Serviços</div>
+</header>
 
-<!-- Autocomplete -->
-<datalist id="dlSuppliers"></datalist>
-<datalist id="dlItems"></datalist>
-
-<div class="container">
+<div class="wrap">
   <div class="card">
-    <h2>Compras Autorizadas</h2>
-    
-    <div class="filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+    <div class="filters">
       <button class="fbtn active" onclick="setFilter('all')">Todos</button>
       <button class="fbtn" onclick="setFilter('today')">Hoje</button>
       <button class="fbtn" onclick="setFilter('week')">Semana</button>
-      <button class="fbtn fbtn-warn" onclick="setFilter('overdue')">Atrasados</button>
+      <button class="fbtn" onclick="setFilter('overdue')">Atrasados</button>
     </div>
 
     <table>
       <thead>
         <tr>
-          <th style="width:16%;">Solicitação</th>
-          <th style="width:20%;">Item</th>
-          <th style="width:24%;">Fornecedor</th>
-          <th style="width:12%;">Valor</th>
-          <th style="width:18%;">Previsão de entrega</th>
-          <th style="width:10%;">Ações</th>
+          <th>Solicitante</th>
+          <th>Item</th>
+          <th>Fornecedor</th>
+          <th>Valor</th>
+          <th>Previsão</th>
+          <th>Ação</th>
         </tr>
       </thead>
-      <tbody id="rows"></tbody>
+      <tbody id="tbody"></tbody>
     </table>
-    <div class="small muted" style="margin-top:10px;">
-      Mostra itens com status <b>authorized</b>, <b>purchased</b> e <b>received</b> (para ajustes se necessário).<br>
-      Autocomplete baseado em <b>todos os registros</b>.
-    </div>
   </div>
 </div>
 
 <script>
 const firebaseConfig={
-  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
-  authDomain:"tmg-painel.firebaseapp.com",
-  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com",
-  projectId:"tmg-painel",
-  storageBucket:"tmg-painel.firebasestorage.app",
-  messagingSenderId:"877912378151",
-  appId:"1:877912378151:web:88af3a4f8f551acd603702"
+ apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+ databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com"
 };
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
-function fmt(ts){
-  if(!ts) return "-";
-  return new Date(ts).toLocaleString("pt-BR");
-}
+let data=[], filter="all";
 
-// ===== Compatibilidade de campos (antigos/novos) =====
-function norm(s){ return (s||"").toString().trim(); }
-function getMember(r){ return r.member || r.requestedBy || r.solicitadoPor || r.solicitante || "-"; }
-function getCost(r){ return r.cost || r.centroCusto || r.costCenter || r.cc || "-"; }
-function getItem(r){ return r.item || r.description || r.descricao || "-"; }
-function getQty(r){
-  const q = (typeof r.qty === "number" && isFinite(r.qty)) ? r.qty : (isFinite(Number(r.qty)) ? Number(r.qty) : 0);
-  const u = r.unit || r.un || r.unidade || "";
-  return (String(q) + " " + String(u)).trim();
-}
-function getRequestedAt(r){ return r.requestedAt || r.createdAt || r.created || r.ts || null; }
-
-// datetime-local helper (LOCAL, não UTC)
-function pad2(n){ return String(n).padStart(2,"0"); }
-function msToLocalInput(ms){
-  if(!ms) return "";
-  const d = new Date(ms);
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
-function localInputToMs(v){
-  if(!v) return null;
-  const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v);
-  if(!m) return null;
-  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0).getTime();
-}
-
-// ===== Autocomplete (fornecedor + item) baseado em todos os registros =====
-function uniqueSorted(arr){
-  const set = new Set();
-  arr.forEach(v=>{ const s = norm(v); if(s) set.add(s); });
-  return Array.from(set).sort((a,b)=>a.localeCompare(b,"pt-BR"));
-}
-function fillDatalist(id, values, max=120){
-  const dl = document.getElementById(id);
-  dl.innerHTML = "";
-  values.slice(0,max).forEach(v=>{
-    const op = document.createElement("option");
-    op.value = v;
-    dl.appendChild(op);
-  });
-}
-
-// ===== Render =====
-db.ref("purchaseRequests").on("value",snap=>{
-  const data=snap.val()||{};
-  const tbody=document.getElementById("rows");
-  tbody.innerHTML="";
-
-  // monta listas para autocomplete (todos os registros)
-  const itemsAll = [];
-  const suppliersAll = [];
-
-  Object.values(data).forEach(r=>{
-    if(!r) return;
-    itemsAll.push(getItem(r));
-    suppliersAll.push(r.supplier && r.supplier.name ? r.supplier.name : "");
-  });
-
-  const itemsU = uniqueSorted(itemsAll);
-  const suppliersU = uniqueSorted(suppliersAll);
-
-  fillDatalist("dlItems", itemsU);
-  fillDatalist("dlSuppliers", suppliersU);
-
-  let count=0;
-
-  Object.entries(data).forEach(([id,r])=>{
-    const st = (r.status||"");
-    if(st!=="authorized" && st!=="purchased" && st!=="received") return;
-    count++;
-
-    const member = getMember(r);
-    const cost = getCost(r);
-    const item = getItem(r);
-    const qtd = getQty(r);
-    const reqAt = getRequestedAt(r);
-
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>
-        <b>${escapeHtml(String(member))}</b><br>
-        <span class="small">${fmt(reqAt)}</span><br>
-        <span class="small">${escapeHtml(String(cost))}</span>
-      </td>
-
-      <td style="min-width:220px;">
-        <input placeholder="Item" list="dlItems" value="${escapeAttr(String(item))}"
-               onblur="upd('${id}','item',this.value)">
-        <div class="small" style="margin-top:6px;">${escapeHtml(String(qtd))}</div>
-        ${r.obs ? `<div class="small muted" style="margin-top:6px;">Obs: ${escapeHtml(String(r.obs))}</div>` : ``}
-      </td>
-
-      <td style="min-width:260px;">
-        <div class="grid2">
-          <input placeholder="Fornecedor" list="dlSuppliers" value="${escapeAttr(r.supplier?.name||"")}"
-                 onblur="upd('${id}','supplier/name',this.value)">
-          <input placeholder="Contato" value="${escapeAttr(r.supplier?.contact||"")}"
-                 onblur="upd('${id}','supplier/contact',this.value)">
-        </div>
-        <input style="margin-top:8px;" placeholder="Link" value="${escapeAttr(r.supplier?.link||"")}"
-               onblur="upd('${id}','supplier/link',this.value)">
-      </td>
-
-      <td style="min-width:160px;">
-        <input type="number" step="any" placeholder="Valor total" value="${escapeAttr(r.total??"")}"
-               onblur="updNumber('${id}','total',this.value)"></div>
-      </td>
-
-      <td style="min-width:240px;">
-        <input type="datetime-local" value="${escapeAttr(msToLocalInput(r.expectedDelivery))}"
-               onblur="updExpected('${id}', this.value)">
-        ${r.expectedDelivery?'<div class="small">'+fmt(r.expectedDelivery)+'</div>':''}
-      </td>
-
-      <td>
-        ${st==="authorized"?
-          `<button class="btn-blue" onclick="markPurchased('${id}')">Comprar</button>`:
-          (st==="purchased"? `<button class="btn-ok" onclick="markReceived('${id}')">Dar entrada</button>` : `<span class="small">Finalizado</span>`)
-        }
-      </td>
-    `;
-    let show=true;
-       if(currentFilter==="today") show=isToday(r.expectedDelivery);
-       if(currentFilter==="week") show=isThisWeek(r.expectedDelivery);
-       if(currentFilter==="overdue") show=isOverdue;
-       if(show) tbody.appendChild(tr);
-  });
-
-  if(count===0){
-    const tr=document.createElement("tr");
-    tr.innerHTML = `<td colspan="6" class="small">Nenhuma compra autorizada no momento.</td>`;
-    let show=true;
-       if(currentFilter==="today") show=isToday(r.expectedDelivery);
-       if(currentFilter==="week") show=isThisWeek(r.expectedDelivery);
-       if(currentFilter==="overdue") show=isOverdue;
-       if(show) tbody.appendChild(tr);
-  }
-});
-
-// Multi-path update (com /) funciona no RTDB
-function upd(id,path,val){
-  const obj={};
-  obj[path]=norm(val);
-  db.ref("purchaseRequests/"+id).update(obj);
-}
-function updNumber(id,path,v){
-  const n = Number(v);
-  const obj={};
-  obj[path] = (isFinite(n) && String(v).trim()!=="" ? n : null);
-  db.ref("purchaseRequests/"+id).update(obj);
-}
-function updExpected(id,v){
-  const ms = localInputToMs(v);
-  const obj={ expectedDelivery: ms };
-  db.ref("purchaseRequests/"+id).update(obj);
-}
-
-function markPurchased(id){
-  db.ref("purchaseRequests/"+id).update({
-    status:"purchased",
-    purchasedAt:Date.now()
-  });
-}
-function markReceived(id){
-  db.ref("purchaseRequests/"+id).update({
-    status:"received",
-    receivedAt:Date.now()
-  });
-}
-
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
-}
-function escapeAttr(s){
-  return escapeHtml(s).replace(/\n/g," ");
-}
-
-let currentFilter = "all";
 function setFilter(f){
-  currentFilter=f;
-  document.querySelectorAll(".filters .fbtn").forEach(b=>b.classList.remove("active"));
+  filter=f;
+  document.querySelectorAll(".fbtn").forEach(b=>b.classList.remove("active"));
   event.target.classList.add("active");
   render();
 }
+
 function isToday(ms){
-  if(!ms) return false;
   const d=new Date(ms), n=new Date();
   return d.toDateString()===n.toDateString();
 }
-function isThisWeek(ms){
-  if(!ms) return false;
+function isWeek(ms){
   const d=new Date(ms), n=new Date();
-  const onejan=new Date(n.getFullYear(),0,1);
-  const week=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
-  const curw=Math.ceil((((n-onejan)/86400000)+onejan.getDay()+1)/7);
-  return d.getFullYear()===n.getFullYear() && week===curw;
+  const diff=(d-n)/(1000*60*60*24);
+  return diff>=0 && diff<=7;
 }
 
+db.ref("purchaseRequests").on("value",snap=>{
+  data=Object.entries(snap.val()||{}).map(([id,r])=>({id,...r}));
+  render();
+});
+
+function render(){
+  tbody.innerHTML="";
+  data.forEach(r=>{
+    const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
+    let show=true;
+    if(filter==="today") show=isToday(r.expectedDelivery);
+    if(filter==="week") show=isWeek(r.expectedDelivery);
+    if(filter==="overdue") show=overdue;
+    if(!show) return;
+
+    const tr=document.createElement("tr");
+    if(overdue) tr.classList.add("overdue");
+
+    tr.innerHTML=`
+      <td>${r.requestedBy||"-"}</td>
+      <td>${r.item||"-"}</td>
+      <td><input value="${r.supplier?.name||""}" onblur="upd('${r.id}','supplier/name',this.value)"></td>
+      <td>
+        <div class="money">
+          <span>R$</span>
+          <input type="number" step="0.01" value="${r.total||""}" onblur="updNum('${r.id}','total',this.value)">
+        </div>
+      </td>
+      <td>
+        <input type="datetime-local" value="${r.expectedDelivery?new Date(r.expectedDelivery).toISOString().slice(0,16):""}"
+               onblur="updDate('${r.id}','expectedDelivery',this.value)">
+      </td>
+      <td>
+        ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
+        ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function upd(id,path,val){
+  const o={}; let ref=o; const p=path.split("/");
+  p.slice(0,-1).forEach(k=>ref=ref[k]=ref[k]||{});
+  ref[p[p.length-1]]=val;
+  db.ref("purchaseRequests/"+id).update(o);
+}
+function updNum(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:Number(v||0)}); }
+function updDate(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:new Date(v).getTime()}); }
+function buy(id){ db.ref("purchaseRequests/"+id).update({status:"purchased",purchasedAt:Date.now()}); }
+function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received",receivedAt:Date.now()}); }
 </script>
 </body>
 </html>
