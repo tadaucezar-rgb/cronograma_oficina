@@ -169,6 +169,34 @@
     color:#fff;
   }
   .actionsRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+
+  /* Inline edit - tarefas */
+  .inlineEdit{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .inlineEdit .miniInput, .inlineEdit .miniSelect{
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    color:#dffbff;
+    border-radius:12px;
+    padding:8px 10px;
+    font-size:0.85rem;
+    outline:none;
+  }
+  .inlineEdit .miniInput{min-width:140px}
+  .inlineEdit .miniInput[type="time"]{min-width:120px}
+  .inlineEdit .miniSelect{min-width:140px}
+  .btnMini{
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(0,0,0,0.35);
+    color:#dffbff;
+    padding:8px 12px;
+    border-radius:12px;
+    cursor:pointer;
+    transition:.15s ease;
+    font-weight:700;
+  }
+  .btnMini:hover{transform:translateY(-1px)}
+  .hintSmall{opacity:.7; font-size:0.85rem; margin-top:6px}
+
 </style>
 </head>
 
@@ -444,6 +472,52 @@ function fmtDateTime(ms){
   if(!ms) return "-";
   return new Date(Number(ms)).toLocaleString("pt-BR");
 }
+
+function toInputDate(ms){
+  if(!ms) return "";
+  try{
+    const d = new Date(Number(ms));
+    if(isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0,10);
+  }catch(e){ return ""; }
+}
+function toInputTime(ms){
+  if(!ms) return "";
+  try{
+    const d = new Date(Number(ms));
+    if(isNaN(d.getTime())) return "";
+    return String(d.getHours()).padStart(2,'0')+":"+String(d.getMinutes()).padStart(2,'0');
+  }catch(e){ return ""; }
+}
+function buildDueAt(dateStr, timeStr){
+  if(!dateStr) return null;
+  const t = timeStr && timeStr.includes(':') ? timeStr : "00:00";
+  const iso = dateStr+"T"+t+":00";
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return null;
+  return d.getTime();
+}
+
+function saveTaskPriority(id){
+  const el = document.getElementById("prio_"+id);
+  if(!el) return;
+  const val = (el.value||"baixa").toLowerCase();
+  db.ref("tasks/"+id).update({priority: val});
+  toast("Prioridade atualizada.");
+  // Re-render to atualizar pill
+  renderTasks();
+}
+
+function saveTaskDue(id){
+  const dEl = document.getElementById("dueDate_"+id);
+  const tEl = document.getElementById("dueTime_"+id);
+  if(!dEl) return;
+  const dueAt = buildDueAt(dEl.value, tEl ? tEl.value : "");
+  db.ref("tasks/"+id).update({dueAt: dueAt});
+  toast("Prazo atualizado.");
+  renderTasks();
+}
+
 function dueToMs(dateStr, timeStr){
   if(!dateStr) return null;
   const [y,m,d] = dateStr.split("-").map(Number);
@@ -549,14 +623,35 @@ function renderMembers(){
     const link = memberLink(m.name||"");
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><b>${esc(m.name||"-")}</b></td>
-      <td>${esc(m.role||"")}</td>
-      <td>${isActive ? '<span class="pill">Sim</span>' : '<span class="pill" style="border-color:rgba(255,23,68,.35);background:rgba(255,23,68,.12)">Não</span>'}</td>
+      <td>
+        <b>${esc(t.title||"-")}</b>
+        ${t.desc ? `<div class="muted" style="margin-top:6px">${esc(t.desc)}</div>` : ``}
+      </td>
+      <td>${esc(t.owner||"-")}</td>
+      <td>
+        <div class="inlineEdit">
+          <input class="miniInput" type="date" id="dueDate_${t.id}" value="${toInputDate(t.dueAt)}">
+          <input class="miniInput" type="time" id="dueTime_${t.id}" value="${toInputTime(t.dueAt)}">
+          <button class="btnMini" onclick="saveTaskDue('${t.id}')">Salvar</button>
+        </div>
+        <div class="hintSmall">Atual: ${t.dueAt ? fmtDateTime(t.dueAt) : "-"}</div>
+      </td>
+      <td>
+        <div class="inlineEdit">
+          <select class="miniSelect" id="prio_${t.id}" onchange="saveTaskPriority('${t.id}')">
+            <option value="baixa" ${String((t.priority||'baixa')).toLowerCase()==='baixa'?'selected':''}>Baixa</option>
+            <option value="media" ${String((t.priority||'baixa')).toLowerCase()==='media'?'selected':''}>Média</option>
+            <option value="alta" ${String((t.priority||'baixa')).toLowerCase()==='alta'?'selected':''}>Alta</option>
+          </select>
+          ${(()=>{const pm=prioMeta(t.priority);return `<span class="pill ${pm.cls}">${pm.label}</span>`;})()}
+        </div>
+      </td>
+      <td><span class="pill">${esc(t.status||"-")}</span></td>
       <td style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn2" onclick="openQR('${esc(m.name||"").replace(/'/g,"&#39;")}')">QR</button>
-        <button class="btnGhost" onclick="copyText('${link.replace(/'/g,"%27")}')">Copiar link</button>
-        <button class="btnGhost" onclick="toggleMember('${m.id}', ${!isActive})">${isActive ? "Desativar" : "Ativar"}</button>
-        <button class="btnDanger" onclick="delMember('${m.id}')">Apagar</button>
+        <button class="btnGhost" onclick="setTaskStatus('${t.id}','a fazer')">A fazer</button>
+        <button class="btnGhost" onclick="setTaskStatus('${t.id}','em andamento')">Em andamento</button>
+        <button class="btn" onclick="setTaskStatus('${t.id}','concluída')">Concluída</button>
+        <button class="btnDanger" onclick="delTask('${t.id}')">Apagar</button>
       </td>
     `;
     tb.appendChild(tr);
