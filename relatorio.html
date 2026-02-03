@@ -45,10 +45,8 @@
   }
   h2{margin:0 0 12px 0;color:var(--c-orange);text-align:center;}
   label{display:block;font-size:.8rem;opacity:.9;margin-bottom:6px;}
-  input,button,select{
-    font-family:'Orbitron',Arial,sans-serif;
-  }
-  input{
+  input,button,select{font-family:'Orbitron',Arial,sans-serif;}
+  input,select{
     width:100%;
     padding:10px 12px;
     border-radius:12px;
@@ -56,14 +54,16 @@
     background:rgba(255,255,255,.08);
     color:#fff;
   }
-  .row{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;}
-  @media (max-width:760px){ .row{grid-template-columns:1fr; } }
+  .row{display:grid;grid-template-columns:1fr 1fr 1.2fr auto auto;gap:10px;align-items:end;}
+  @media (max-width:980px){ .row{grid-template-columns:1fr 1fr 1fr; } }
+  @media (max-width:680px){ .row{grid-template-columns:1fr; } }
   button{
     padding:10px 14px;
     border-radius:14px;
     border:none;
     cursor:pointer;
     font-weight:900;
+    white-space:nowrap;
   }
   .btn{
     background:linear-gradient(90deg,#00c853,#64dd17);
@@ -100,9 +100,7 @@
     white-space:nowrap;
   }
   .up{border-color:rgba(255,23,68,.55);background:rgba(255,23,68,.14);}
-  .ok{border-color:rgba(100,221,23,.45);background:rgba(100,221,23,.12);}
-  .pin-wrap{max-width:420px;margin:40px auto;padding:14px;}
-  .pin-card{padding:18px;}
+  .pin-card{max-width:420px;margin:40px auto;}
 </style>
 </head>
 
@@ -115,13 +113,14 @@
     <label>Digite o PIN para acessar</label>
     <input id="pin" type="password" placeholder="PIN" />
     <button class="btn" style="margin-top:12px;width:100%;" onclick="unlock()">Entrar</button>
-    <div class="muted" style="margin-top:10px;">PIN simples (igual os outros): padrão <b>1234</b>.</div>
+    <div class="muted" style="margin-top:10px;">PIN simples: padrão <b>1234</b>.</div>
   </div>
 </div>
 
 <div class="wrap" id="app" style="display:none;">
   <div class="card">
-    <h2>Filtro por data</h2>
+    <h2>Filtro por data + Exportação</h2>
+
     <div class="row">
       <div>
         <label>Data inicial</label>
@@ -131,13 +130,27 @@
         <label>Data final</label>
         <input id="dateTo" type="date" />
       </div>
+
+      <div>
+        <label>Tipo de data</label>
+        <select id="dateMode" onchange="applyFilter()">
+          <option value="auto" selected>Automático (compra → entrada → solicitação)</option>
+          <option value="requestedAt">Data da solicitação</option>
+          <option value="purchasedAt">Data da compra</option>
+          <option value="receivedAt">Data da entrada</option>
+        </select>
+      </div>
+
       <div>
         <button class="btn" style="width:100%;" onclick="applyFilter()">Aplicar</button>
       </div>
+      <div>
+        <button class="btn2" style="width:100%;" onclick="exportCSV()">Exportar CSV</button>
+      </div>
     </div>
+
     <div class="muted" style="margin-top:10px;">
-      Critério de data: usa <b>purchasedAt</b> (se existir), senão <b>receivedAt</b>, senão <b>requestedAt</b>.
-      Só entra no relatório o que tem <b>valor</b> preenchido.
+      Só entra no relatório o que tem <b>valor</b> preenchido. Exportação: itens filtrados (com valor).
     </div>
 
     <div class="kpis">
@@ -154,8 +167,8 @@
         <div class="v" id="kpiCosts">0</div>
       </div>
       <div class="kpi">
-        <div class="t">Itens únicos</div>
-        <div class="v" id="kpiItems">0</div>
+        <div class="t">Fornecedores</div>
+        <div class="v" id="kpiSup">0</div>
       </div>
     </div>
   </div>
@@ -200,7 +213,7 @@
   <div class="card">
     <h2>3) Itens com valor aumentando</h2>
     <div class="muted" style="margin-bottom:10px;">
-      Regra simples: compara os <b>2 últimos preços unitários</b> do mesmo item (quando tiver quantidade &gt; 0).
+      Regra: compara os <b>2 últimos preços unitários</b> do mesmo item (quando tiver quantidade &gt; 0).
       Se o último for maior, entra na lista.
     </div>
     <table>
@@ -214,6 +227,28 @@
       </thead>
       <tbody id="tbUp"></tbody>
     </table>
+  </div>
+
+  <div class="card">
+    <h2>4) Valor por fornecedor</h2>
+    <div class="grid2">
+      <div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:52%;">Fornecedor</th>
+              <th style="width:24%;">Total</th>
+              <th style="width:24%;">% do total</th>
+            </tr>
+          </thead>
+          <tbody id="tbSup"></tbody>
+        </table>
+      </div>
+      <div>
+        <canvas id="pieSup" height="260"></canvas>
+        <div class="muted" style="margin-top:8px;">Útil para ver concentração de gastos por fornecedor.</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -254,16 +289,25 @@ function safeNum(n){
 }
 function getItem(r){ return norm(r.item || r.description || r.descricao || "-"); }
 function getCost(r){ return norm(r.cost || r.centroCusto || r.costCenter || r.cc || "Sem centro"); }
+function getSupplier(r){
+  const s = r.supplier && r.supplier.name ? r.supplier.name : (r.fornecedor || r.supplierName || "");
+  return norm(s) || "Sem fornecedor";
+}
 function getQty(r){
   const q = safeNum(r.qty);
   return q>0 ? q : 0;
 }
-function getDateMs(r){
+function getDateMs(r, mode){
+  if(mode==="requestedAt") return r.requestedAt || 0;
+  if(mode==="purchasedAt") return r.purchasedAt || 0;
+  if(mode==="receivedAt") return r.receivedAt || 0;
   return r.purchasedAt || r.receivedAt || r.requestedAt || 0;
 }
 function msFromDateInput(v){
   if(!v) return null;
-  const [y,m,d] = v.split("-").map(Number);
+  const parts = v.split("-").map(Number);
+  if(parts.length!==3) return null;
+  const [y,m,d] = parts;
   return new Date(y, m-1, d, 0,0,0,0).getTime();
 }
 function msToDateInput(ms){
@@ -275,10 +319,10 @@ function msToDateInput(ms){
 // ===== State =====
 let raw = [];
 let filtered = [];
-let pieChart = null;
+let pieCosts = null;
+let pieSup = null;
 
 function boot(){
-  // Default: últimos 30 dias
   const now = Date.now();
   const from = now - 30*24*60*60*1000;
   document.getElementById("dateFrom").value = msToDateInput(from);
@@ -296,8 +340,21 @@ function applyFilter(){
   const to = msFromDateInput(document.getElementById("dateTo").value);
   const toEnd = (to!==null) ? (to + 24*60*60*1000 - 1) : null;
 
+  const mode = document.getElementById("dateMode").value;
+
   filtered = raw
-    .map(r=>({ ...r, _ms: getDateMs(r), _item: getItem(r), _cost: getCost(r), _total: safeNum(r.total), _qty: getQty(r) }))
+    .map(r=>{
+      const total = safeNum(r.total);
+      return ({
+        ...r,
+        _ms: getDateMs(r, mode),
+        _item: getItem(r),
+        _cost: getCost(r),
+        _sup: getSupplier(r),
+        _total: total,
+        _qty: getQty(r)
+      });
+    })
     .filter(r=> r._total>0 )
     .filter(r=> from===null || r._ms>=from )
     .filter(r=> toEnd===null || r._ms<=toEnd );
@@ -306,19 +363,19 @@ function applyFilter(){
 }
 
 function renderAll(){
-  // KPIs
   const total = filtered.reduce((a,r)=>a+r._total, 0);
   const costs = new Set(filtered.map(r=>r._cost)).size;
-  const items = new Set(filtered.map(r=>r._item)).size;
+  const sup = new Set(filtered.map(r=>r._sup)).size;
 
   document.getElementById("kpiTotal").textContent = money(total);
   document.getElementById("kpiCount").textContent = String(filtered.length);
   document.getElementById("kpiCosts").textContent = String(costs);
-  document.getElementById("kpiItems").textContent = String(items);
+  document.getElementById("kpiSup").textContent = String(sup);
 
   renderCosts(total);
   renderItems();
   renderUp();
+  renderSup(total);
 }
 
 function renderCosts(grandTotal){
@@ -326,9 +383,7 @@ function renderCosts(grandTotal){
   filtered.forEach(r=>{
     by.set(r._cost, (by.get(r._cost)||0) + r._total);
   });
-
-  const rows = Array.from(by.entries())
-    .sort((a,b)=>b[1]-a[1]);
+  const rows = Array.from(by.entries()).sort((a,b)=>b[1]-a[1]);
 
   const tb = document.getElementById("tbCosts");
   tb.innerHTML = "";
@@ -343,30 +398,63 @@ function renderCosts(grandTotal){
     tb.appendChild(tr);
   });
 
-  // Pie
   const labels = rows.map(r=>r[0]);
   const data = rows.map(r=>Number(r[1].toFixed(2)));
 
   const ctx = document.getElementById("pieCosts");
-  if(pieChart) pieChart.destroy();
-  pieChart = new Chart(ctx,{
+  if(pieCosts) pieCosts.destroy();
+  pieCosts = new Chart(ctx,{
     type:"pie",
-    data:{
-      labels,
-      datasets:[{ data }]
-    },
+    data:{ labels, datasets:[{ data }] },
     options:{
       plugins:{
         legend:{ position:"bottom", labels:{ color:"#fff", boxWidth:12 } },
-        tooltip:{
-          callbacks:{
-            label:(it)=>{
-              const v = it.raw || 0;
-              const pct = grandTotal>0 ? (v/grandTotal*100) : 0;
-              return ` ${money(v)} (${pct.toFixed(1)}%)`;
-            }
-          }
-        }
+        tooltip:{ callbacks:{ label:(it)=>{
+          const v = it.raw || 0;
+          const pct = grandTotal>0 ? (v/grandTotal*100) : 0;
+          return ` ${money(v)} (${pct.toFixed(1)}%)`;
+        } } }
+      }
+    }
+  });
+}
+
+function renderSup(grandTotal){
+  const by = new Map();
+  filtered.forEach(r=>{
+    by.set(r._sup, (by.get(r._sup)||0) + r._total);
+  });
+  const rows = Array.from(by.entries()).sort((a,b)=>b[1]-a[1]);
+
+  const tb = document.getElementById("tbSup");
+  tb.innerHTML = "";
+  rows.forEach(([sup,tot])=>{
+    const pct = grandTotal>0 ? (tot/grandTotal*100) : 0;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(sup)}</td>
+      <td><b>${money(tot)}</b></td>
+      <td>${pct.toLocaleString("pt-BR",{minimumFractionDigits:1, maximumFractionDigits:1})}%</td>
+    `;
+    tb.appendChild(tr);
+  });
+
+  const labels = rows.map(r=>r[0]);
+  const data = rows.map(r=>Number(r[1].toFixed(2)));
+
+  const ctx = document.getElementById("pieSup");
+  if(pieSup) pieSup.destroy();
+  pieSup = new Chart(ctx,{
+    type:"pie",
+    data:{ labels, datasets:[{ data }] },
+    options:{
+      plugins:{
+        legend:{ position:"bottom", labels:{ color:"#fff", boxWidth:12 } },
+        tooltip:{ callbacks:{ label:(it)=>{
+          const v = it.raw || 0;
+          const pct = grandTotal>0 ? (v/grandTotal*100) : 0;
+          return ` ${money(v)} (${pct.toFixed(1)}%)`;
+        } } }
       }
     }
   });
@@ -383,7 +471,7 @@ function renderItems(){
   });
 
   const rows = Array.from(by.entries())
-    .map(([item,o])=>({ item, total:o.total, count:o.count, avg: o.total/o.count }))
+    .map(([item,o])=>({ item, total:o.total, count:o.count, avg:o.total/o.count }))
     .sort((a,b)=>b.total-a.total);
 
   const tb = document.getElementById("tbItems");
@@ -401,7 +489,6 @@ function renderItems(){
 }
 
 function renderUp(){
-  // Para cada item, pega lista (ordenada por data) com preço unitário
   const map = new Map();
   filtered.forEach(r=>{
     const q = r._qty;
@@ -444,6 +531,54 @@ function renderUp(){
     `;
     tb.appendChild(tr);
   });
+}
+
+// ===== CSV =====
+function csvEscape(s){
+  const v = (s===null || s===undefined) ? "" : String(s);
+  const needs = /["\n;]/.test(v) || v.includes(",");
+  const fixed = v.replace(/"/g,'""');
+  return needs ? `"${fixed}"` : fixed;
+}
+function exportCSV(){
+  if(!filtered.length){
+    alert("Nenhum registro com valor no filtro atual.");
+    return;
+  }
+  const mode = document.getElementById("dateMode").value;
+  const header = ["Data(ms)","Data","Status","Centro de custo","Item","Fornecedor","Qtd","Unidade","Valor total","Obs","ID"];
+  const lines = [header.join(";")];
+
+  filtered.slice().sort((a,b)=>a._ms-b._ms).forEach(r=>{
+    const dt = new Date(r._ms || 0);
+    const dateStr = (r._ms?dt.toLocaleString("pt-BR"):"-");
+    const status = r.status || "";
+    const unit = r.unit || r.un || r.unidade || "";
+    const obs = r.obs || "";
+    const row = [
+      r._ms||"",
+      dateStr,
+      status,
+      r._cost,
+      r._item,
+      r._sup,
+      (r.qty ?? ""),
+      unit,
+      (r._total||0).toFixed(2),
+      obs,
+      r.id
+    ].map(csvEscape).join(";");
+    lines.push(row);
+  });
+
+  const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  const from = document.getElementById("dateFrom").value || "ini";
+  const to = document.getElementById("dateTo").value || "fim";
+  a.download = `relatorio_${mode}_${from}_a_${to}.csv`;
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
 }
 
 function escapeHtml(s){
