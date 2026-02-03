@@ -464,11 +464,16 @@ function siblingUrl(targetSlug){
 }
 
 function memberLink(name){
-  const base = siblingUrl("equipe"); // <<< aqui é /equipe (igual seu site)
+  const base = siblingUrl("equipe"); // /equipe
   const u = new URL(base);
-  u.searchParams.set("m", String(name||"").trim());
+  const n = String(name || "").trim();
+  // Compatível com o seu equipe (usa ?u=)
+  u.searchParams.set("u", n);
+  // extra: compatibilidade com versões antigas que usem ?m=
+  u.searchParams.set("m", n);
   return u.toString();
 }
+
 
 /* ===== State caches ===== */
 let membersCache = [];
@@ -754,3 +759,4 @@ document.addEventListener("keydown",(e)=>{
 
 </body>
 </html>
+
