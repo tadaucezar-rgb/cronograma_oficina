@@ -73,6 +73,17 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
+function normStatus(s){
+  if(!s) return "";
+  const t=String(s).trim().toLowerCase();
+  if(t==="autorizado") return "authorized";
+  if(t==="comprado") return "purchased";
+  if(t==="recebido"||t==="chegou") return "received";
+  if(t==="finalizado") return "finalized";
+  if(t==="requested"||t==="solicitado") return "requested";
+  return t;
+}
+
 let currentFilter="all";
 function setFilter(v){
   currentFilter=v;
@@ -86,7 +97,12 @@ window.addEventListener("click",(e)=>{
 });
 
 
-function fmt(ts){return new Date(ts).toLocaleString("pt-BR");}
+function fmt(ts){
+  if(!ts) return "-";
+  const d=new Date(ts);
+  if(isNaN(d.getTime())) return "-";
+  return d.toLocaleString("pt-BR");
+}
 
 
 function refreshSuggestions(all){
@@ -136,9 +152,9 @@ function render(all){
         ${r.expectedDelivery?'<div class="small">'+fmt(r.expectedDelivery)+'</div>':''}
       </td>
       <td>
-        ${r.status==="authorized"
+        ${status==="authorized"
           ? `<button class="btn-blue" onclick="markPurchased('${id}')">Comprar</button>`
-          : (r.status==="purchased"
+          : (status==="purchased"
             ? `<button class="btn-ok" onclick="markReceived('${id}')">Dar entrada</button>`
             : `<span class="small">Finalizado</span>`)}
       </td>
