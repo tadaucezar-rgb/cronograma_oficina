@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Compras / Serviços</title>
 
 <style>
@@ -9,6 +9,10 @@ body {
     background:#000;
     color:#00eaff;
     font-family: Arial, sans-serif;
+}
+
+h2 {
+    color:#ff6a00;
 }
 
 /* FILTROS */
@@ -36,7 +40,16 @@ th, td {
     border-bottom:1px solid #0ff2;
 }
 
-/* BOTÕES DE STATUS */
+/* INPUTS */
+input {
+    background:#111;
+    border:1px solid #0ff3;
+    color:#00eaff;
+    padding:6px;
+    border-radius:6px;
+}
+
+/* BOTÕES */
 .btn-comprar {
     background:#2bff00;
     color:#000;
@@ -55,28 +68,26 @@ th, td {
     font-weight:bold;
 }
 
-/* 🔴 CORRIGIDO AQUI */
-.btn-finalizado {
+/* ✅ SOMENTE COR DIFERENTE */
+.badge-finalizado {
     background:#444;
     color:#ccc;
     border-radius:20px;
     padding:6px 14px;
-    border:none;
     font-weight:bold;
-    cursor:default;
 }
 </style>
 </head>
 
 <body>
 
-<h2 style="color:#ff6a00">Compras Autorizadas</h2>
+<h2>Compras Autorizadas</h2>
 
 <div>
-    <button class="filter-btn active" onclick="filtrar('todos', this)">Todos</button>
-    <button class="filter-btn" onclick="filtrar('finalizado', this)">Finalizado</button>
-    <button class="filter-btn" onclick="filtrar('comprar', this)">Comprar</button>
-    <button class="filter-btn" onclick="filtrar('entrada', this)">Entrada</button>
+    <button class="filter-btn active" onclick="filtrar('todos',this)">Todos</button>
+    <button class="filter-btn" onclick="filtrar('finalizado',this)">Finalizado</button>
+    <button class="filter-btn" onclick="filtrar('comprar',this)">Comprar</button>
+    <button class="filter-btn" onclick="filtrar('entrada',this)">Entrada</button>
 </div>
 
 <br>
@@ -98,27 +109,27 @@ th, td {
 <tr data-status="finalizado">
     <td>TADAU</td>
     <td>Fita dupla face</td>
-    <td>Brads</td>
-    <td>R$ 50,27</td>
-    <td>11/02/2026</td>
-    <td><span class="btn-finalizado">Finalizado</span></td>
+    <td><input value="Brads"></td>
+    <td><input value="50,27"></td>
+    <td><input value="11/02/2026"></td>
+    <td><span class="badge-finalizado">Finalizado</span></td>
 </tr>
 
 <tr data-status="comprar">
     <td>TADAU</td>
     <td>Usinagem</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
+    <td><input></td>
+    <td><input></td>
+    <td><input></td>
     <td><button class="btn-comprar">Comprar</button></td>
 </tr>
 
 <tr data-status="entrada">
     <td>TADAU</td>
     <td>Plotter adesivo</td>
-    <td>Nagano</td>
-    <td>R$ 2399</td>
-    <td>11/02/2026</td>
+    <td><input value="Nagano"></td>
+    <td><input value="2399"></td>
+    <td><input value="11/02/2026"></td>
     <td><button class="btn-entrada">Entrada</button></td>
 </tr>
 
