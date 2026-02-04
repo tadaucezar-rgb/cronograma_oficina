@@ -1,166 +1,305 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Admin - Compras</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Compras</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-<style>
-body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff;}
-header{padding:14px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900;text-align:center;}
-.container{padding:14px;max-width:900px;margin:auto;}
-.card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22);margin-bottom:12px;}
-h2{margin-top:0;color:#ff3d00;text-align:center;}
-table{width:100%;border-collapse:collapse;font-size:.85rem;}
-th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.15);text-align:left;}
-button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Arial,sans-serif;font-weight:900;cursor:pointer;}
-.btn-ok{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
-.btn-no{background:linear-gradient(90deg,#b71c1c,#ff1744);color:#fff;}
-input{padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:'Orbitron';}
-.pin{max-width:300px;margin:60px auto;}
-</style>
+  <style>
+    :root{--c1:#00e6ff;--c2:#ff4a00;--bg:#07090b;--panel:#0b0f12;--muted:#9aa7b2;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Orbitron',sans-serif;background:radial-gradient(circle at 50% 10%, #0c1116 0%, #060708 60%, #040405 100%);color:#e9f6ff;min-height:100vh}
+    header{height:72px;background:linear-gradient(#d9d9d9,#bfbfbf);display:flex;align-items:center;justify-content:space-between;padding:0 18px;box-shadow:0 2px 0 rgba(0,0,0,.25)}
+    header .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.08em;color:#111}
+    header img{height:34px;object-fit:contain}
+    header .title{font-weight:800;color:#111}
+
+    .wrap{max-width:1200px;margin:26px auto;padding:0 14px}
+    .panel{background:linear-gradient(180deg, rgba(6,9,11,.9), rgba(2,3,4,.92));border:1px solid rgba(0,230,255,.25);border-radius:18px;box-shadow:0 0 0 1px rgba(0,230,255,.08) inset, 0 0 26px rgba(0,230,255,.12);padding:18px}
+    .panel h1{margin:2px 0 14px;text-align:center;color:var(--c2);font-size:34px;letter-spacing:.08em}
+
+    .tabs{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+    .tab{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;border-radius:999px;padding:9px 14px;font-weight:700;cursor:pointer;transition:.15s}
+    .tab.active{background:linear-gradient(180deg, rgba(50,255,120,.95), rgba(0,170,70,.92));border-color:rgba(50,255,120,.5);color:#08100a}
+
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+    th{color:var(--c1);text-align:left;font-size:13px;letter-spacing:.08em}
+    td{font-size:13px;color:#e7f5ff}
+    .sub{display:block;color:var(--muted);font-size:11px;margin-top:4px;line-height:1.2}
+
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.07em;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
+    .pill.ok{background:rgba(50,255,120,.16);border-color:rgba(50,255,120,.35);color:#7bffb0}
+    .pill.wait{background:rgba(0,230,255,.14);border-color:rgba(0,230,255,.35);color:#63f1ff}
+    .pill.bad{background:rgba(255,60,60,.12);border-color:rgba(255,60,60,.35);color:#ff9a9a}
+    .pill.neutral{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#e8f6ff}
+
+    .btn{border:0;border-radius:999px;padding:9px 14px;font-weight:900;cursor:pointer;letter-spacing:.06em}
+    .btn.green{background:linear-gradient(180deg,#34ff7a,#00c35a);color:#08100a}
+    .btn.red{background:linear-gradient(180deg,#ff4455,#c81828);color:#130507}
+    .btn.ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff}
+
+    .note{color:var(--muted);font-size:12px;margin-top:10px;text-align:center}
+
+    /* PIN */
+    .pinOverlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:18px}
+    .pinCard{width:min(420px,100%);background:linear-gradient(180deg, rgba(6,9,11,.94), rgba(2,3,4,.94));border:1px solid rgba(0,230,255,.25);border-radius:18px;padding:18px;box-shadow:0 0 26px rgba(0,230,255,.14)}
+    .pinCard h2{margin:0 0 6px;color:var(--c2);text-align:center;letter-spacing:.08em}
+    .pinCard p{margin:0 0 14px;text-align:center;color:var(--muted);font-size:12px}
+    .pinRow{display:flex;gap:10px}
+    .pinRow input{flex:1;padding:12px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;font-size:16px;outline:none}
+    .pinErr{display:none;margin-top:10px;color:#ff9a9a;text-align:center;font-size:12px}
+
+    @media (max-width: 720px){
+      header{height:64px}
+      .panel h1{font-size:26px}
+      th,td{padding:9px 8px}
+      .btn{padding:8px 12px}
+    }
+  </style>
 </head>
-
 <body>
-
-<header>Administração de Compras</header>
-
-<div class="container" id="login">
-  <div class="card pin">
-    <h2>PIN de acesso</h2>
-    <input id="pin" type="password" placeholder="Digite o PIN">
-    <button class="btn-ok" onclick="checkPin()">Entrar</button>
-  </div>
-</div>
-
-<div class="container" id="content" style="display:none;">
-  <div class="card">
-    <div class="filters" id="tabs">
-      <button class="fbtn active" data-tab="pendentes">Pendentes</button>
-      <button class="fbtn" data-tab="acomp">Acompanhamento</button>
+  <header>
+    <div class="brand">
+      <img src="https://tadaucezar-rgb.github.io/cronograma_oficina/logo_tmg.png" alt="TMG" onerror="this.style.display='none'">
+      <div>TMG Racing</div>
     </div>
-    <h2 id="hPend">Requisições Pendentes</h2>
-    <table id="tablePend">
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Membro</th>
-          <th>Centro de custo</th>
-          <th>Item</th>
-          <th>Qtd</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
+    <div class="title">Admin Compras</div>
+  </header>
+
+  <!-- PIN -->
+  <div id="pinOverlay" class="pinOverlay">
+    <div class="pinCard">
+      <h2>Acesso restrito</h2>
+      <p>Digite o PIN para continuar</p>
+      <div class="pinRow">
+        <input id="pinInput" type="password" inputmode="numeric" placeholder="PIN" autocomplete="one-time-code" />
+        <button class="btn green" id="pinBtn">Entrar</button>
+      </div>
+      <div id="pinErr" class="pinErr">PIN inválido</div>
+    </div>
   </div>
-</div>
+
+  <div class="wrap">
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab active" data-tab="pendentes">Autorizações</button>
+        <button class="tab" data-tab="acompanhamento">Acompanhamento</button>
+        <button class="tab" id="btnZerar">Zerar histórico</button>
+      </div>
+
+      <h1 id="h1">Requisições Pendentes</h1>
+
+      <section id="secPendentes">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Solicitante</th>
+              <th>Centro</th>
+              <th>Item</th>
+              <th>Qtd</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="rowsPend"></tbody>
+        </table>
+        <div class="note">Mostra apenas solicitações com status <b>requested</b>.</div>
+      </section>
+
+      <section id="secAcomp" style="display:none">
+        <table>
+          <thead>
+            <tr>
+              <th>Solicitante</th>
+              <th>Item</th>
+              <th>Centro</th>
+              <th>Previsão</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="rowsAcomp"></tbody>
+        </table>
+        <div class="note">Acompanhe status e previsão (autorizado/comprado/chegou/recusado). Valores/fornecedor ficam ocultos aqui.</div>
+      </section>
+    </div>
+  </div>
 
 <script>
-function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-const ADMIN_PIN="1234"; // <<< ALTERE AQUI
+  // Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyD-0itIFRB1ioBRdmy6v1IkwxKkN6GktU8",
+    authDomain: "tmg-2d4c8.firebaseapp.com",
+    databaseURL: "https://tmg-2d4c8-default-rtdb.firebaseio.com",
+    projectId: "tmg-2d4c8",
+    storageBucket: "tmg-2d4c8.appspot.com",
+    messagingSenderId: "236075822674",
+    appId: "1:236075822674:web:a05a35b8a5ca7cdd80b4bf"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-const firebaseConfig={
-  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
-  authDomain:"tmg-painel.firebaseapp.com",
-  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com",
-  projectId:"tmg-painel",
-  storageBucket:"tmg-painel.firebasestorage.app",
-  messagingSenderId:"877912378151",
-  appId:"1:877912378151:web:88af3a4f8f551acd603702"
-};
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+  // PIN simples (mesmo padrão dos outros arquivos)
+  const ADMIN_PIN = "1234";
 
-function checkPin(){
-  if(document.getElementById("pin").value===ADMIN_PIN){
-    document.getElementById("login").style.display="none";
-    document.getElementById("content").style.display="block";
-    load();
-  }else alert("PIN incorreto");
-}
+  const $ = (id)=>document.getElementById(id);
 
-function load(){
-  let currentTab="pendentes";
-function setTab(t){
-  currentTab=t;
-  document.querySelectorAll(".fbtn").forEach(b=>b.classList.toggle("active", b.dataset.tab===t));
-  document.getElementById("hPend").style.display = (t==="pendentes")?"block":"none";
-  document.getElementById("tablePend").style.display = (t==="pendentes")?"table":"none";
-  document.getElementById("acompSection").style.display = (t==="acomp")?"block":"none";
-}
-window.addEventListener("click",(e)=>{
-  const b=e.target.closest?.(".fbtn");
-  if(!b) return;
-  setTab(b.dataset.tab);
-});
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function fmt(ts){
+    if(!ts) return "-";
+    const d = new Date(ts);
+    return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
 
-function statusLabel(s){
-  if(s==="requested") return "Pendente";
-  if(s==="authorized") return "Autorizado";
-  if(s==="purchased") return "Comprado";
-  if(s==="received") return "Chegou";
-  if(s==="rejected") return "Recusado";
-  return s||"-";
-}
+  function statusLabel(st){
+    const s = String(st||"").toLowerCase();
+    if(s==="requested") return `<span class="pill wait">Pendente</span>`;
+    if(s==="authorized") return `<span class="pill wait">Autorizado</span>`;
+    if(s==="purchased") return `<span class="pill wait">Comprado</span>`;
+    if(s==="received") return `<span class="pill ok">Chegou</span>`;
+    if(s==="rejected") return `<span class="pill bad">Recusado</span>`;
+    return `<span class="pill neutral">${st||"-"}</span>`;
+  }
 
-db.ref("purchaseRequests").on("value",snap=>{
-  const all=snap.val()||{};
-  const tbody=document.getElementById("rows");
-  tbody.innerHTML="";
-  Object.entries(all).forEach(([id,r])=>{
-    if(r.status!=="requested") return;
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${fmt(r.requestedAt)}</td>
-      <td>${esc(r.member||"-")}</td>
-      <td>${esc(r.cost||"-")}</td>
-      <td>${esc(r.item||"-")}</td>
-      <td>${esc(r.qty||"")} ${esc(r.unit||"")}</td>
-      <td>
-        <button class="btn-ok" onclick="authorize('${id}')">Autorizar</button>
-        <button class="btn-red" onclick="reject('${id}')">Recusar</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
+  let currentTab = "pendentes";
+  let all = {};
+
+  function setTab(tab){
+    currentTab = tab;
+    document.querySelectorAll('.tab[data-tab]').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+    $('secPendentes').style.display = tab==='pendentes' ? '' : 'none';
+    $('secAcomp').style.display = tab==='acompanhamento' ? '' : 'none';
+    $('h1').textContent = tab==='pendentes' ? 'Requisições Pendentes' : 'Acompanhamento';
+    render();
+  }
+
+  document.querySelectorAll('.tab[data-tab]').forEach(btn=>{
+    btn.addEventListener('click', ()=> setTab(btn.dataset.tab));
   });
 
-  const tbodyAll=document.getElementById("rowsAll");
-  tbodyAll.innerHTML="";
-  Object.entries(all).forEach(([id,r])=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${fmt(r.requestedAt)}</td>
-      <td>${esc(r.member||"-")}</td>
-      <td>${esc(r.cost||"-")}</td>
-      <td>${esc(r.item||"-")}</td>
-      <td>${esc(r.qty||"")} ${esc(r.unit||"")}</td>
-      <td>${statusLabel(r.status)}</td>
-    `;
-    tbodyAll.appendChild(tr);
-  });
-});
-});
-}
+  // PIN
+  function unlock(){
+    $('pinOverlay').style.display = 'none';
+    subscribe();
+  }
+  function checkPin(){
+    const v = ($('pinInput').value||"").trim();
+    if(v === ADMIN_PIN){
+      localStorage.setItem('tmg_admin_compras_ok','1');
+      $('pinErr').style.display='none';
+      unlock();
+    } else {
+      $('pinErr').style.display='block';
+    }
+  }
+  $('pinBtn').addEventListener('click', checkPin);
+  $('pinInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') checkPin(); });
+  if(localStorage.getItem('tmg_admin_compras_ok')==='1') unlock();
 
-function approve(id){
-  db.ref("purchaseRequests/"+id).update({
-    status:"authorized",
-    authorizedAt:Date.now()
-  });
-}
-function reject(id){
-  if(confirm("Confirmar recusa?")){
-    db.ref("purchaseRequests/"+id).update({
-      status:"rejected",
-      rejectedAt:Date.now()
+  function subscribe(){
+    db.ref('purchaseRequests').on('value', snap=>{
+      all = snap.val() || {};
+      render();
     });
   }
-}
+
+  function normalizeReq(r){
+    const member = r.member || r.requestedBy || r.user || r.solicitante || "-";
+    const costCenter = r.costCenter || r.centro || r.center || "-";
+    const item = r.item || r.description || r.material || "-";
+    const qty = (r.qty ?? r.qtd ?? "-");
+    const unit = r.unit || r.un || "";
+    const requestedAt = r.requestedAt || r.createdAt || r.ts || null;
+    const expectedAt = r.expectedAt || r.previsaoEntrega || r.deliveryAt || null;
+    const status = r.status || "requested";
+    return {member, costCenter, item, qty, unit, requestedAt, expectedAt, status};
+  }
+
+  function render(){
+    const entries = Object.entries(all).map(([id,r])=>({id, raw:r, ...normalizeReq(r)}));
+
+    // PENDENTES
+    const pend = entries.filter(e=>String(e.status).toLowerCase()==='requested');
+    $('rowsPend').innerHTML = pend.length ? pend.map(e=>{
+      return `
+        <tr>
+          <td>${fmt(e.requestedAt)}<span class="sub">ID: ${e.id}</span></td>
+          <td>${e.member}</td>
+          <td>${e.costCenter}</td>
+          <td>${e.item}</td>
+          <td>${e.qty} ${e.unit}</td>
+          <td style="white-space:nowrap;display:flex;gap:8px;align-items:center;">
+            <button class="btn green" onclick="approve('${e.id}')">Autorizar</button>
+            <button class="btn red" onclick="reject('${e.id}')">Recusar</button>
+          </td>
+        </tr>
+      `;
+    }).join('') : `<tr><td colspan="6" style="color:#9aa7b2;text-align:center;padding:18px">Nenhuma requisição pendente</td></tr>`;
+
+    // ACOMP
+    const acomp = entries
+      .filter(e=>String(e.status).toLowerCase()!=='requested')
+      .sort((a,b)=>(b.requestedAt||0)-(a.requestedAt||0));
+
+    $('rowsAcomp').innerHTML = acomp.length ? acomp.map(e=>{
+      const st = String(e.status).toLowerCase();
+      let prevTxt = fmt(e.expectedAt);
+      if(!e.expectedAt) prevTxt = '-';
+      // destaque atrasado (tem previsão, não chegou)
+      let overdue = false;
+      if(e.expectedAt && st !== 'received' && st !== 'rejected') overdue = (Date.now() > Number(e.expectedAt));
+
+      return `
+        <tr style="${overdue ? 'background:rgba(255,60,60,.06)' : ''}">
+          <td>${e.member}</td>
+          <td>${e.item}<span class="sub">${e.qty} ${e.unit}</span></td>
+          <td>${e.costCenter}</td>
+          <td>${prevTxt}${overdue ? '<span class="sub" style="color:#ff9a9a">Atrasado</span>' : ''}</td>
+          <td>${statusLabel(e.status)}</td>
+        </tr>
+      `;
+    }).join('') : `<tr><td colspan="5" style="color:#9aa7b2;text-align:center;padding:18px">Sem histórico ainda</td></tr>`;
+
+    // Mostrar a seção correta
+    $('secPendentes').style.display = currentTab==='pendentes' ? '' : 'none';
+    $('secAcomp').style.display = currentTab==='acompanhamento' ? '' : 'none';
+  }
+
+  // Ações
+  window.approve = function(id){
+    if(!confirm('Autorizar esta requisição?')) return;
+    db.ref('purchaseRequests/'+id).update({
+      status:'authorized',
+      authorizedAt: Date.now()
+    });
+  }
+
+  window.reject = function(id){
+    const motivo = prompt('Motivo (opcional):') || '';
+    if(!confirm('Recusar esta requisição?')) return;
+    db.ref('purchaseRequests/'+id).update({
+      status:'rejected',
+      rejectedAt: Date.now(),
+      rejectedReason: motivo
+    });
+  }
+
+  // Zerar histórico
+  $('btnZerar').addEventListener('click', async ()=>{
+    const ok = prompt('Digite ZERAR para confirmar (isso apaga compras/requisições):');
+    if(ok !== 'ZERAR') return;
+    if(!confirm('Última confirmação: apagar purchaseRequests?')) return;
+    try{
+      await db.ref('purchaseRequests').remove();
+      alert('Histórico de compras/requisições apagado.');
+    } catch(e){
+      alert('Falha ao apagar: ' + (e && e.message ? e.message : e));
+    }
+  });
 </script>
 </body>
 </html>
