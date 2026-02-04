@@ -22,6 +22,10 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
 .btn-ok{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
 .btn-blue{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
 .small{font-size:.75rem;opacity:.8;}
+    .filters{display:flex;gap:10px;justify-content:flex-start;flex-wrap:wrap;margin:8px 0 14px;}
+    .fbtn{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.22);}
+    .fbtn.active{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;border:none;}
+
 </style>
 </head>
 
@@ -31,6 +35,12 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Ar
 <div class="container">
   <div class="card">
     <h2>Compras Autorizadas</h2>
+    <div class="filters" id="filters">
+      <button class="fbtn active" data-filter="all">Todos</button>
+      <button class="fbtn" data-filter="comprar">Comprar</button>
+      <button class="fbtn" data-filter="darentrada">Dar entrada</button>
+      <button class="fbtn" data-filter="finalizado">Finalizado</button>
+    </div>
     <table>
       <thead>
         <tr>
@@ -63,6 +73,19 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
+let currentFilter="all";
+function setFilter(v){
+  currentFilter=v;
+  document.querySelectorAll(".fbtn").forEach(b=>b.classList.toggle("active", b.dataset.filter===v));
+  render(currentData);
+}
+window.addEventListener("click",(e)=>{
+  const b=e.target.closest?.(".fbtn");
+  if(!b) return;
+  setFilter(b.dataset.filter);
+});
+
+
 function fmt(ts){return new Date(ts).toLocaleString("pt-BR");}
 
 
@@ -78,45 +101,57 @@ function refreshSuggestions(all){
   }
 }
 
-db.ref("purchaseRequests").on("value",snap=>{
-  const data=snap.val()||{};
+let currentData = {};
+function render(all){
   const tbody=document.getElementById("rows");
   tbody.innerHTML="";
-  Object.entries(data).forEach(([id,r])=>{
+  Object.entries(all).forEach(([id,r])=>{
     if(!["authorized","purchased","received"].includes(r.status)) return;
+
+    if(currentFilter==="comprar" && r.status!=="authorized") return;
+    if(currentFilter==="darentrada" && r.status!=="purchased") return;
+    if(currentFilter==="finalizado" && r.status!=="received") return;
 
     const tr=document.createElement("tr");
     tr.innerHTML=`
       <td>
         <b>${esc(r.member||r.requestedBy||r.requester||"-")}</b><br>
         <span class="small">${fmt(r.requestedAt)}</span><br>
-        ${r.cost}
+        ${esc(r.cost||"-")}
       </td>
       <td>
-        ${r.item}<br>
-        <span class="small">${r.qty} ${r.unit}</span>
+        ${esc(r.item||"-")}<br>
+        <span class="small">${esc(r.qty||"")} ${esc(r.unit||"")}</span>
       </td>
       <td>
-        <input placeholder="Fornecedor" value="${r.supplier?.name||""}" onchange="upd('${id}','supplier/name',this.value)">
-        <input placeholder="Contato" value="${r.supplier?.contact||""}" onchange="upd('${id}','supplier/contact',this.value)">
-        <input placeholder="Link" value="${r.supplier?.link||""}" onchange="upd('${id}','supplier/link',this.value)">
+        <input placeholder="Fornecedor" value="${esc(r.supplier?.name||"")}" onchange="upd('${id}','supplier/name',this.value)">
+        <input placeholder="Contato" value="${esc(r.supplier?.contact||"")}" onchange="upd('${id}','supplier/contact',this.value)">
+        <input placeholder="Link" value="${esc(r.supplier?.link||"")}" onchange="upd('${id}','supplier/link',this.value)">
       </td>
       <td>
-        <input type="number" step="0.01" placeholder="Valor total" value="${r.total||""}" onchange="upd('${id}','total',Number(this.value))">
+        <input type="number" step="0.01" placeholder="Valor total" value="${r.total??""}" onchange="upd('${id}','total',Number(this.value))">
       </td>
       <td>
-        <input type="datetime-local" onchange="upd('${id}','expectedDelivery',new Date(this.value).getTime())">
+        <input type="datetime-local" value="${r.expectedDelivery?new Date(r.expectedDelivery).toISOString().slice(0,16):""}" onchange="upd('${id}','expectedDelivery',this.value?new Date(this.value).getTime():null)">
         ${r.expectedDelivery?'<div class="small">'+fmt(r.expectedDelivery)+'</div>':''}
       </td>
       <td>
-        ${r.status==="authorized"?
-          `<button class="btn-blue" onclick="markPurchased('${id}')">Comprar</button>`:
-          `<button class="btn-ok" onclick="markReceived('${id}')">Dar entrada</button>`
-        }
+        ${r.status==="authorized"
+          ? `<button class="btn-blue" onclick="markPurchased('${id}')">Comprar</button>`
+          : (r.status==="purchased"
+            ? `<button class="btn-ok" onclick="markReceived('${id}')">Dar entrada</button>`
+            : `<span class="small">Finalizado</span>`)}
       </td>
     `;
     tbody.appendChild(tr);
   });
+}
+
+db.ref("purchaseRequests").on("value",snap=>{
+  currentData=snap.val()||{};
+  refreshSuggestions(currentData);
+  render(currentData);
+});
 });
 
 function upd(id,path,val){
