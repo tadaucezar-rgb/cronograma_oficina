@@ -1,69 +1,345 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Aprovação de Compras</title>
-<style>
-  body{ font-family:sans-serif; background:#0a0a0a; color:#00e5ff; padding:20px; }
-  table{ width:100%; border-collapse:collapse; background:rgba(255,255,255,0.05); }
-  th, td{ padding:12px; border:1px solid #333; text-align:left; }
-  .btn-ok{ background:#64dd17; color:#000; border:none; padding:8px 15px; cursor:pointer; border-radius:4px; }
-</style>
-</head>
-<body>
-  <h2>SOLICITAÇÕES PENDENTES (ADMIN)</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Solicitante</th>
-        <th>Item</th>
-        <th>Centro de Custo</th>
-        <th>Ação</th>
-      </tr>
-    </thead>
-    <tbody id="tbPending"></tbody>
-  </table>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Compras - TMG</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+  :root{
+    --c-cyan:#00e5ff;
+    --c-orange:#ff3d00;
+    --c-green:#64dd17;
+    --c-red:#ff1744;
+    --bg1:#0a0a0a;
+    --bg2:#000;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Orbitron',Arial,sans-serif;
+    background:radial-gradient(circle at top,var(--bg1),var(--bg2));
+    color:var(--c-cyan);
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 16px;
+    background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
+    color:#000;
+    font-weight:900;
+  }
+  header img{height:36px}
+  .wrap{max-width:1200px;margin:auto;padding:14px;}
+  .card{
+    background:rgba(0,0,0,.78);
+    border-radius:18px;
+    padding:16px;
+    border:2px solid rgba(0,229,255,.22);
+    box-shadow:0 0 26px rgba(0,229,255,.22);
+    margin-bottom:12px;
+  }
+  h2{margin:0 0 12px 0;color:var(--c-orange);text-align:center;}
+  .tabs{
+    display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;
+  }
+  .tab{
+    padding:8px 14px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.08);
+    color:#fff;font-weight:900;cursor:pointer;
+  }
+  .tab.active{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
+  table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.82rem;}
+  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.14);vertical-align:top;word-break:break-word;}
+  th{color:var(--c-cyan);text-transform:uppercase;font-size:.7rem;letter-spacing:.8px;}
+  .muted{opacity:.78;font-size:.78rem;}
+  .pill{
+    display:inline-block;padding:4px 8px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.08);
+    font-size:.72rem;
+    white-space:nowrap;
+  }
+  .overdue-row td{ background:rgba(255,23,68,.10); }
+  .overdue-tag{
+    display:inline-block;
+    padding:4px 8px;border-radius:999px;
+    border:1px solid rgba(255,23,68,.35);
+    background:rgba(255,23,68,.16);
+    color:#fff;font-size:.72rem;font-weight:900;margin-left:8px;
+  }
+  input,button{
+    font-family:'Orbitron',Arial,sans-serif;
+  }
+  input{
+    width:100%;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+  }
+  button{
+    padding:10px 14px;border-radius:14px;border:none;
+    cursor:pointer;font-weight:900;white-space:nowrap;
+  }
+  .btn{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
+  .btn2{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
+  .btnDanger{background:linear-gradient(90deg,#ff1744,#ff3d00);color:#000;}
+  .pinCard{max-width:420px;margin:50px auto;}
+  .dangerBox{
+    border:2px solid rgba(255,23,68,.35);
+    box-shadow:0 0 26px rgba(255,23,68,.18);
+  }
+</style>
+</head>
+
+<body>
+<header>
+  <img src="logo_tmg_clean.png" alt="TMG" />
+  <div>Admin Compras</div>
+</header>
+
+<!-- PIN -->
+<div class="wrap" id="pinScreen">
+  <div class="card pinCard">
+    <h2>PIN</h2>
+    <div class="muted" style="margin-bottom:10px;">Digite o PIN para acessar.</div>
+    <input id="pin" type="password" placeholder="PIN" />
+    <button class="btn" style="width:100%;margin-top:12px" onclick="unlock()">Entrar</button>
+    <div class="muted" style="margin-top:10px;">PIN padrão: <b>1234</b></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="wrap" id="app" style="display:none;">
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('auth', this)">Autorizações</button>
+      <button class="tab" onclick="showTab('track', this)">Acompanhamento</button>
+      <button class="tab" onclick="showTab('danger', this)">Zerar histórico</button>
+    </div>
+
+    <!-- AUTH -->
+    <div id="tab_auth">
+      <h2>Autorizações pendentes</h2>
+      <div class="muted">Aqui você autoriza solicitações feitas pela equipe.</div>
+      <table style="margin-top:10px;">
+        <thead>
+          <tr>
+            <th style="width:18%;">Solicitante</th>
+            <th style="width:28%;">Item</th>
+            <th style="width:12%;">Qtd</th>
+            <th style="width:18%;">Centro</th>
+            <th style="width:24%;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbAuth"></tbody>
+      </table>
+    </div>
+
+    <!-- TRACK -->
+    <div id="tab_track" style="display:none;">
+      <h2>Acompanhamento</h2>
+      <div class="muted">Mostra autorizados/comprados/recebidos. Atrasados ficam destacados.</div>
+      <table style="margin-top:10px;">
+        <thead>
+          <tr>
+            <th style="width:18%;">Solicitante</th>
+            <th style="width:24%;">Item</th>
+            <th style="width:18%;">Centro</th>
+            <th style="width:20%;">Previsão</th>
+            <th style="width:20%;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbTrack"></tbody>
+      </table>
+    </div>
+
+    <!-- DANGER -->
+    <div id="tab_danger" style="display:none;">
+      <h2>Zerar histórico de compras</h2>
+      <div class="card dangerBox">
+        <div class="muted" style="margin-bottom:10px;">
+          Isso apaga <b>todas</b> as solicitações/autorizações/compras do banco:
+          <span class="pill">purchaseRequests</span>. <b>Irreversível</b>.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;">
+          <div>
+            <label style="display:block;font-size:.78rem;margin-bottom:6px;">Digite ZERAR</label>
+            <input id="wipeText" placeholder="ZERAR" />
+          </div>
+          <div>
+            <label style="display:block;font-size:.78rem;margin-bottom:6px;">PIN</label>
+            <input id="wipePin" type="password" placeholder="PIN" />
+          </div>
+          <div>
+            <button class="btnDanger" style="width:100%" onclick="wipePurchases()">APAGAR TUDO</button>
+          </div>
+        </div>
+        <div class="muted" style="margin-top:10px;">
+          Dica: faça isso somente quando quiser recomeçar do zero.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-  // CONFIGURAÇÃO FIREBASE (Mantenha as suas chaves aqui)
-  const firebaseConfig = {  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+/* ===== PIN ===== */
+const PIN = "1234";
+function unlock(){
+  const v = (document.getElementById("pin").value||"").trim();
+  if(v !== PIN){ alert("PIN incorreto"); return; }
+  document.getElementById("pinScreen").style.display="none";
+  document.getElementById("app").style.display="block";
+  boot();
+}
+
+/* ===== Firebase ===== */
+const firebaseConfig={
+  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
   authDomain:"tmg-painel.firebaseapp.com",
   databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com",
   projectId:"tmg-painel",
   storageBucket:"tmg-painel.firebasestorage.app",
   messagingSenderId:"877912378151",
   appId:"1:877912378151:web:88af3a4f8f551acd603702"
- };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-  db.ref("purchaseRequests").on("value", snap => {
-    const tbody = document.getElementById("tbPending");
-    tbody.innerHTML = "";
-    
-    snap.forEach(child => {
-      const r = child.val();
-      // SÓ MOSTRA O QUE ESTÁ PENDENTE
-      if(r.status === "requested"){
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${r.requestedBy || r.member || "-"}</td>
-          <td>${r.item}</td>
-          <td>${r.cost || "-"}</td>
-          <td><button class="btn-ok" onclick="authorize('${child.key}')">AUTORIZAR</button></td>
-        `;
-        tbody.appendChild(tr);
-      }
-    });
+/* ===== Tabs ===== */
+function showTab(key, btn){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  ["auth","track","danger"].forEach(k=>{
+    document.getElementById("tab_"+k).style.display = (k===key) ? "block" : "none";
   });
+}
 
-  function authorize(id){
-    if(confirm("Autorizar este pedido?")){
-      db.ref("purchaseRequests/" + id).update({ status: "authorized" });
-    }
+function esc(s){
+  return String(s||"").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+function fmt(ms){
+  if(!ms) return "-";
+  return new Date(ms).toLocaleString("pt-BR");
+}
+
+/* ===== State ===== */
+let rows = [];
+
+/* ===== Boot ===== */
+function boot(){
+  db.ref("purchaseRequests").on("value", snap=>{
+    const data = snap.val() || {};
+    rows = Object.entries(data).map(([id,r])=>({id, ...(r||{})}));
+    renderAuth();
+    renderTrack();
+  });
+}
+
+/* ===== Render: Auth ===== */
+function renderAuth(){
+  const tb = document.getElementById("tbAuth");
+  tb.innerHTML = "";
+  const pend = rows
+    .filter(r => (r.status||"") === "requested")
+    .sort((a,b)=>(a.requestedAt||0)-(b.requestedAt||0));
+
+  if(!pend.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="5" class="muted">Nenhuma autorização pendente.</td>`;
+    tb.appendChild(tr);
+    return;
   }
+
+  pend.forEach(r=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${esc(r.requestedBy||"-")}</td>
+      <td>
+        <b>${esc(r.item||"-")}</b>
+        <div class="muted" style="margin-top:6px;">Solicitado em: ${fmt(r.requestedAt)}</div>
+      </td>
+      <td>${r.qty ?? "-" } ${esc(r.unit||"")}</td>
+      <td>${esc(r.cost||"Sem centro")}</td>
+      <td style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn" onclick="authorize('${r.id}')">Autorizar</button>
+        <button class="btnDanger" onclick="reject('${r.id}')">Rejeitar</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+function authorize(id){
+  db.ref("purchaseRequests/"+id).update({status:"authorized", authorizedAt: Date.now()});
+}
+function reject(id){
+  if(!confirm("Rejeitar esta solicitação?")) return;
+  db.ref("purchaseRequests/"+id).update({status:"rejected", rejectedAt: Date.now()});
+}
+
+/* ===== Render: Track ===== */
+function renderTrack(){
+  const tb = document.getElementById("tbTrack");
+  tb.innerHTML = "";
+
+  const list = rows
+    .filter(r => ["authorized","purchased","received"].includes(r.status||""))
+    .sort((a,b)=>(a.expectedDelivery||9999999999999)-(b.expectedDelivery||9999999999999));
+
+  if(!list.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="5" class="muted">Sem itens em acompanhamento.</td>`;
+    tb.appendChild(tr);
+    return;
+  }
+
+  list.forEach(r=>{
+    const status = r.status || "-";
+    const stLabel = (status==="authorized") ? "Autorizado"
+                  : (status==="purchased") ? "Comprado"
+                  : (status==="received") ? "Chegou"
+                  : status;
+
+    const isOverdue = r.expectedDelivery && (Date.now() > r.expectedDelivery) && status!=="received";
+    const tr = document.createElement("tr");
+    if(isOverdue) tr.className = "overdue-row";
+
+    tr.innerHTML = `
+      <td>${esc(r.requestedBy||"-")}</td>
+      <td><b>${esc(r.item||"-")}</b></td>
+      <td>${esc(r.cost||"Sem centro")}</td>
+      <td>${r.expectedDelivery ? fmt(r.expectedDelivery) : "-"}</td>
+      <td><b>${stLabel}</b>${isOverdue ? `<span class="overdue-tag">ATRASADO</span>` : ``}</td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+
+/* ===== WIPE ===== */
+function wipePurchases(){
+  const t = (document.getElementById("wipeText").value||"").trim().toUpperCase();
+  const p = (document.getElementById("wipePin").value||"").trim();
+  if(t !== "ZERAR"){ alert("Digite ZERAR para confirmar."); return; }
+  if(p !== PIN){ alert("PIN incorreto."); return; }
+  if(!confirm("IRREVERSÍVEL: apagar TODO o histórico de compras. Confirmar?")) return;
+
+  db.ref("purchaseRequests").remove()
+    .then(()=>alert("Histórico de compras apagado ✅"))
+    .catch(e=>alert("Erro ao apagar: " + (e?.message||e)));
+}
 </script>
 </body>
 </html>
