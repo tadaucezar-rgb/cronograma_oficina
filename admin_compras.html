@@ -111,52 +111,52 @@ const PIN_ADMIN_COMPRAS = "1234";
 const pinCard = document.getElementById('pinCard');
 const appCard = document.getElementById('appCard');
 const pinInput = document.getElementById('pinInput');
+const btnPin = document.getElementById('btnPin');
+const pinCard = document.getElementById('pinCard');
+const appCard = document.getElementById('appCard');
 
-document.getElementById('btnPin').addEventListener('click', function(){
-  const v = (pinInput.value || "").trim();
-  if(v === PIN_ADMIN_COMPRAS){
-    localStorage.setItem('tmg_admin_compras_pin_ok','1');
-    pinCard.classList.add('hidden');
+// evita duplicar listeners e evita erro de TDZ
+var started = false;
+
+function unlockUI(){
+  if(pinCard) pinCard.style.display = 'none';
+  if(appCard){
     appCard.classList.remove('hidden');
-    startListeners();
-  } else {
-    alert('PIN incorreto');
+    appCard.style.display = 'block';
   }
-});
+}
+function lockUI(){
+  if(pinCard) pinCard.style.display = 'block';
+  if(appCard) appCard.style.display = 'none';
+}
 
-if(localStorage.getItem('tmg_admin_compras_pin_ok') === '1'){
-  pinCard.classList.add('hidden');
-  appCard.classList.remove('hidden');
+function isUnlocked(){
+  return sessionStorage.getItem('ADMIN_COMPRAS_UNLOCKED') === '1';
+}
+function setUnlocked(v){
+  sessionStorage.setItem('ADMIN_COMPRAS_UNLOCKED', v ? '1' : '0');
+}
+
+if(btnPin){
+  btnPin.addEventListener('click', () => {
+    const val = (pinInput?.value || '').trim();
+    if(val === PIN_ADMIN_COMPRAS){
+      setUnlocked(true);
+      unlockUI();
+      startListeners();
+    } else {
+      alert('PIN incorreto');
+    }
+  });
+}
+
+// mantém destravado ao recarregar
+if(isUnlocked()){
+  unlockUI();
   startListeners();
+} else {
+  lockUI();
 }
-
-function fmtDateTime(ts){
-  if(!ts) return '-';
-  const d = new Date(ts);
-  if(isNaN(d.getTime())) return '-';
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const yyyy = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2,'0');
-  const mi = String(d.getMinutes()).padStart(2,'0');
-  return dd + "/" + mm + "/" + yyyy + " " + hh + ":" + mi;
-}
-function pill(status){
-  const s = (status || '').toLowerCase();
-  const cls = "pill " + (s || "requested");
-  const label = s ? s.toUpperCase() : "-";
-  return '<span class="' + cls + '">' + label + '</span>';
-}
-function isOverdue(item){
-  if(!item || !item.deliveryExpectedAt) return false;
-  const exp = new Date(item.deliveryExpectedAt).getTime();
-  if(!exp) return false;
-  const st = (item.status || '').toLowerCase();
-  if(st === 'received') return false;
-  return Date.now() > exp;
-}
-
-let started = false;
 function startListeners(){
   if(started) return;
   started = true;
