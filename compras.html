@@ -190,7 +190,7 @@ function render(){
     if(overdue) tr.classList.add("overdue");
 
     tr.innerHTML=`
-      <td>${r.requestedBy||"-"}</td>
+      <td>${(r.requestedBy||r.member||"-")}</td>
       <td>${r.item||"-"}</td>
       <td><input value="${r.supplier?.name||""}" onblur="upd('${r.id}','supplier/name',this.value)"></td>
       <td>
