@@ -266,7 +266,7 @@ function renderAuth(){
   pend.forEach(r=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${esc(r.requestedBy||"-")}</td>
+      <td>${esc(r.requestedBy||r.member||"-")}</td>
       <td>
         <b>${esc(r.item||"-")}</b>
         <div class="muted" style="margin-top:6px;">Solicitado em: ${fmt(r.requestedAt)}</div>
@@ -318,7 +318,7 @@ function renderTrack(){
     if(isOverdue) tr.className = "overdue-row";
 
     tr.innerHTML = `
-      <td>${esc(r.requestedBy||"-")}</td>
+      <td>${esc(r.requestedBy||r.member||"-")}</td>
       <td><b>${esc(r.item||"-")}</b></td>
       <td>${esc(r.cost||"Sem centro")}</td>
       <td>${r.expectedDelivery ? fmt(r.expectedDelivery) : "-"}</td>
