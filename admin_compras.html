@@ -168,6 +168,69 @@ function startListeners(){
   });
 }
 
+
+// ===== Helpers (evita travar render) =====
+function _parseDateTime(val){
+  if(!val) return null;
+  if(val instanceof Date) return val;
+  if(typeof val === 'number') return new Date(val);
+  if(typeof val === 'string'){
+    // dd/mm/aaaa hh:mm (ou só dd/mm/aaaa)
+    var m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
+    if(m){
+      var dd = parseInt(m[1],10), mm = parseInt(m[2],10)-1, yyyy = parseInt(m[3],10);
+      var hh = m[4] ? parseInt(m[4],10) : 0;
+      var mi = m[5] ? parseInt(m[5],10) : 0;
+      return new Date(yyyy, mm, dd, hh, mi, 0, 0);
+    }
+    var d2 = new Date(val);
+    if(!isNaN(d2.getTime())) return d2;
+  }
+  // Firebase Timestamp? (seconds)
+  if(typeof val === 'object'){
+    if(val.seconds) return new Date(val.seconds*1000);
+    if(val._seconds) return new Date(val._seconds*1000);
+  }
+  return null;
+}
+function fmtDateTime(val){
+  var d = _parseDateTime(val);
+  if(!d) return '-';
+  var dd = String(d.getDate()).padStart(2,'0');
+  var mm = String(d.getMonth()+1).padStart(2,'0');
+  var yyyy = d.getFullYear();
+  var hh = String(d.getHours()).padStart(2,'0');
+  var mi = String(d.getMinutes()).padStart(2,'0');
+  return dd + '/' + mm + '/' + yyyy + ' ' + hh + ':' + mi;
+}
+function isOverdue(rec){
+  try{
+    if(!rec) return false;
+    var st = (rec.status||'').toLowerCase();
+    if(st==='received' || st==='finalizado' || st==='chegou') return false;
+    var d = _parseDateTime(rec.deliveryDate || rec.previsao || rec.previsaoEntrega);
+    if(!d) return false;
+    return d.getTime() < Date.now();
+  }catch(e){
+    return false;
+  }
+}
+function pill(status){
+  var s = (status||'').toLowerCase();
+  var label = status || '-';
+  if(s==='requested') label = 'Requested';
+  if(s==='authorized') label = 'Autorizado';
+  if(s==='purchased') label = 'Comprado';
+  if(s==='received') label = 'Chegou';
+  if(s==='rejected') label = 'Recusado';
+  var cls = 'pill';
+  if(s==='requested') cls += ' pill-req';
+  else if(s==='authorized') cls += ' pill-auth';
+  else if(s==='purchased') cls += ' pill-buy';
+  else if(s==='received') cls += ' pill-ok';
+  else if(s==='rejected') cls += ' pill-no';
+  return '<span class="'+cls+'">'+label+'</span>';
+}
 function renderPending(arr){
   const tbody = document.getElementById('tbodyPending');
   const pend = arr
