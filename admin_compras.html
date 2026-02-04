@@ -39,8 +39,12 @@ input{padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.2);back
 
 <div class="container" id="content" style="display:none;">
   <div class="card">
-    <h2>Requisições Pendentes</h2>
-    <table>
+    <div class="filters" id="tabs">
+      <button class="fbtn active" data-tab="pendentes">Pendentes</button>
+      <button class="fbtn" data-tab="acomp">Acompanhamento</button>
+    </div>
+    <h2 id="hPend">Requisições Pendentes</h2>
+    <table id="tablePend">
       <thead>
         <tr>
           <th>Data</th>
@@ -81,26 +85,66 @@ function checkPin(){
 }
 
 function load(){
-  db.ref("purchaseRequests").on("value",snap=>{
-    const data=snap.val()||{};
-    const tbody=document.getElementById("rows");
-    tbody.innerHTML="";
-    Object.entries(data).forEach(([id,r])=>{
-      if(r.status!=="requested") return;
-      const tr=document.createElement("tr");
-      tr.innerHTML=`
-        <td>${new Date(r.requestedAt).toLocaleString("pt-BR")}</td>
-        <td>${esc(r.member||r.requestedBy||r.requester||'-')}</td>
-        <td>${r.cost}</td>
-        <td>${r.item}</td>
-        <td>${r.qty} ${r.unit}</td>
-        <td>
-          <button class="btn-ok" onclick="approve('${id}')">Autorizar</button>
-          <button class="btn-no" onclick="reject('${id}')">Recusar</button>
-        </td>`;
-      tbody.appendChild(tr);
-    });
+  let currentTab="pendentes";
+function setTab(t){
+  currentTab=t;
+  document.querySelectorAll(".fbtn").forEach(b=>b.classList.toggle("active", b.dataset.tab===t));
+  document.getElementById("hPend").style.display = (t==="pendentes")?"block":"none";
+  document.getElementById("tablePend").style.display = (t==="pendentes")?"table":"none";
+  document.getElementById("acompSection").style.display = (t==="acomp")?"block":"none";
+}
+window.addEventListener("click",(e)=>{
+  const b=e.target.closest?.(".fbtn");
+  if(!b) return;
+  setTab(b.dataset.tab);
+});
+
+function statusLabel(s){
+  if(s==="requested") return "Pendente";
+  if(s==="authorized") return "Autorizado";
+  if(s==="purchased") return "Comprado";
+  if(s==="received") return "Chegou";
+  if(s==="rejected") return "Recusado";
+  return s||"-";
+}
+
+db.ref("purchaseRequests").on("value",snap=>{
+  const all=snap.val()||{};
+  const tbody=document.getElementById("rows");
+  tbody.innerHTML="";
+  Object.entries(all).forEach(([id,r])=>{
+    if(r.status!=="requested") return;
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${fmt(r.requestedAt)}</td>
+      <td>${esc(r.member||"-")}</td>
+      <td>${esc(r.cost||"-")}</td>
+      <td>${esc(r.item||"-")}</td>
+      <td>${esc(r.qty||"")} ${esc(r.unit||"")}</td>
+      <td>
+        <button class="btn-ok" onclick="authorize('${id}')">Autorizar</button>
+        <button class="btn-red" onclick="reject('${id}')">Recusar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
   });
+
+  const tbodyAll=document.getElementById("rowsAll");
+  tbodyAll.innerHTML="";
+  Object.entries(all).forEach(([id,r])=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${fmt(r.requestedAt)}</td>
+      <td>${esc(r.member||"-")}</td>
+      <td>${esc(r.cost||"-")}</td>
+      <td>${esc(r.item||"-")}</td>
+      <td>${esc(r.qty||"")} ${esc(r.unit||"")}</td>
+      <td>${statusLabel(r.status)}</td>
+    `;
+    tbodyAll.appendChild(tr);
+  });
+});
+});
 }
 
 function approve(id){
