@@ -246,7 +246,7 @@ function renderPending(arr){
     const who = x.member || x.requestedBy || '-';
     const qty = (x.quantity || '-') + ' ' + (x.unit || '');
     return '<tr>' +
-      '<td>' + fmtDateTime(x.createdAt) + '</td>' +
+      '<td>' + fmtDateTime(x.requestedAt||x.createdAt||x.authorizedAt||x.purchasedAt||x.receivedAt) + '</td>' +
       '<td>' + who + '</td>' +
       '<td>' + (x.costCenter || '-') + '</td>' +
       '<td>' + (x.item || '-') + '</td>' +
