@@ -2,226 +2,142 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<title>Compras - Execução</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Compras</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:'Orbitron',Arial,sans-serif;
-  background:radial-gradient(circle at top,#0a0a0a,#000);
-  color:#00e5ff;
-}
-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:12px 16px;
-  background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);
-  color:#000;
-  font-weight:900;
-}
-header img{height:36px}
-.wrap{padding:14px;max-width:1200px;margin:auto}
-.card{
-  background:rgba(0,0,0,.78);
-  border-radius:18px;
-  padding:16px;
-  border:2px solid rgba(0,229,255,.22);
-  box-shadow:0 0 26px rgba(0,229,255,.22);
-}
-.filters{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-bottom:12px;
-}
-.fbtn{
-  padding:6px 14px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.25);
-  background:rgba(255,255,255,.08);
-  color:#fff;
-  font-weight:800;
-  cursor:pointer;
-}
-.fbtn.active{
-  background:linear-gradient(90deg,#00c853,#64dd17);
-  color:#000;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  table-layout:fixed;
-  font-size:.82rem;
-}
-th,td{
-  padding:10px;
-  border-bottom:1px solid rgba(255,255,255,.15);
-  vertical-align:top;
-}
-th{
-  text-transform:uppercase;
-  font-size:.7rem;
-}
-.money{
-  display:flex;
-  align-items:center;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.2);
-  border-radius:10px;
-  overflow:hidden;
-}
-.money span{
-  padding:8px 10px;
-  font-weight:900;
-  background:rgba(0,0,0,.35);
-  border-right:1px solid rgba(255,255,255,.15);
-}
-.money input{
-  border:none;
-  background:transparent;
-  padding:8px;
-  color:#fff;
-  width:100%;
-  font-family:'Orbitron';
-}
-input,select{
-  width:100%;
-  padding:8px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,.2);
-  background:rgba(255,255,255,.08);
-  color:#fff;
-}
-button{
-  padding:8px 12px;
-  border-radius:12px;
-  border:none;
-  font-family:'Orbitron';
-  font-weight:900;
-  cursor:pointer;
-}
-.buy{background:#00c853;color:#000}
-.recv{background:#2979ff;color:#000}
-.overdue{background:rgba(255,23,68,.18)}
+body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff;}
+header{padding:14px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900;text-align:center;}
+.container{padding:14px;max-width:1100px;margin:auto;}
+.card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22);margin-bottom:12px;}
+h2{margin-top:0;color:#ff3d00;text-align:center;}
+table{width:100%;border-collapse:collapse;font-size:.85rem;}
+th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.15);text-align:left;vertical-align:top;}
+input{width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:'Orbitron';}
+button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron',Arial,sans-serif;font-weight:900;cursor:pointer;}
+.btn-ok{background:linear-gradient(90deg,#00c853,#64dd17);color:#000;}
+.btn-blue{background:linear-gradient(90deg,#2979ff,#00e5ff);color:#000;}
+.small{font-size:.75rem;opacity:.8;}
 </style>
 </head>
 
 <body>
-<header>
-  <img src="logo_tmg_clean.png">
-  <div>Compras / Serviços</div>
-</header>
+<header>Setor de Compras</header>
 
-<div class="wrap">
+<div class="container">
   <div class="card">
-    <div class="filters">
-      <button class="fbtn active" onclick="setFilter('all')">Todos</button>
-      <button class="fbtn" onclick="setFilter('today')">Hoje</button>
-      <button class="fbtn" onclick="setFilter('week')">Semana</button>
-      <button class="fbtn" onclick="setFilter('overdue')">Atrasados</button>
-    </div>
-
+    <h2>Compras Autorizadas</h2>
     <table>
       <thead>
         <tr>
-          <th>Solicitante</th>
+          <th>Solicitação</th>
           <th>Item</th>
           <th>Fornecedor</th>
-          <th>Valor</th>
+          <th>Valores</th>
           <th>Previsão</th>
-          <th>Ação</th>
+          <th>Ações</th>
         </tr>
       </thead>
-      <tbody id="tbody"></tbody>
+      <tbody id="rows"></tbody>
     </table>
+<datalist id="dlSuppliers"></datalist>
+
   </div>
 </div>
 
 <script>
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 const firebaseConfig={
- apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
- databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com"
+  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+  authDomain:"tmg-painel.firebaseapp.com",
+  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com",
+  projectId:"tmg-painel",
+  storageBucket:"tmg-painel.firebasestorage.app",
+  messagingSenderId:"877912378151",
+  appId:"1:877912378151:web:88af3a4f8f551acd603702"
 };
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
-let data=[], filter="all";
+function fmt(ts){return new Date(ts).toLocaleString("pt-BR");}
 
-function setFilter(f){
-  filter=f;
-  document.querySelectorAll(".fbtn").forEach(b=>b.classList.remove("active"));
-  event.target.classList.add("active");
-  render();
-}
 
-function isToday(ms){
-  const d=new Date(ms), n=new Date();
-  return d.toDateString()===n.toDateString();
-}
-function isWeek(ms){
-  const d=new Date(ms), n=new Date();
-  const diff=(d-n)/(1000*60*60*24);
-  return diff>=0 && diff<=7;
+function refreshSuggestions(all){
+  const supSet = new Set();
+  all.forEach(r=>{
+    const n = r.supplier && r.supplier.name ? String(r.supplier.name).trim() : "";
+    if(n) supSet.add(n);
+  });
+  const dl = document.getElementById("dlSuppliers");
+  if(dl){
+    dl.innerHTML = Array.from(supSet).sort().map(v=>`<option value="${esc(v)}"></option>`).join("");
+  }
 }
 
 db.ref("purchaseRequests").on("value",snap=>{
-  data=Object.entries(snap.val()||{}).map(([id,r])=>({id,...r}));
-  render();
-});
-
-function render(){
+  const data=snap.val()||{};
+  const tbody=document.getElementById("rows");
   tbody.innerHTML="";
-  data.forEach(r=>{
-    const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
-    let show=true;
-    if(filter==="today") show=isToday(r.expectedDelivery);
-    if(filter==="week") show=isWeek(r.expectedDelivery);
-    if(filter==="overdue") show=overdue;
-    if(!show) return;
+  Object.entries(data).forEach(([id,r])=>{
+    if(!["authorized","purchased","received"].includes(r.status)) return;
 
     const tr=document.createElement("tr");
-    if(overdue) tr.classList.add("overdue");
-
     tr.innerHTML=`
-      <td>${r.requestedBy||"-"}</td>
-      <td>${r.item||"-"}</td>
-      <td><input value="${r.supplier?.name||""}" onblur="upd('${r.id}','supplier/name',this.value)"></td>
       <td>
-        <div class="money">
-          <span>R$</span>
-          <input type="number" step="0.01" value="${r.total||""}" onblur="updNum('${r.id}','total',this.value)">
-        </div>
+        <b>${esc(r.member||r.requestedBy||r.requester||"-")}</b><br>
+        <span class="small">${fmt(r.requestedAt)}</span><br>
+        ${r.cost}
       </td>
       <td>
-        <input type="datetime-local" value="${r.expectedDelivery?new Date(r.expectedDelivery).toISOString().slice(0,16):""}"
-               onblur="updDate('${r.id}','expectedDelivery',this.value)">
+        ${r.item}<br>
+        <span class="small">${r.qty} ${r.unit}</span>
       </td>
       <td>
-        ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
-        ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
+        <input placeholder="Fornecedor" value="${r.supplier?.name||""}" onchange="upd('${id}','supplier/name',this.value)">
+        <input placeholder="Contato" value="${r.supplier?.contact||""}" onchange="upd('${id}','supplier/contact',this.value)">
+        <input placeholder="Link" value="${r.supplier?.link||""}" onchange="upd('${id}','supplier/link',this.value)">
+      </td>
+      <td>
+        <input type="number" step="0.01" placeholder="Valor total" value="${r.total||""}" onchange="upd('${id}','total',Number(this.value))">
+      </td>
+      <td>
+        <input type="datetime-local" onchange="upd('${id}','expectedDelivery',new Date(this.value).getTime())">
+        ${r.expectedDelivery?'<div class="small">'+fmt(r.expectedDelivery)+'</div>':''}
+      </td>
+      <td>
+        ${r.status==="authorized"?
+          `<button class="btn-blue" onclick="markPurchased('${id}')">Comprar</button>`:
+          `<button class="btn-ok" onclick="markReceived('${id}')">Dar entrada</button>`
+        }
       </td>
     `;
     tbody.appendChild(tr);
   });
-}
+});
 
 function upd(id,path,val){
-  const o={}; let ref=o; const p=path.split("/");
-  p.slice(0,-1).forEach(k=>ref=ref[k]=ref[k]||{});
-  ref[p[p.length-1]]=val;
-  db.ref("purchaseRequests/"+id).update(o);
+  const obj={};
+  obj[path]=val;
+  db.ref("purchaseRequests/"+id).update(obj);
 }
-function updNum(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:Number(v||0)}); }
-function updDate(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:new Date(v).getTime()}); }
-function buy(id){ db.ref("purchaseRequests/"+id).update({status:"purchased",purchasedAt:Date.now()}); }
-function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received",receivedAt:Date.now()}); }
+
+function markPurchased(id){
+  db.ref("purchaseRequests/"+id).update({
+    status:"purchased",
+    purchasedAt:Date.now()
+  });
+}
+
+function markReceived(id){
+  db.ref("purchaseRequests/"+id).update({
+    status:"received",
+    receivedAt:Date.now()
+  });
+}
 </script>
 </body>
 </html>
