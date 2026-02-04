@@ -50,12 +50,13 @@ button{margin-top:16px;width:100%;padding:14px;border-radius:16px;border:none;ba
 
     <label>Centro de custo</label>
     <select id="cost">
-      <option>Oficina Geral</option>
-      <option>Projeto X</option>
-      <option>Projeto Y</option>
-      <option>Desenvolvimento</option>
-      <option>Pista / Testes</option>
-      <option>Administrativo</option>
+      <option value="">Selecione</option>
+      <option>Stock Car</option>
+      <option>Fórmula 4</option>
+      <option>Endurance</option>
+      <option>Oficina</option>
+      <option>Geral</option>
+      <option>Outros</option>
     </select>
 
     <label>Material ou serviço</label>
@@ -97,17 +98,38 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
+// Prefill do membro via URL (?m=Nome ou ?u=Nome) — permite edição manual
+try{
+  const p=new URLSearchParams(location.search);
+  const pre=p.get("m")||p.get("u");
+  if(pre){ document.getElementById("member").value=pre; }
+}catch(e){}
+
+// Centro de custo: se "Outros", abre campo manual
+const costEl=document.getElementById("cost");
+const costOtherEl=document.getElementById("costOther");
+function syncCostOther(){
+  const isOther=(costEl.value==="Outros");
+  costOtherEl.style.display=isOther?"block":"none";
+  if(!isOther) costOtherEl.value="";
+}
+costEl.addEventListener("change", syncCostOther);
+syncCostOther();
+
 function send(){
   const member=document.getElementById("member").value.trim();
   const item=document.getElementById("item").value.trim();
   const qty=document.getElementById("qty").value;
-  if(!member||!item||!qty){
+  const costSel=document.getElementById("cost").value;
+  const costOther=(document.getElementById("costOther")?.value||"").trim();
+  const costFinal=(costSel==="Outros"?costOther:costSel);
+  if(!member||!item||!qty||!costFinal){
     document.getElementById("status").innerText="Preencha os campos obrigatórios.";
     return;
   }
   const data={
     member,
-    cost:document.getElementById("cost").value,
+    cost:(document.getElementById("cost").value==="Outros" ? document.getElementById("costOther").value.trim() : document.getElementById("cost").value),
     item,
     qty:Number(qty),
     unit:document.getElementById("unit").value,
@@ -118,6 +140,7 @@ function send(){
   db.ref("purchaseRequests").push(data).then(()=>{
     document.getElementById("status").innerText="Requisição enviada com sucesso ✔️";
     document.querySelectorAll("input,textarea").forEach(e=>e.value="");
+    costEl.value=""; syncCostOther();
   });
 }
 </script>
