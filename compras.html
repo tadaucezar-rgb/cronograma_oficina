@@ -44,10 +44,10 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
 <div class="wrap">
   <div class="card">
     <div class="filters">
-      <button class="fbtn active" onclick="setFilter('all', this)">Todos</button>
-      <button class="fbtn" onclick="setFilter('today', this)">Hoje</button>
-      <button class="fbtn" onclick="setFilter('week', this)">Semana</button>
-      <button class="fbtn" onclick="setFilter('overdue', this)">Atrasados</button>
+      <button class="fbtn active" onclick="setFilter('all',this)">Todos</button>
+      <button class="fbtn" onclick="setFilter('finalizado',this)">Finalizado</button>
+      <button class="fbtn" onclick="setFilter('comprar',this)">Comprar</button>
+      <button class="fbtn" onclick="setFilter('entrada',this)">Entrada</button>
     </div>
 
     <table>
@@ -106,9 +106,9 @@ function render(){
   data.forEach(r=>{
     const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
     let show=true;
-    if(filter==="today") show=isToday(r.expectedDelivery);
-    if(filter==="week") show=isWeek(r.expectedDelivery);
-    if(filter==="overdue") show=overdue;
+    if(filter==="comprar") show=r.status==="authorized";
+    if(filter==="entrada") show=r.status==="purchased";
+    if(filter==="finalizado") show=r.status==="received";
     if(!show) return;
 
     const tr=document.createElement("tr");
