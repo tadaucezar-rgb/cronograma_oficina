@@ -1,188 +1,153 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Compras / Serviços</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compras</title>
 
-  <style>
-    body {
-      background: #000;
-      color: #00eaff;
-      font-family: Arial, sans-serif;
-      margin: 0;
-    }
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-    header {
-      background: #e5e5e5;
-      color: #000;
-      padding: 15px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 40px auto;
-      border: 2px solid #00eaff;
-      border-radius: 20px;
-      padding: 30px;
-    }
-
-    h2 {
-      text-align: center;
-      color: #ff6a00;
-      margin-bottom: 30px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #004b50;
-      text-align: left;
-    }
-
-    th {
-      color: #00eaff;
-      font-size: 14px;
-    }
-
-    input {
-      background: #111;
-      border: 1px solid #00eaff;
-      color: #00eaff;
-      padding: 6px;
-      border-radius: 8px;
-      width: 100%;
-    }
-
-    button {
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .btn-green { background: #00c853; color: #000; }
-    .btn-blue { background: #2196f3; color: #000; }
-
-    .badge-finalizado {
-      padding: 6px 14px;
-      background: #1e7f43;
-      color: #fff;
-      border-radius: 20px;
-      font-weight: bold;
-      font-size: 12px;
-      display: inline-block;
-    }
-
-    .filtros button {
-      margin-right: 10px;
-      background: #111;
-      color: #00eaff;
-      border: 1px solid #00eaff;
-    }
-
-    .filtros .ativo {
-      background: #00c853;
-      color: #000;
-    }
-  </style>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff}
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900}
+header img{height:36px}
+.wrap{padding:14px;max-width:1200px;margin:auto}
+.card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.fbtn{padding:6px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-weight:800;cursor:pointer}
+.fbtn.active{background:linear-gradient(90deg,#00c853,#64dd17);color:#000}
+table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.82rem}
+th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.15);vertical-align:top}
+th{text-transform:uppercase;font-size:.7rem}
+.money{display:flex;align-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;overflow:hidden}
+.money span{padding:8px 10px;font-weight:900;background:rgba(0,0,0,.35);border-right:1px solid rgba(255,255,255,.15)}
+.money input{border:none;background:transparent;padding:8px;color:#fff;width:100%;font-family:'Orbitron'}
+input,select{width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff}
+button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';font-weight:900;cursor:pointer}
+.buy{background:#00c853;color:#000}
+.recv{background:#2979ff;color:#000}
+.overdue{background:rgba(255,23,68,.18)}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff}
+.badge.finalizado{background:linear-gradient(90deg,#00c853,#64dd17);color:#000}
+</style>
 </head>
 
 <body>
-
 <header>
-  <strong>TMG Racing</strong>
-  <span>Compras / Serviços</span>
+  <img src="logo_tmg_clean.png">
+  <div>Compras / Serviços</div>
 </header>
 
-<div class="container">
-  <h2>Compras Autorizadas</h2>
+<div class="wrap">
+  <div class="card">
+    <div class="filters">
+      <button class="fbtn active" onclick="setFilter('all', this)">Todos</button>
+      <button class="fbtn" onclick="setFilter('today', this)">Hoje</button>
+      <button class="fbtn" onclick="setFilter('week', this)">Semana</button>
+      <button class="fbtn" onclick="setFilter('overdue', this)">Atrasados</button>
+    </div>
 
-  <div class="filtros">
-    <button class="ativo">Todos</button>
-    <button>Comprar</button>
-    <button>Dar entrada</button>
-    <button>Finalizado</button>
+    <table>
+      <thead>
+        <tr>
+          <th>Solicitante</th>
+          <th>Item</th>
+          <th>Fornecedor</th>
+          <th>Valor</th>
+          <th>Previsão</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Solicitante</th>
-        <th>Item</th>
-        <th>Fornecedor</th>
-        <th>Valor</th>
-        <th>Previsão</th>
-        <th>Ação</th>
-      </tr>
-    </thead>
-    <tbody id="listaCompras"></tbody>
-  </table>
 </div>
 
 <script>
-  const compras = JSON.parse(localStorage.getItem("compras")) || [];
+const firebaseConfig={
+  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
 
-  function salvar() {
-    localStorage.setItem("compras", JSON.stringify(compras));
-    render();
-  }
+let data=[], filter="all";
 
-  function comprar(id) {
-    const item = compras.find(c => c.id === id);
-    item.status = "purchased";
-    salvar();
-  }
-
-  function darEntrada(id) {
-    const item = compras.find(c => c.id === id);
-    item.status = "finalizado";
-    salvar();
-  }
-
-  function renderAcao(item) {
-    if (item.status === "authorized") {
-      return `<button class="btn-green" onclick="comprar('${item.id}')">Comprar</button>`;
-    }
-
-    if (item.status === "purchased") {
-      return `<button class="btn-blue" onclick="darEntrada('${item.id}')">Dar entrada</button>`;
-    }
-
-    if (item.status === "finalizado" || item.status === "received") {
-      return `<span class="badge-finalizado">Finalizado</span>`;
-    }
-
-    return "-";
-  }
-
-  function render() {
-    const tbody = document.getElementById("listaCompras");
-    tbody.innerHTML = "";
-
-    compras.forEach(item => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${item.solicitante || "-"}</td>
-          <td>${item.item}</td>
-          <td><input value="${item.fornecedor || ""}"></td>
-          <td><input value="${item.valor || ""}"></td>
-          <td><input type="date" value="${item.previsao || ""}"></td>
-          <td>${renderAcao(item)}</td>
-        </tr>
-      `;
-    });
-  }
-
+function setFilter(f,btn){
+  filter=f;
+  document.querySelectorAll(".fbtn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
   render();
-</script>
+}
 
+function isToday(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  return d.toDateString()===n.toDateString();
+}
+function isWeek(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  const diff=(d-n)/(1000*60*60*24);
+  return diff>=0 && diff<=7;
+}
+
+db.ref("purchaseRequests").on("value",snap=>{
+  data=Object.entries(snap.val()||{}).map(([id,r])=>({id,...r}));
+  render();
+});
+
+function render(){
+  const tbody=document.getElementById("tbody");
+  tbody.innerHTML="";
+  data.forEach(r=>{
+    const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
+    let show=true;
+    if(filter==="today") show=isToday(r.expectedDelivery);
+    if(filter==="week") show=isWeek(r.expectedDelivery);
+    if(filter==="overdue") show=overdue;
+    if(!show) return;
+
+    const tr=document.createElement("tr");
+    if(overdue) tr.classList.add("overdue");
+
+    tr.innerHTML=`
+      <td>${(r.requestedBy||r.member||"-")}</td>
+      <td>${r.item||"-"}</td>
+      <td><input value="${(r.supplier&&r.supplier.name)||""}" onblur="upd('${r.id}','supplier/name',this.value)"></td>
+      <td>
+        <div class="money">
+          <span>R$</span>
+          <input type="number" step="0.01" value="${(r.total ?? "")}" onblur="updNum('${r.id}','total',this.value)">
+        </div>
+      </td>
+      <td>
+        <input type="datetime-local" value="${r.expectedDelivery?new Date(r.expectedDelivery).toISOString().slice(0,16):""}"
+               onblur="updDate('${r.id}','expectedDelivery',this.value)">
+      </td>
+      <td>
+        ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
+        ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
+        ${r.status==="received"?`<span class="badge finalizado">Finalizado</span>`:""}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function upd(id,path,val){
+  const o={}; let ref=o; const p=path.split("/");
+  p.slice(0,-1).forEach(k=>ref=ref[k]=ref[k]||{});
+  ref[p[p.length-1]]=val;
+  db.ref("purchaseRequests/"+id).update(o);
+}
+function updNum(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:Number(v||0)}); }
+function updDate(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]: v ? new Date(v).getTime() : null}); }
+function buy(id){ db.ref("purchaseRequests/"+id).update({status:"purchased",purchasedAt:Date.now()}); }
+function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received",receivedAt:Date.now()}); }
+</script>
 </body>
 </html>
