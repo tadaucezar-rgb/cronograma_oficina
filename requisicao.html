@@ -6,34 +6,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
+function refreshItemSuggestions(){
+  db.ref("purchaseRequests").once("value").then(snap=>{
+    const data = snap.val()||{};
+    const set = new Set();
+    Object.values(data).forEach(r=>{
+      const it = (r.item||r.description||"").toString().trim();
+      if(it) set.add(it);
+    });
+    const dl = document.getElementById("dlItems");
+    if(dl) dl.innerHTML = Array.from(set).sort().map(v=>`<option value="${esc(v)}"></option>`).join("");
+  });
+}
+window.addEventListener("load", refreshItemSuggestions);
+
+</script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-  body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff;}
-  header{padding:14px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900;text-align:center;}
-  .container{padding:14px;max-width:540px;margin:auto;}
-  .card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22);}
-  h2{text-align:center;color:#ff3d00;margin-top:0;}
-  label{display:block;margin-top:12px;font-size:.85rem;}
-  input,select,textarea{
-    width:100%;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.2);
-    background:rgba(255,255,255,.08);color:#fff;font-family:'Orbitron',Arial,sans-serif;margin-top:4px;
-  }
-  textarea{resize:vertical;}
-  button{
-    margin-top:16px;width:100%;padding:14px;border-radius:16px;border:none;
-    background:linear-gradient(90deg,#00c853,#64dd17);color:#000;font-weight:900;font-size:1rem;cursor:pointer;
-  }
-  .status{margin-top:14px;font-size:.85rem;text-align:center;opacity:.9;}
-  .badge{
-    display:inline-block;margin-top:10px;padding:10px 12px;border-radius:14px;
-    background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);
-    color:#fff;font-size:.78rem;line-height:1.35;
-  }
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  @media (max-width:520px){ .row{grid-template-columns:1fr;} }
-  .hint{font-size:.72rem;opacity:.8;margin-top:6px;}
+body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff;}
+header{padding:14px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900;text-align:center;}
+.container{padding:14px;max-width:520px;margin:auto;}
+.card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22);}
+h2{text-align:center;color:#ff3d00;margin-top:0;}
+label{display:block;margin-top:12px;font-size:.85rem;}
+input,select,textarea{width:100%;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:'Orbitron',Arial,sans-serif;margin-top:4px;}
+textarea{resize:vertical;}
+button{margin-top:16px;width:100%;padding:14px;border-radius:16px;border:none;background:linear-gradient(90deg,#00c853,#64dd17);color:#000;font-weight:900;font-size:1rem;cursor:pointer;}
+.status{margin-top:14px;font-size:.85rem;text-align:center;opacity:.85;}
 </style>
 </head>
 
@@ -47,45 +48,43 @@
     <label>Seu nome</label>
     <input id="member" placeholder="Ex: Davi">
 
-    <div class="badge" id="prefillInfo" style="display:none;"></div>
-
     <label>Centro de custo</label>
-    <select id="cost" onchange="onCostChange()">
-      <option value="Stock Car">Stock Car</option>
-      <option value="Fórmula 4">Fórmula 4</option>
-      <option value="Endurance">Endurance</option>
-      <option value="Oficina Geral">Oficina Geral</option>
-      <option value="Outros">Outros (preencher)</option>
+    <select id="cost">
+      <option>Oficina Geral</option>
+      <option>Projeto X</option>
+      <option>Projeto Y</option>
+      <option>Desenvolvimento</option>
+      <option>Pista / Testes</option>
+      <option>Administrativo</option>
     </select>
-    <input id="costOther" placeholder="Digite o centro de custo" style="display:none;">
 
     <label>Material ou serviço</label>
-    <input id="item" list="dlItems" placeholder="Ex: Usinagem suporte alumínio">
-    <datalist id="dlItems"></datalist>
-    <div class="hint" id="hintItems">Sugestões aparecem conforme o histórico.</div>
+    <input id="item" placeholder="Ex: Usinagem suporte alumínio">
 
-    <div class="row">
-      <div>
-        <label>Quantidade</label>
-        <input id="qty" type="number" min="0" step="any" placeholder="Ex: 2">
-      </div>
-      <div>
-        <label>Unidade (digite)</label>
-        <input id="unit" list="dlUnits" placeholder="Ex: un, kg, m, serviço...">
-        <datalist id="dlUnits"></datalist>
-        <div class="hint">Você pode digitar livremente ou escolher uma sugestão.</div>
-      </div>
-    </div>
+    <label>Quantidade</label>
+    <input id="qty" type="number" min="0" step="any">
+
+    <label>Unidade</label>
+    <select id="unit">
+      <option>un</option>
+      <option>kg</option>
+      <option>m</option>
+      <option>m²</option>
+      <option>l</option>
+      <option>jogo</option>
+      <option>serviço</option>
+    </select>
 
     <label>Observação</label>
-    <textarea id="obs" rows="3" placeholder="Opcional"></textarea>
+    <textarea id="obs" rows="3"></textarea>
 
-    <button id="btnSend" onclick="send()">Enviar requisição</button>
+    <button onclick="send()">Enviar requisição</button>
     <div class="status" id="status"></div>
   </div>
 </div>
 
 <script>
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 const firebaseConfig={
   apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
   authDomain:"tmg-painel.firebaseapp.com",
@@ -98,168 +97,29 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
-function qs(){
-  const p = new URLSearchParams(window.location.search);
-  return { u: (p.get("u")||"").trim(), member: (p.get("member")||"").trim() };
-}
-
-function setStatus(msg){ document.getElementById("status").innerText = msg; }
-function norm(s){ return (s||"").trim(); }
-
-function prefillMember(){
-  const el = document.getElementById("member");
-  const info = document.getElementById("prefillInfo");
-
-  const { u, member } = qs();
-  const fromQuery = norm(u || member);
-  const fromSession = norm(localStorage.getItem("tmg_member_name") || "");
-
-  const chosen = fromQuery || fromSession;
-  if(chosen){
-    el.value = chosen;
-    info.style.display = "block";
-    info.textContent = fromQuery
-      ? "Nome preenchido automaticamente (atalho/QR)."
-      : "Nome preenchido automaticamente (sessão da Equipe).";
-  } else {
-    info.style.display = "none";
-  }
-}
-
-function onCostChange(){
-  const sel = document.getElementById("cost").value;
-  document.getElementById("costOther").style.display = (sel==="Outros") ? "block" : "none";
-}
-
-function getCostFinal(){
-  const sel = document.getElementById("cost").value;
-  if(sel!=="Outros") return sel;
-  const other = norm(document.getElementById("costOther").value);
-  return other || "Outros";
-}
-
-// ===== Autocomplete do histórico (items + units) =====
-function uniqueSorted(arr){
-  const set = new Set();
-  arr.forEach(v=>{ const s = norm(v); if(s) set.add(s); });
-  return Array.from(set).sort((a,b)=>a.localeCompare(b,"pt-BR"));
-}
-
-function fillDatalist(id, values, max=60){
-  const dl = document.getElementById(id);
-  dl.innerHTML = "";
-  values.slice(0,max).forEach(v=>{
-    const op = document.createElement("option");
-    op.value = v;
-    dl.appendChild(op);
-  });
-}
-
-function loadHistory(){
-  // cache rápido (para abrir instantâneo)
-  try{
-    const cache = JSON.parse(localStorage.getItem("tmg_pr_cache")||"{}");
-    if(cache.items && cache.units){
-      fillDatalist("dlItems", cache.items);
-      fillDatalist("dlUnits", cache.units);
-    }
-  }catch(_){}
-
-  // pega do Firebase (fonte da verdade)
-  db.ref("purchaseRequests").limitToLast(800).once("value").then(snap=>{
-    const data = snap.val() || {};
-    const items = [];
-    const units = [];
-
-    Object.values(data).forEach(r=>{
-      if(!r) return;
-      items.push(r.item || r.description || r.descricao);
-      units.push(r.unit || r.un || r.unidade);
-    });
-
-    units.push("un","kg","g","l","m","m²","jogo","par","serviço","kit");
-
-    const itemsU = uniqueSorted(items);
-    const unitsU = uniqueSorted(units);
-
-    fillDatalist("dlItems", itemsU);
-    fillDatalist("dlUnits", unitsU);
-
-    localStorage.setItem("tmg_pr_cache", JSON.stringify({ items: itemsU, units: unitsU, ts: Date.now() }));
-    document.getElementById("hintItems").textContent = itemsU.length
-      ? ("Sugestões do histórico carregadas ("+itemsU.length+").")
-      : "Sem histórico ainda (as sugestões vão aparecer depois das primeiras requisições).";
-  }).catch(()=>{});
-}
-
 function send(){
-  const member = norm(document.getElementById("member").value);
-  const item = norm(document.getElementById("item").value);
-  const qtyRaw = document.getElementById("qty").value;
-  const unit = norm(document.getElementById("unit").value);
-
-  if(!member || !item || !qtyRaw || !unit){
-    setStatus("Preencha: nome, material/serviço, quantidade e unidade.");
+  const member=document.getElementById("member").value.trim();
+  const item=document.getElementById("item").value.trim();
+  const qty=document.getElementById("qty").value;
+  if(!member||!item||!qty){
+    document.getElementById("status").innerText="Preencha os campos obrigatórios.";
     return;
   }
-
-  const qty = Number(qtyRaw);
-  if(!isFinite(qty) || qty <= 0){
-    setStatus("Quantidade inválida.");
-    return;
-  }
-
-  localStorage.setItem("tmg_member_name", member);
-
-  const data = {
+  const data={
     member,
-    cost: getCostFinal(),
+    cost:document.getElementById("cost").value,
     item,
-    qty,
-    unit,
-    obs: norm(document.getElementById("obs").value),
-    requestedAt: Date.now(),
-    status: "requested"
+    qty:Number(qty),
+    unit:document.getElementById("unit").value,
+    obs:document.getElementById("obs").value.trim(),
+    requestedAt:Date.now(),
+    status:"requested"
   };
-
-  const btn = document.getElementById("btnSend");
-  btn.disabled = true;
-  btn.style.opacity = .85;
-  setStatus("Enviando...");
-
   db.ref("purchaseRequests").push(data).then(()=>{
-    setStatus("Requisição enviada com sucesso ✔️");
-    document.getElementById("item").value = "";
-    document.getElementById("qty").value = "";
-    document.getElementById("unit").value = "";
-    document.getElementById("obs").value = "";
-    document.getElementById("cost").value = "Oficina Geral";
-    onCostChange();
-
-    try{
-      const cache = JSON.parse(localStorage.getItem("tmg_pr_cache")||"{}");
-      const items = Array.isArray(cache.items) ? cache.items : [];
-      const units = Array.isArray(cache.units) ? cache.units : [];
-      items.push(item);
-      units.push(unit);
-      const itemsU = uniqueSorted(items);
-      const unitsU = uniqueSorted(units);
-      localStorage.setItem("tmg_pr_cache", JSON.stringify({ items: itemsU, units: unitsU, ts: Date.now() }));
-      fillDatalist("dlItems", itemsU);
-      fillDatalist("dlUnits", unitsU);
-    }catch(_){}
-  }).catch((e)=>{
-    console.log(e);
-    setStatus("Falha ao enviar. Verifique sua internet.");
-  }).finally(()=>{
-    btn.disabled = false;
-    btn.style.opacity = 1;
+    document.getElementById("status").innerText="Requisição enviada com sucesso ✔️";
+    document.querySelectorAll("input,textarea").forEach(e=>e.value="");
   });
 }
-
-prefillMember();
-onCostChange();
-loadHistory();
 </script>
 </body>
 </html>
