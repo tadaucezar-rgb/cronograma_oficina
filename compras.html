@@ -1,211 +1,66 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Compras / Serviços</title>
-  <style>
-    :root{
-      --c-bg:#000;
-      --c-cyan:#00e5ff;
-      --c-green:#00ff66;
-      --c-orange:#ff6a00;
-      --c-blue:#2979ff;
-      --c-card:#0a0a0a;
-      --c-line:#0a7078;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: "Segoe UI", Tahoma, sans-serif;
-      color: var(--c-cyan);
-      background: radial-gradient(ellipse at top, #111 0%, #000 60%);
-      min-height:100vh;
-    }
-    header{
-      height:78px;
-      background: linear-gradient(#ddd,#bfbfbf);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:0 26px;
-      color:#111;
-      font-weight:700;
-      letter-spacing:.5px;
-      border-bottom: 2px solid #222;
-    }
-    header .title{
-      font-size:22px;
-    }
-    header .right{
-      font-size:22px;
-    }
-    .wrap{
-      max-width:1400px;
-      margin:46px auto;
-      padding:0 14px;
-    }
-    .card{
-      background:rgba(0,0,0,.78);
-      border:2px solid var(--c-line);
-      border-radius:18px;
-      padding:20px 18px 26px;
-      box-shadow:0 0 30px rgba(0,229,255,.12);
-    }
-    .filters{
-      display:flex;
-      gap:12px;
-      margin:0 0 16px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    .filters button{
-      border:1px solid rgba(0,229,255,.35);
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      padding:8px 16px;
-      border-radius:16px;
-      cursor:pointer;
-      font-weight:700;
-      letter-spacing:.3px;
-      box-shadow: inset 0 0 10px rgba(0,229,255,.08);
-    }
-    .filters button.active{
-      background: linear-gradient(#1aff6d,#00c853);
-      color:#000;
-      border-color: rgba(0,0,0,.25);
-    }
-    h1{
-      margin:0 0 16px;
-      color:var(--c-orange);
-      text-align:center;
-      font-size:44px;
-      letter-spacing:1px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compras</title>
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      table-layout:fixed;
-    }
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff}
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900}
+header img{height:36px}
+.wrap{padding:14px;max-width:1400px;margin:auto}
+.card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.fbtn{padding:6px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-weight:800;cursor:pointer}
+.fbtn.active{background:linear-gradient(90deg,#00c853,#64dd17);color:#000}
+table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.82rem}
     td:last-child{white-space:nowrap}
-    thead th{
-      font-size:13px;
-      letter-spacing:1.2px;
-      color:var(--c-cyan);
-      text-transform:uppercase;
-      padding:10px 8px;
-      border-bottom:1px solid rgba(0,229,255,.18);
-    }
-    tbody td{
-      padding:12px 8px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      vertical-align:top;
-      color:var(--c-cyan);
-      font-size:16px;
-    }
-    .muted{opacity:.7}
-    .name{
-      text-transform:uppercase;
-      letter-spacing:.8px;
-    }
-    .dt{
-      line-height:1.1;
-      white-space:nowrap;
-    }
+th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.15);vertical-align:top}
+th{text-transform:uppercase;font-size:.7rem}
+.money{display:flex;align-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;overflow:hidden}
+.money span{padding:8px 10px;font-weight:900;background:rgba(0,0,0,.35);border-right:1px solid rgba(255,255,255,.15)}
+.money input{border:none;background:transparent;padding:8px;color:#fff;width:100%;font-family:'Orbitron'}
+input,select{width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff}
+button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';font-weight:900;cursor:pointer}
+.buy{background:#00c853;color:#000;display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box}
+.recv{background:#2979ff;color:#000;display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box}
+.overdue{background:rgba(255,23,68,.18)}
+.badge{display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box;padding:6px 10px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff}
 
-    .inp{
-      width:100%;
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.12);
-      color:#eaeaea;
-      padding:8px 10px;
-      border-radius:12px;
-      outline:none;
-      font-size:14px;
-      box-shadow: inset 0 0 12px rgba(0,0,0,.35);
-    }
-    .inp:focus{
-      border-color: rgba(0,229,255,.5);
-      box-shadow: 0 0 0 2px rgba(0,229,255,.12), inset 0 0 12px rgba(0,0,0,.35);
-    }
+/* ✅ Mantém a mudança de cor do Finalizado */
+.badge.finalizado{
+  background:linear-gradient(90deg,#9e9e9e,#616161);
+  color:#000;
+}
 
-    .money{
-      display:flex;
-      width:100%;
-      gap:6px;
-      align-items:center;
-    }
-    .money .prefix{
-      background:rgba(0,229,255,.18);
-      border:1px solid rgba(0,229,255,.25);
-      color:var(--c-cyan);
-      padding:8px 9px;
-      border-radius:12px;
-      font-weight:800;
-      letter-spacing:.2px;
-      min-width:44px;
-      text-align:center;
-    }
-
-    .btn{
-      border:none;
-      border-radius:14px;
-      padding:9px 14px;
-      font-weight:900;
-      letter-spacing:.4px;
-      cursor:pointer;
-      box-shadow:0 0 18px rgba(0,0,0,.25);
-    }
-    .buy{background:#00c853;color:#000;display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box}
-    .recv{background:#2979ff;color:#000;display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box}
-    .badge{display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box;padding:6px 10px;border-radius:14px;font-weight:900;letter-spacing:.4px;background:rgba(255,255,255,.18);color:#111;border:1px solid rgba(255,255,255,.25)}
-    .badge.done{background:rgba(180,0,255,.18);color:#fff;border-color:rgba(180,0,255,.35)} /* finalizado com cor diferente */
-
-    .supplierWrap{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    @media (max-width: 980px){
-      h1{font-size:34px}
-      header{height:auto; padding:12px 14px}
-      table{font-size:14px}
-      thead{display:none}
-      table, tbody, tr, td{display:block; width:100%}
-      tbody td{border-bottom:none}
-      tr{border-bottom:1px solid rgba(255,255,255,.12); padding:10px 0}
-      .rowlabel{
-        display:block;
-        font-size:11px;
-        text-transform:uppercase;
-        opacity:.8;
-        margin:0 0 4px;
-        letter-spacing:1px;
-      }
-      .money{max-width:320px}
-      .filters{justify-content:center}
-    }
-  </style>
+  .cellStack{display:flex;flex-direction:column;gap:8px;}
+  .supContact{font-size:14px;}
+</style>
 </head>
+
 <body>
 <header>
-  <div class="title">TMG Racing</div>
-  <div class="right">Compras / Serviços</div>
+  <img src="logo_tmg_clean.png">
+  <div>Compras / Serviços</div>
 </header>
 
 <div class="wrap">
   <div class="card">
     <div class="filters">
-      <button id="f_all" class="active" onclick="setFilter('all')">Todos</button>
-      <button id="f_buy" onclick="setFilter('purchased')">Comprar</button>
-      <button id="f_recv" onclick="setFilter('received')">Entrada</button>
-      <button id="f_done" onclick="setFilter('finalized')">Finalizado</button>
+      <button class="fbtn active" onclick="setFilter('all',this)">Todos</button>
+      <button class="fbtn" onclick="setFilter('authorized',this)">Comprar</button>
+      <button class="fbtn" onclick="setFilter('purchased',this)">Entrada</button>
+      <button class="fbtn" onclick="setFilter('received',this)">Finalizado</button>
     </div>
 
     <table>
-      <colgroup>
+<colgroup>
         <col style="width:9%">
         <col style="width:9%">
         <col style="width:22%">
@@ -216,10 +71,11 @@
         <col style="width:12%">
         <col style="width:6%">
       </colgroup>
+
       <thead>
         <tr>
           <th>Solicitante</th>
-          <th>Data<br>Solicitação</th>
+          <th>Data solicitação</th>
           <th>Item</th>
           <th>Qtd</th>
           <th>Unidade</th>
@@ -234,223 +90,168 @@
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
-  // --- Firebase config (mantido como estava no seu arquivo) ---
-  const firebaseConfig = {
-    apiKey: "AIzaSyDUMMY",
-    authDomain: "DUMMY.firebaseapp.com",
-    databaseURL: "https://DUMMY.firebaseio.com",
-    projectId: "DUMMY",
-    storageBucket: "DUMMY.appspot.com",
-    messagingSenderId: "DUMMY",
-    appId: "1:000000000:web:000000"
-  };
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+const firebaseConfig={
+  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
 
-  // --- estado ---
-  let currentFilter = 'all';
-  let allRows = [];
+let data=[], filter="all";
 
-  function setActiveBtn(){
-    document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
-    if(currentFilter==='all') document.getElementById('f_all').classList.add('active');
-    if(currentFilter==='purchased') document.getElementById('f_buy').classList.add('active');
-    if(currentFilter==='received') document.getElementById('f_recv').classList.add('active');
-    if(currentFilter==='finalized') document.getElementById('f_done').classList.add('active');
-  }
+function setFilter(f,btn){
+  filter=f;
+  document.querySelectorAll(".fbtn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  render();
+}
 
-  function setFilter(f){
-    currentFilter = f;
-    setActiveBtn();
-    render();
-  }
+function isToday(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  return d.toDateString()===n.toDateString();
+}
+function isWeek(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  const diff=(d-n)/(1000*60*60*24);
+  return diff>=0 && diff<=7;
+}
 
-  function fmtDateTime(ts){
-    if(!ts) return '-';
-    const d = (typeof ts === 'number') ? new Date(ts) : new Date(ts);
-    if(isNaN(d.getTime())) return '-';
-    const dd = String(d.getDate()).padStart(2,'0');
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const yyyy = d.getFullYear();
-    const hh = String(d.getHours()).padStart(2,'0');
-    const mi = String(d.getMinutes()).padStart(2,'0');
-    return `${dd}/${mm}/${yyyy}<br>${hh}:${mi}`;
-  }
+db.ref("purchaseRequests").on("value",snap=>{
+  data=Object.entries(snap.val()||{}).map(([id,r])=>({id,...r}));
+  render();
+});
 
-  // --- autocomplete simples (mantido conforme sua versão) ---
-  const suppliers = {}; // nome -> contato
-  function loadSuppliers(){
-    db.ref('fornecedores').on('value', snap=>{
-      const v = snap.val() || {};
-      Object.keys(v).forEach(k=>{
-        const obj = v[k] || {};
-        if(obj.nome) suppliers[obj.nome] = obj.contato || '';
-      });
+let suppliersIndex = {};
+  function rebuildSuppliersIndex(list){
+    suppliersIndex = {};
+    const names = [];
+    (list||[]).forEach(r=>{
+      const name = ((r.supplier && r.supplier.name) || "").trim();
+      if(!name) return;
+      const contact = ((r.supplier && (r.supplier.contact || r.supplier.phone || r.supplier.whatsapp)) || "").trim();
+      const key = name.toLowerCase();
+      if(contact && !suppliersIndex[key]) suppliersIndex[key] = contact;
+      if(!names.some(n=>n.toLowerCase()===key)) names.push(name);
     });
-  }
-
-  function buildSupplierDatalist(){
-    let dl = document.getElementById('dl_suppliers');
-    if(!dl){
-      dl = document.createElement('datalist');
-      dl.id = 'dl_suppliers';
-      document.body.appendChild(dl);
+    const dl = document.getElementById('suppliersList');
+    if(dl){
+      dl.innerHTML = names.sort((a,b)=>a.localeCompare(b)).map(n=>`<option value="${escapeAttr(n)}"></option>`).join('');
     }
-    dl.innerHTML = '';
-    Object.keys(suppliers).sort().forEach(name=>{
-      const opt = document.createElement('option');
-      opt.value = name;
-      dl.appendChild(opt);
-    });
   }
 
-  function render(){
-    const tbody = document.getElementById('tbody');
-    tbody.innerHTML = '';
-
-    const rows = allRows.filter(r=>{
-      if(currentFilter==='all') return true;
-      return (r.status === currentFilter);
-    });
-
-    if(rows.length===0){
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td colspan="9" class="muted">Nenhum registro</td>`;
-      tbody.appendChild(tr);
-      return;
+  function onSupplierInput(id, el){
+    const name = (el.value||"").trim();
+    if(!name) return;
+    const key = name.toLowerCase();
+    const contact = suppliersIndex[key];
+    const contactEl = el.closest('td')?.querySelector('.supContact');
+    if(contactEl && contact && !contactEl.value.trim()){
+      contactEl.value = contact;
+      upd(id,'supplier/contact',contact);
     }
+  }
 
-    buildSupplierDatalist();
+function render(){
+  const tbody=document.getElementById("tbody");
+  tbody.innerHTML="";
+  rebuildSuppliersIndex(data);
+  data.forEach(r=>{
+    const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
+    let show=true;
+    if(filter!=='all') show=(r.status===filter);
+    if(!show) return;
 
-    rows.forEach(r=>{
-      const tr = document.createElement('tr');
+    const tr=document.createElement("tr");
+    if(overdue) tr.classList.add("overdue");
 
-      const solicitante = r.solicitante || '-';
-      const dtSolic = fmtDateTime(r.createdAt || r.timestamp || r.dataSolicitacao);
+    tr.innerHTML=`
+      <td>${(r.requestedBy||r.member||"-")}</td>
+      <td>${fmtDT(r.requestedAt)}</td>
 
-      const itemInput = `<input class="inp" value="${escapeHtml(r.item||'')}"
-        onblur="updateField('${r._key}','item',this.value)" />`;
+      <!-- ✅ NOVO: Item editável -->
+      <td>
+        <input value="${escapeAttr(r.item||"")}"
+               onblur="updText('${r.id}','item',this.value)">
+      </td>
 
-      const qtdInput = `<input class="inp" value="${escapeAttr(r.qtd||'')}"
-        onblur="updateField('${r._key}','qtd',this.value)" />`;
+      <!-- Qtd -->
+      <td>
+        <input type="number" min="0" step="1"
+               value="${escapeAttr((r.qty ?? '') + '')}"
+               onblur="updNum('${r.id}','qty',this.value)">
+      </td>
 
-      const unInput = `<input class="inp" value="${escapeAttr(r.unidade||'')}"
-        onblur="updateField('${r._key}','unidade',this.value)" />`;
+      <!-- Unidade -->
+      <td>
+        <input value="${escapeAttr(r.unit||"")}"
+               onblur="updText('${r.id}','unit',this.value)">
+      </td>
 
-      const fornecedorInput = `
-        <div class="supplierWrap">
-          <input class="inp" list="dl_suppliers" placeholder=""
-            value="${escapeAttr(r.fornecedor||'')}"
-            oninput="onSupplierInput('${r._key}', this)"
-            onblur="updateField('${r._key}','fornecedor',this.value)" />
-          <input class="inp" placeholder="Contato do fornecedor"
-            value="${escapeAttr(r.contatoFornecedor||'')}"
-            onblur="updateField('${r._key}','contatoFornecedor',this.value)" />
+      <td>
+        <div class="cellStack">
+          <input class="rowInput" list="suppliersList" value="${escapeAttr((r.supplier&&r.supplier.name)||"")}"
+                 oninput="onSupplierInput('${r.id}', this)"
+                 onblur="upd('${r.id}','supplier/name',this.value)">
+          <input class="rowInput supContact" placeholder="Contato do fornecedor" value="${escapeAttr((r.supplier&&r.supplier.contact)||"")}"
+                 onblur="upd('${r.id}','supplier/contact',this.value)">
         </div>
-      `;
+      </td>
 
-      const valorInput = `
+      <td>
         <div class="money">
-          <div class="prefix">R$</div>
-          <input class="inp" value="${escapeAttr(r.valor||'')}"
-            onblur="updateField('${r._key}','valor',this.value)" />
+          <span>R$</span>
+          <input type="number" step="0.01" value="${(r.total ?? "")}" onblur="updNum('${r.id}','total',this.value)">
         </div>
-      `;
+      </td>
 
-      const prevInput = `<input class="inp" type="datetime-local"
-        value="${toLocalDT(r.previsao)}"
-        onblur="updateField('${r._key}','previsao',fromLocalDT(this.value))" />`;
+      <td>
+        <input type="datetime-local" value="${r.expectedDelivery?new Date(r.expectedDelivery).toISOString().slice(0,16):""}"
+               onblur="updDate('${r.id}','expectedDelivery',this.value)">
+      </td>
 
-      const actionCell = buildAction(r);
+      <td>
+        ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
+        ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
+        ${r.status==="received"?`<span class="badge finalizado">Finalizado</span>`:""}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
-      tr.innerHTML = `
-        <td class="name">${escapeHtml(solicitante)}</td>
-        <td class="dt">${dtSolic}</td>
-        <td>${itemInput}</td>
-        <td>${qtdInput}</td>
-        <td>${unInput}</td>
-        <td>${fornecedorInput}</td>
-        <td>${valorInput}</td>
-        <td>${prevInput}</td>
-        <td>${actionCell}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
+function upd(id,path,val){
+  const o={}; let ref=o; const p=path.split("/");
+  p.slice(0,-1).forEach(k=>ref=ref[k]=ref[k]||{});
+  ref[p[p.length-1]]=val;
+  db.ref("purchaseRequests/"+id).update(o);
+}
 
-  function buildAction(r){
-    if(r.status === 'purchased'){
-      return `<button class="btn recv" onclick="setStatus('${r._key}','received')">Entrada</button>`;
-    }
-    if(r.status === 'received'){
-      return `<span class="badge done">Finalizado</span>`;
-    }
-    if(r.status === 'finalized'){
-      return `<span class="badge done">Finalizado</span>`;
-    }
-    return `<button class="btn buy" onclick="setStatus('${r._key}','purchased')">Comprar</button>`;
-  }
+function updText(id,key,val){
+  // salva texto (com trim pra evitar "   ")
+  db.ref("purchaseRequests/"+id).update({[key]:(val||"").trim()});
+}
 
-  function setStatus(key, status){
-    db.ref('requisicoes/'+key).update({status});
-  }
+function updNum(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:Number(v||0)}); }
+function updDate(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]: v ? new Date(v).getTime() : null}); }
+function buy(id){ db.ref("purchaseRequests/"+id).update({status:"purchased",purchasedAt:Date.now()}); }
+function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received",receivedAt:Date.now()}); }
 
-  function updateField(key, field, value){
-    const obj = {};
-    obj[field] = value;
-    db.ref('requisicoes/'+key).update(obj);
-  }
+// evita quebrar o HTML quando tiver aspas no texto
+function escapeAttr(s){
+  return String(s).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+}
+function fmtDT(ts){
+  if(!ts) return "-";
+  const d = (typeof ts === "number") ? new Date(ts) : new Date(ts);
+  if(isNaN(d.getTime())) return "-";
+  const data = d.toLocaleDateString("pt-BR");
+  const hora = d.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+  return `${data} ${hora}`;
+}
 
-  function onSupplierInput(key, el){
-    const name = el.value || '';
-    const contato = suppliers[name] || '';
-    // não sobrescreve se usuário já digitou manualmente algo diferente
-    const tr = el.closest('tr');
-    if(!tr) return;
-    const contatoInp = tr.querySelector('input[placeholder="Contato do fornecedor"]');
-    if(contatoInp && (!contatoInp.value || contatoInp.value===suppliers[contatoInp.value])){
-      if(contato) contatoInp.value = contato;
-    }
-  }
-
-  function toLocalDT(v){
-    if(!v) return '';
-    const d = (typeof v === 'number') ? new Date(v) : new Date(v);
-    if(isNaN(d.getTime())) return '';
-    const pad = n => String(n).padStart(2,'0');
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-  function fromLocalDT(v){
-    if(!v) return null;
-    const d = new Date(v);
-    if(isNaN(d.getTime())) return null;
-    return d.getTime();
-  }
-
-  function escapeHtml(str){
-    return String(str||'').replace(/[&<>"']/g, s=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[s]));
-  }
-  function escapeAttr(str){
-    return String(str||'').replace(/"/g,'&quot;');
-  }
-
-  function listen(){
-    db.ref('requisicoes').on('value', snap=>{
-      const v = snap.val() || {};
-      const arr = [];
-      Object.keys(v).forEach(k=>{
-        arr.push({...v[k], _key:k});
-      });
-      allRows = arr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-      render();
-    });
-  }
-
-  loadSuppliers();
-  listen();
 </script>
 </body>
 </html>
