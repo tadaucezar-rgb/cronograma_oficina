@@ -1,181 +1,196 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Compras</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Compras / Serviços</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-<style>
-*{box-sizing:border-box}
-body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff}
-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900}
-header img{height:36px}
-.wrap{padding:14px;max-width:1200px;margin:auto}
-.card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22)}
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.fbtn{padding:6px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-weight:800;cursor:pointer}
-.fbtn.active{background:linear-gradient(90deg,#00c853,#64dd17);color:#000}
-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.82rem}
-th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.15);vertical-align:top}
-th{text-transform:uppercase;font-size:.7rem}
-.money{display:flex;align-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;overflow:hidden}
-.money span{padding:8px 10px;font-weight:900;background:rgba(0,0,0,.35);border-right:1px solid rgba(255,255,255,.15)}
-.money input{border:none;background:transparent;padding:8px;color:#fff;width:100%;font-family:'Orbitron'}
-input,select{width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff}
-button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';font-weight:900;cursor:pointer}
-.buy{background:#00c853;color:#000}
-.recv{background:#2979ff;color:#000}
-.overdue{background:rgba(255,23,68,.18)}
-.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff}
+  <style>
+    body{margin:0;background:#050505;color:#fff;font-family:Arial, Helvetica, sans-serif}
+    header{height:70px;background:linear-gradient(#dedede,#cfcfcf);display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+    header .t{font-weight:900;color:#111;font-size:18px;letter-spacing:.5px}
+    header .r{font-weight:800;color:#111;font-size:22px}
+    .wrap{max-width:1200px;margin:30px auto;padding:0 18px}
+    .card{background:rgba(0,0,0,.72);border:2px solid rgba(0,255,255,.35);border-radius:18px;box-shadow:0 0 18px rgba(0,255,255,.12);padding:22px}
+    h1{margin:0 0 14px;text-align:center;color:#ff7a00;letter-spacing:1px}
 
-/* ✅ Mantém a mudança de cor do Finalizado */
-.badge.finalizado{
-  background:linear-gradient(90deg,#9e9e9e,#616161);
-  color:#000;
-}
-</style>
+    .filters{display:flex;gap:12px;margin:2px 0 16px}
+    .fbtn{background:#222;border:1px solid rgba(0,255,255,.35);color:#fff;border-radius:18px;padding:8px 14px;cursor:pointer;font-weight:800}
+    .fbtn.active{background:linear-gradient(90deg,#00e676,#00c853);color:#0b0b0b;border-color:transparent}
+
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px 10px;border-bottom:1px solid rgba(0,255,255,.16)}
+    th{color:#00e5ff;font-size:13px;text-transform:uppercase;letter-spacing:1px}
+    td{color:#eaeaea}
+    input{width:100%;background:#1b1b1b;border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:12px;padding:10px 12px;outline:none}
+    .moneywrap{display:flex;align-items:center;gap:8px}
+    .rs{background:#101010;border:1px solid rgba(0,255,255,.25);color:#00e5ff;border-radius:10px;padding:8px 10px;font-weight:900}
+    .act{display:flex;justify-content:flex-end}
+    .buyBtn{background:linear-gradient(90deg,#00e676,#00c853);border:none;color:#0b0b0b;border-radius:18px;padding:10px 18px;cursor:pointer;font-weight:900}
+    .recvBtn{background:linear-gradient(90deg,#2196f3,#1976d2);border:none;color:#fff;border-radius:18px;padding:10px 18px;cursor:pointer;font-weight:900}
+    .badge{display:inline-block;border-radius:18px;padding:10px 16px;font-weight:900}
+    .badge.finalizado{background:linear-gradient(90deg,#7c4dff,#b388ff); color:#0b0b0b; font-weight:800;}
+  </style>
 </head>
 
 <body>
-<header>
-  <img src="logo_tmg_clean.png">
-  <div>Compras / Serviços</div>
-</header>
+  <header>
+    <div class="t">TMG Racing</div>
+    <div class="r">Compras / Serviços</div>
+  </header>
 
-<div class="wrap">
-  <div class="card">
-    <div class="filters">
-      <button class="fbtn active" onclick="setFilter('all', this)">Todos</button>
-      <button class="fbtn" onclick="setFilter('today', this)">Hoje</button>
-      <button class="fbtn" onclick="setFilter('week', this)">Semana</button>
-      <button class="fbtn" onclick="setFilter('overdue', this)">Atrasados</button>
-    </div>
+  <div class="wrap">
+    <div class="card">
+      <h1>Compras Autorizadas</h1>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Solicitante</th>
-          <th>Item</th>
-          <th>Fornecedor</th>
-          <th>Valor</th>
-          <th>Previsão</th>
-          <th>Ação</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
+      <div class="filters">
+    <button class="fbtn active" onclick="setFilter('all')">Todos</button>
+    <button class="fbtn" onclick="setFilter('comprar')">Comprar</button>
+    <button class="fbtn" onclick="setFilter('entrada')">Entrada</button>
+    <button class="fbtn" onclick="setFilter('finalizado')">Finalizado</button>
   </div>
-</div>
 
-<script>
-const firebaseConfig={
-  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
-  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com"
-};
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+      <table>
+        <thead>
+          <tr>
+            <th>Solicitante</th>
+            <th>Item</th>
+            <th>Fornecedor</th>
+            <th>Valor</th>
+            <th>Previsão</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
 
-let data=[], filter="all";
+  <script>
+  let currentFilter = 'all';
 
-function setFilter(f,btn){
-  filter=f;
-  document.querySelectorAll(".fbtn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  render();
-}
+    // ==== Firebase config (mesma base do seu arquivo) ====
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DATABASE_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-function isToday(ms){
-  if(!ms) return false;
-  const d=new Date(ms), n=new Date();
-  return d.toDateString()===n.toDateString();
-}
-function isWeek(ms){
-  if(!ms) return false;
-  const d=new Date(ms), n=new Date();
-  const diff=(d-n)/(1000*60*60*24);
-  return diff>=0 && diff<=7;
-}
+    try { firebase.initializeApp(firebaseConfig); } catch(e) {}
+    const db = firebase.database();
 
-db.ref("purchaseRequests").on("value",snap=>{
-  data=Object.entries(snap.val()||{}).map(([id,r])=>({id,...r}));
-  render();
-});
+    const tbody = document.getElementById('tbody');
+    let reqs = [];
 
-function render(){
-  const tbody=document.getElementById("tbody");
-  tbody.innerHTML="";
-  data.forEach(r=>{
-    const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
-    let show=true;
-    if(filter==="today") show=isToday(r.expectedDelivery);
-    if(filter==="week") show=isWeek(r.expectedDelivery);
-    if(filter==="overdue") show=overdue;
-    if(!show) return;
+    function fmtMoney(v){
+      const n = parseFloat(String(v||'').replace(',','.'));
+      if(isNaN(n)) return '-';
+      return n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    }
 
-    const tr=document.createElement("tr");
-    if(overdue) tr.classList.add("overdue");
+    function fmtDate(v){
+      if(!v) return '-';
+      // aceita "YYYY-MM-DD" ou timestamp
+      if(typeof v === 'number'){
+        const d = new Date(v);
+        if(isNaN(d.getTime())) return '-';
+        return d.toLocaleDateString('pt-BR');
+      }
+      const s = String(v);
+      if(/^\d{4}-\d{2}-\d{2}$/.test(s)){
+        const [y,m,d]=s.split('-');
+        return `${d}/${m}/${y}`;
+      }
+      return s;
+    }
 
-    tr.innerHTML=`
-      <td>${(r.requestedBy||r.member||"-")}</td>
+    function upd(id, path, value){
+      if(!id) return;
+      const p = `purchaseRequests/${id}/${path}`;
+      db.ref(p).set(value);
+    }
 
-      <!-- ✅ NOVO: Item editável -->
-      <td>
-        <input value="${escapeAttr(r.item||"")}"
-               onblur="updText('${r.id}','item',this.value)">
-      </td>
+    function updNum(id, path, value){
+      const v = String(value||'').replace(',','.');
+      const n = parseFloat(v);
+      upd(id, path, isNaN(n) ? 0 : n);
+    }
 
-      <td>
-        <input value="${escapeAttr((r.supplier&&r.supplier.name)||"")}"
-               onblur="upd('${r.id}','supplier/name',this.value)">
-      </td>
+    function buy(id){
+      // authorized -> purchased
+      db.ref(`purchaseRequests/${id}`).update({ status:'purchased' });
+    }
 
-      <td>
-        <div class="money">
-          <span>R$</span>
-          <input type="number" step="0.01" value="${(r.total ?? "")}" onblur="updNum('${r.id}','total',this.value)">
-        </div>
-      </td>
+    function recv(id){
+      // purchased -> received
+      db.ref(`purchaseRequests/${id}`).update({ status:'received' });
+    }
 
-      <td>
-        <input type="datetime-local" value="${r.expectedDelivery?new Date(r.expectedDelivery).toISOString().slice(0,16):""}"
-               onblur="updDate('${r.id}','expectedDelivery',this.value)">
-      </td>
+    function setFilter(kind){
+      currentFilter = kind || 'all';
+      // ativa visual
+      document.querySelectorAll('.fbtn').forEach((b)=>b.classList.remove('active'));
+      const map = {all:0, comprar:1, entrada:2, finalizado:3};
+      const idx = map[currentFilter] ?? 0;
+      const btns = document.querySelectorAll('.filters .fbtn');
+      if(btns[idx]) btns[idx].classList.add('active');
+      render();
+    }
 
-      <td>
-        ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
-        ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
-        ${r.status==="received"?`<span class="badge finalizado">Finalizado</span>`:""}
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
+    function render(){
+      tbody.innerHTML = '';
 
-function upd(id,path,val){
-  const o={}; let ref=o; const p=path.split("/");
-  p.slice(0,-1).forEach(k=>ref=ref[k]=ref[k]||{});
-  ref[p[p.length-1]]=val;
-  db.ref("purchaseRequests/"+id).update(o);
-}
+      reqs.forEach(r=>{
+        // status esperado: authorized / purchased / received
+        const st = (r.status || 'authorized');
 
-function updText(id,key,val){
-  // salva texto (com trim pra evitar "   ")
-  db.ref("purchaseRequests/"+id).update({[key]:(val||"").trim()});
-}
+        let show = true;
+        if(currentFilter==='comprar') show = (st==='authorized');
+        else if(currentFilter==='entrada') show = (st==='purchased');
+        else if(currentFilter==='finalizado') show = (st==='received');
 
-function updNum(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:Number(v||0)}); }
-function updDate(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]: v ? new Date(v).getTime() : null}); }
-function buy(id){ db.ref("purchaseRequests/"+id).update({status:"purchased",purchasedAt:Date.now()}); }
-function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received",receivedAt:Date.now()}); }
+        if(!show) return;
 
-// evita quebrar o HTML quando tiver aspas no texto
-function escapeAttr(s){
-  return String(s).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-}
-</script>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${(r.requesterName||r.solicitante||r.requestedBy||r.member||'-')}</td>
+          <td><input value="${(r.item||'')}" onblur="upd('${r.id}','item',this.value)" placeholder="Item"></td>
+          <td><input value="${(r.supplier&&r.supplier.name)||r.supplierName||''}" onblur="upd('${r.id}','supplier/name',this.value)" placeholder="Fornecedor"></td>
+          <td>
+            <div class="moneywrap">
+              <span class="rs">R$</span>
+              <input value="${(r.value||0)}" onblur="updNum('${r.id}','value',this.value)" placeholder="0,00">
+            </div>
+          </td>
+          <td><input value="${(r.expectedDate||'')}" onblur="upd('${r.id}','expectedDate',this.value)" placeholder="dd/mm/aaaa"></td>
+          <td class="act">
+            ${st==='authorized'
+              ? `<button class="buyBtn" onclick="buy('${r.id}')">Comprar</button>`
+              : (st==='purchased'
+                  ? `<button class="recvBtn" onclick="recv('${r.id}')">Entrada</button>`
+                  : `<span class="badge finalizado">Finalizado</span>`
+                )
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Listener
+    db.ref('purchaseRequests').on('value', snap=>{
+      const val = snap.val() || {};
+      reqs = Object.keys(val).map(id=>({id, ...val[id]}))
+        .filter(r => (r.status==='authorized' || r.status==='purchased' || r.status==='received'));
+      render();
+    });
+  </script>
 </body>
 </html>
