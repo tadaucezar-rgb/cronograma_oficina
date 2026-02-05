@@ -1,402 +1,256 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Compras / Serviços</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compras</title>
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: radial-gradient(ellipse at center, #111 0%, #000 70%, #000 100%);
-      color: #fff;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 18px 22px;
-      background: linear-gradient(180deg, #d8d8d8 0%, #bfbfbf 100%);
-      color: #000;
-      font-weight: 700;
-      letter-spacing: 1px;
-      box-shadow: 0 2px 12px rgba(0,0,0,.4);
-    }
-    header .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 18px;
-    }
-    header .title {
-      font-size: 20px;
-    }
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff}
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900}
+header img{height:36px}
+.wrap{padding:14px;max-width:1200px;margin:auto}
+.card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.fbtn{padding:6px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-weight:800;cursor:pointer}
+.fbtn.active{background:linear-gradient(90deg,#00c853,#64dd17);color:#000}
+table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.82rem}
+th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.15);vertical-align:top}
+th{text-transform:uppercase;font-size:.7rem}
+.money{display:flex;align-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;overflow:hidden}
+.money span{padding:8px 10px;font-weight:900;background:rgba(0,0,0,.35);border-right:1px solid rgba(255,255,255,.15)}
+.money input{border:none;background:transparent;padding:8px;color:#fff;width:100%;font-family:'Orbitron'}
+input,select{width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff}
+button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';font-weight:900;cursor:pointer}
+.buy{background:#00c853;color:#000}
+.recv{background:#2979ff;color:#000}
+.overdue{background:rgba(255,23,68,.18)}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff}
 
-    .container {
-      max-width: 1200px;
-      margin: 34px auto;
-      padding: 0 14px;
-    }
+/* ✅ Mantém a mudança de cor do Finalizado */
+.badge.finalizado{
+  background:linear-gradient(90deg,#9e9e9e,#616161);
+  color:#000;
+}
 
-    .card {
-      border-radius: 18px;
-      border: 2px solid rgba(0, 255, 255, 0.25);
-      box-shadow: 0 0 22px rgba(0,255,255,.08), inset 0 0 22px rgba(0,255,255,.05);
-      padding: 22px;
-      background: rgba(0,0,0,.45);
-    }
-
-    h1 {
-      text-align: center;
-      margin: 0 0 18px;
-      color: #ff7a00;
-      font-size: 38px;
-      letter-spacing: 2px;
-      text-shadow: 0 0 12px rgba(255, 122, 0, 0.25);
-    }
-
-    .filters {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-start;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
-    }
-    .filter-btn {
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(0,255,255,.28);
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 18px;
-      cursor: pointer;
-      font-weight: 700;
-      letter-spacing: .5px;
-      transition: .15s ease;
-    }
-    .filter-btn.active {
-      background: #00c853;
-      border-color: #00c853;
-      color: #000;
-      box-shadow: 0 0 16px rgba(0,200,83,.25);
-    }
-    .filter-btn:hover {
-      transform: translateY(-1px);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
-    th, td {
-      border-top: 1px solid rgba(0,255,255,.15);
-      padding: 14px 10px;
-      vertical-align: middle;
-    }
-    th {
-      color: #00e5ff;
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      padding-top: 10px;
-      padding-bottom: 10px;
-    }
-
-    .text-cell {
-      color: #00e5ff;
-      font-weight: 700;
-      letter-spacing: .5px;
-    }
-
-    .input {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.16);
-      background: rgba(255,255,255,.06);
-      color: #fff;
-      outline: none;
-      box-shadow: inset 0 0 10px rgba(0,0,0,.35);
-    }
-    .input::placeholder { color: rgba(255,255,255,.35); }
-
-    .money-wrap {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .money-prefix {
-      width: 44px;
-      text-align: center;
-      padding: 10px 0;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.16);
-      background: rgba(255,255,255,.06);
-      color: #00e5ff;
-      font-weight: 800;
-      box-shadow: inset 0 0 10px rgba(0,0,0,.35);
-      flex: 0 0 44px;
-    }
-
-    .action-btn {
-      border: none;
-      border-radius: 14px;
-      padding: 10px 16px;
-      font-weight: 800;
-      cursor: pointer;
-      letter-spacing: .6px;
-      transition: .15s ease;
-      width: 100%;
-      max-width: 140px;
-    }
-
-    .btn-comprar {
-      background: #00c853;
-      color: #000;
-    }
-    .btn-entrada {
-      background: #1e88ff;
-      color: #000;
-    }
-    .btn-finalizado {
-      background: #7b2cff;
-      color: #fff;
-    }
-
-    .action-btn:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.05);
-    }
-
-    .subrow {
-      border-top: none !important;
-      padding-top: 0 !important;
-    }
-    .contato-input {
-      margin-top: 8px;
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.16);
-      background: rgba(255,255,255,.06);
-      color: #fff;
-      outline: none;
-      box-shadow: inset 0 0 10px rgba(0,0,0,.35);
-    }
-
-    @media (max-width: 980px) {
-      h1 { font-size: 28px; }
-      th { font-size: 12px; }
-    }
-  </style>
+  .cellStack{display:flex;flex-direction:column;gap:8px;}
+  .supContact{font-size:14px;}
+</style>
 </head>
 
 <body>
-  <header>
-    <div class="logo">TMG Racing</div>
-    <div class="title">Compras / Serviços</div>
-  </header>
+<header>
+  <img src="logo_tmg_clean.png">
+  <div>Compras / Serviços</div>
+</header>
 
-  <div class="container">
-    <div class="card">
-      <h1>Compras Autorizadas</h1>
-
-      <div class="filters">
-        <button class="filter-btn active" data-filter="all">Todos</button>
-        <button class="filter-btn" data-filter="comprar">Comprar</button>
-        <button class="filter-btn" data-filter="entrada">Entrada</button>
-        <button class="filter-btn" data-filter="finalizado">Finalizado</button>
-      </div>
-
-      <table id="tbl">
-        <!-- ✅ ÚNICA ALTERAÇÃO: proporções das colunas -->
-        <colgroup>
-          <col style="width:7%">
-          <col style="width:9%">
-          <col style="width:21%">
-          <col style="width:5%">
-          <col style="width:5%">
-          <col style="width:17%">
-          <col style="width:16%">
-          <col style="width:14%">
-          <col style="width:6%">
-        </colgroup>
-
-        <thead>
-          <tr>
-            <th>Solicitante</th>
-            <th>Data Solicitação</th>
-            <th>Item</th>
-            <th>Qtd</th>
-            <th>Unidade</th>
-            <th>Fornecedor</th>
-            <th>Valor</th>
-            <th>Previsão</th>
-            <th>Ação</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
+<div class="wrap">
+  <div class="card">
+    <div class="filters">
+      <button class="fbtn active" onclick="setFilter('all',this)">Todos</button>
+      <button class="fbtn" onclick="setFilter('authorized',this)">Comprar</button>
+      <button class="fbtn" onclick="setFilter('purchased',this)">Entrada</button>
+      <button class="fbtn" onclick="setFilter('received',this)">Finalizado</button>
     </div>
+
+    <table>
+<colgroup>
+      <col style="width:10%">
+      <col style="width:10%">
+      <col style="width:22%">
+      <col style="width:4%">
+      <col style="width:4%">
+      <col style="width:18%">
+      <col style="width:12%">
+      <col style="width:15%">
+      <col style="width:5%">
+    </colgroup>
+
+      <thead>
+        <tr>
+          <th>Solicitante</th>
+          <th>Data solicitação</th>
+          <th>Item</th>
+          <th>Qtd</th>
+          <th>Unidade</th>
+          <th>Fornecedor</th>
+          <th>Valor</th>
+          <th>Previsão</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
+</div>
 
-  <script>
-    // Firebase config (mantido como no seu arquivo)
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      databaseURL: "YOUR_DATABASE_URL",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
+  databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
 
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+let data=[], filter="all";
 
-    // ---- Estado de filtros ----
-    let currentFilter = "all";
+function setFilter(f,btn){
+  filter=f;
+  document.querySelectorAll(".fbtn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  render();
+}
 
-    function setActiveFilterBtn(filter) {
-      document.querySelectorAll(".filter-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.filter === filter);
-      });
-    }
+function isToday(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  return d.toDateString()===n.toDateString();
+}
+function isWeek(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  const diff=(d-n)/(1000*60*60*24);
+  return diff>=0 && diff<=7;
+}
 
-    document.querySelectorAll(".filter-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        currentFilter = btn.dataset.filter;
-        setActiveFilterBtn(currentFilter);
-        renderRows(window.__cachedRows || []);
-      });
+db.ref("purchaseRequests").on("value",snap=>{
+  data=Object.entries(snap.val()||{}).map(([id,r])=>({id,...r}));
+  render();
+});
+
+let suppliersIndex = {};
+  function rebuildSuppliersIndex(list){
+    suppliersIndex = {};
+    const names = [];
+    (list||[]).forEach(r=>{
+      const name = ((r.supplier && r.supplier.name) || "").trim();
+      if(!name) return;
+      const contact = ((r.supplier && (r.supplier.contact || r.supplier.phone || r.supplier.whatsapp)) || "").trim();
+      const key = name.toLowerCase();
+      if(contact && !suppliersIndex[key]) suppliersIndex[key] = contact;
+      if(!names.some(n=>n.toLowerCase()===key)) names.push(name);
     });
-
-    // ---- AutoComplete Fornecedor -> Contato (mantido como no seu arquivo) ----
-    const fornecedoresRef = db.ref("fornecedores");
-    let fornecedoresCache = {};
-    fornecedoresRef.on("value", snap => {
-      fornecedoresCache = snap.val() || {};
-    });
-
-    function findContatoByFornecedor(nome) {
-      if (!nome) return "";
-      const key = Object.keys(fornecedoresCache).find(k => {
-        const n = (fornecedoresCache[k]?.nome || "").toLowerCase();
-        return n === nome.toLowerCase();
-      });
-      return key ? (fornecedoresCache[key]?.contato || "") : "";
+    const dl = document.getElementById('suppliersList');
+    if(dl){
+      dl.innerHTML = names.sort((a,b)=>a.localeCompare(b)).map(n=>`<option value="${escapeAttr(n)}"></option>`).join('');
     }
+  }
 
-    function renderRows(rows) {
-      const tbody = document.getElementById("tbody");
-      tbody.innerHTML = "";
-
-      const filtered = rows.filter(r => {
-        if (currentFilter === "all") return true;
-        return (r.status || "").toLowerCase() === currentFilter;
-      });
-
-      filtered.forEach((r) => {
-        const tr = document.createElement("tr");
-
-        const solicitante = r.solicitante || "-";
-        const dt = r.createdAt || r.dataSolicitacao || r.data || null;
-        const dtTxt = dt ? formatDateTime(dt) : "-";
-
-        tr.innerHTML = `
-          <td class="text-cell">${escapeHtml(solicitante)}</td>
-          <td class="text-cell">${escapeHtml(dtTxt)}</td>
-          <td><input class="input" value="${escapeAttr(r.item || "")}" /></td>
-          <td><input class="input" value="${escapeAttr(r.qtd || r.quantidade || "")}" /></td>
-          <td><input class="input" value="${escapeAttr(r.unidade || "un")}" /></td>
-          <td>
-            <input class="input fornecedor-input" value="${escapeAttr(r.fornecedor || "")}" placeholder="Fornecedor" list="forn-list"/>
-            <input class="contato-input" value="${escapeAttr(r.contatoFornecedor || r.contato || "")}" placeholder="Contato do fornecedor"/>
-          </td>
-          <td>
-            <div class="money-wrap">
-              <div class="money-prefix">R$</div>
-              <input class="input" value="${escapeAttr(r.valor || "")}" />
-            </div>
-          </td>
-          <td><input class="input" value="${escapeAttr(r.previsao || "")}" placeholder="dd/mm/aaaa --:--"/></td>
-          <td>${renderAction(r.status)}</td>
-        `;
-
-        // Autopreench contato ao digitar fornecedor
-        const fornecedorInput = tr.querySelector(".fornecedor-input");
-        const contatoInput = tr.querySelector(".contato-input");
-        fornecedorInput.addEventListener("change", () => {
-          const contato = findContatoByFornecedor(fornecedorInput.value.trim());
-          if (contato) contatoInput.value = contato;
-        });
-
-        tbody.appendChild(tr);
-      });
+  function onSupplierInput(id, el){
+    const name = (el.value||"").trim();
+    if(!name) return;
+    const key = name.toLowerCase();
+    const contact = suppliersIndex[key];
+    const contactEl = el.closest('td')?.querySelector('.supContact');
+    if(contactEl && contact && !contactEl.value.trim()){
+      contactEl.value = contact;
+      upd(id,'supplier/contact',contact);
     }
+  }
 
-    function renderAction(status) {
-      const s = (status || "").toLowerCase();
-      if (s === "finalizado") return `<button class="action-btn btn-finalizado" disabled>Finalizado</button>`;
-      if (s === "entrada") return `<button class="action-btn btn-entrada">Entrada</button>`;
-      return `<button class="action-btn btn-comprar">Comprar</button>`;
-    }
+function render(){
+  const tbody=document.getElementById("tbody");
+  tbody.innerHTML="";
+  rebuildSuppliersIndex(data);
+  data.forEach(r=>{
+    const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
+    let show=true;
+    if(filter!=='all') show=(r.status===filter);
+    if(!show) return;
 
-    function formatDateTime(value) {
-      try {
-        // aceita timestamp number, string ISO, ou objeto {seconds}
-        let d = null;
-        if (typeof value === "number") d = new Date(value);
-        else if (typeof value === "string") d = new Date(value);
-        else if (value && typeof value === "object" && typeof value.seconds === "number") d = new Date(value.seconds * 1000);
-        else return String(value);
+    const tr=document.createElement("tr");
+    if(overdue) tr.classList.add("overdue");
 
-        const pad = (n) => String(n).padStart(2, "0");
-        return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      } catch(e) {
-        return String(value);
-      }
-    }
+    tr.innerHTML=`
+      <td>${(r.requestedBy||r.member||"-")}</td>
+      <td>${fmtDT(r.requestedAt)}</td>
 
-    function escapeHtml(str) {
-      return String(str ?? "").replace(/[&<>"']/g, s => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
-      }[s]));
-    }
-    function escapeAttr(str) {
-      return escapeHtml(str).replace(/"/g, "&quot;");
-    }
+      <!-- ✅ NOVO: Item editável -->
+      <td>
+        <input value="${escapeAttr(r.item||"")}"
+               onblur="updText('${r.id}','item',this.value)">
+      </td>
 
-    // ---- Carrega compras autorizadas (mantido como no seu arquivo) ----
-    const comprasRef = db.ref("compras");
-    comprasRef.on("value", snap => {
-      const raw = snap.val() || {};
-      const rows = Object.keys(raw).map(id => ({ id, ...raw[id] }));
-      window.__cachedRows = rows;
-      renderRows(rows);
-    });
-  </script>
+      <!-- Qtd -->
+      <td>
+        <input type="number" min="0" step="1"
+               value="${escapeAttr((r.qty ?? '') + '')}"
+               onblur="updNum('${r.id}','qty',this.value)">
+      </td>
 
-  <datalist id="forn-list"></datalist>
-  <script>
-    // popula datalist de fornecedores (mantido)
-    const dl = document.getElementById("forn-list");
-    function refreshDatalist() {
-      dl.innerHTML = "";
-      Object.keys(fornecedoresCache).forEach(k => {
-        const nome = fornecedoresCache[k]?.nome;
-        if (!nome) return;
-        const opt = document.createElement("option");
-        opt.value = nome;
-        dl.appendChild(opt);
-      });
-    }
-    setInterval(refreshDatalist, 800);
-  </script>
+      <!-- Unidade -->
+      <td>
+        <input value="${escapeAttr(r.unit||"")}"
+               onblur="updText('${r.id}','unit',this.value)">
+      </td>
+
+      <td>
+        <div class="cellStack">
+          <input class="rowInput" list="suppliersList" value="${escapeAttr((r.supplier&&r.supplier.name)||"")}"
+                 oninput="onSupplierInput('${r.id}', this)"
+                 onblur="upd('${r.id}','supplier/name',this.value)">
+          <input class="rowInput supContact" placeholder="Contato do fornecedor" value="${escapeAttr((r.supplier&&r.supplier.contact)||"")}"
+                 onblur="upd('${r.id}','supplier/contact',this.value)">
+        </div>
+      </td>
+
+      <td>
+        <div class="money">
+          <span>R$</span>
+          <input type="number" step="0.01" value="${(r.total ?? "")}" onblur="updNum('${r.id}','total',this.value)">
+        </div>
+      </td>
+
+      <td>
+        <input type="datetime-local" value="${r.expectedDelivery?new Date(r.expectedDelivery).toISOString().slice(0,16):""}"
+               onblur="updDate('${r.id}','expectedDelivery',this.value)">
+      </td>
+
+      <td>
+        ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
+        ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
+        ${r.status==="received"?`<span class="badge finalizado">Finalizado</span>`:""}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function upd(id,path,val){
+  const o={}; let ref=o; const p=path.split("/");
+  p.slice(0,-1).forEach(k=>ref=ref[k]=ref[k]||{});
+  ref[p[p.length-1]]=val;
+  db.ref("purchaseRequests/"+id).update(o);
+}
+
+function updText(id,key,val){
+  // salva texto (com trim pra evitar "   ")
+  db.ref("purchaseRequests/"+id).update({[key]:(val||"").trim()});
+}
+
+function updNum(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:Number(v||0)}); }
+function updDate(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]: v ? new Date(v).getTime() : null}); }
+function buy(id){ db.ref("purchaseRequests/"+id).update({status:"purchased",purchasedAt:Date.now()}); }
+function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received",receivedAt:Date.now()}); }
+
+// evita quebrar o HTML quando tiver aspas no texto
+function escapeAttr(s){
+  return String(s).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+}
+function fmtDT(ts){
+  if(!ts) return "-";
+  const d = (typeof ts === "number") ? new Date(ts) : new Date(ts);
+  if(isNaN(d.getTime())) return "-";
+  const data = d.toLocaleDateString("pt-BR");
+  const hora = d.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+  return `${data} ${hora}`;
+}
+
+</script>
 </body>
 </html>
