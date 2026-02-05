@@ -32,7 +32,7 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
 .overdue{background:rgba(255,23,68,.18)}
 .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff}
 
-/* ✅ ÚNICA ALTERAÇÃO */
+/* ✅ Mantém a mudança de cor do Finalizado */
 .badge.finalizado{
   background:linear-gradient(90deg,#9e9e9e,#616161);
   color:#000;
@@ -121,18 +121,30 @@ function render(){
 
     tr.innerHTML=`
       <td>${(r.requestedBy||r.member||"-")}</td>
-      <td>${r.item||"-"}</td>
-      <td><input value="${(r.supplier&&r.supplier.name)||""}" onblur="upd('${r.id}','supplier/name',this.value)"></td>
+
+      <!-- ✅ NOVO: Item editável -->
+      <td>
+        <input value="${escapeAttr(r.item||"")}"
+               onblur="updText('${r.id}','item',this.value)">
+      </td>
+
+      <td>
+        <input value="${escapeAttr((r.supplier&&r.supplier.name)||"")}"
+               onblur="upd('${r.id}','supplier/name',this.value)">
+      </td>
+
       <td>
         <div class="money">
           <span>R$</span>
           <input type="number" step="0.01" value="${(r.total ?? "")}" onblur="updNum('${r.id}','total',this.value)">
         </div>
       </td>
+
       <td>
         <input type="datetime-local" value="${r.expectedDelivery?new Date(r.expectedDelivery).toISOString().slice(0,16):""}"
                onblur="updDate('${r.id}','expectedDelivery',this.value)">
       </td>
+
       <td>
         ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
         ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
@@ -149,10 +161,21 @@ function upd(id,path,val){
   ref[p[p.length-1]]=val;
   db.ref("purchaseRequests/"+id).update(o);
 }
+
+function updText(id,key,val){
+  // salva texto (com trim pra evitar "   ")
+  db.ref("purchaseRequests/"+id).update({[key]:(val||"").trim()});
+}
+
 function updNum(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:Number(v||0)}); }
 function updDate(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]: v ? new Date(v).getTime() : null}); }
 function buy(id){ db.ref("purchaseRequests/"+id).update({status:"purchased",purchasedAt:Date.now()}); }
 function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received",receivedAt:Date.now()}); }
+
+// evita quebrar o HTML quando tiver aspas no texto
+function escapeAttr(s){
+  return String(s).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+}
 </script>
 </body>
 </html>
