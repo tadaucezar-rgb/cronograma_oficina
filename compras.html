@@ -2,39 +2,98 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Compras</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff}
-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900}
+body{
+  margin:0;
+  font-family:'Orbitron',Arial,sans-serif;
+  background:#000;
+  color:#00e5ff;
+}
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 16px;
+  background:#dcdcdc;
+  color:#000;
+  font-weight:900;
+}
 header img{height:36px}
 .wrap{padding:14px;max-width:1200px;margin:auto}
-.card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22)}
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.fbtn{padding:6px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-weight:800;cursor:pointer}
-.fbtn.active{background:linear-gradient(90deg,#00c853,#64dd17);color:#000}
-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.82rem}
-th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.15);vertical-align:top}
+.card{
+  background:rgba(0,0,0,.8);
+  border-radius:18px;
+  padding:16px;
+  border:2px solid rgba(0,229,255,.22);
+}
+.filters{display:flex;gap:10px;margin-bottom:14px}
+.fbtn{
+  padding:6px 14px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  cursor:pointer;
+  font-weight:800;
+}
+.fbtn.active{
+  background:#00c853;
+  color:#000;
+}
+
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th,td{
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,.15);
+}
 th{text-transform:uppercase;font-size:.7rem}
-.money{display:flex;align-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;overflow:hidden}
-.money span{padding:8px 10px;font-weight:900;background:rgba(0,0,0,.35);border-right:1px solid rgba(255,255,255,.15)}
-.money input{border:none;background:transparent;padding:8px;color:#fff;width:100%;font-family:'Orbitron'}
-input,select{width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff}
-button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';font-weight:900;cursor:pointer}
+
+input{
+  width:100%;
+  padding:7px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.25);
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  font-family:'Orbitron';
+}
+
+.money{
+  display:flex;
+  align-items:center;
+  background:rgba(255,255,255,.1);
+  border-radius:10px;
+  overflow:hidden;
+}
+.money span{
+  padding:7px 10px;
+  background:rgba(0,0,0,.4);
+  border-right:1px solid rgba(255,255,255,.2);
+}
+
+button{
+  padding:8px 12px;
+  border-radius:12px;
+  border:none;
+  font-weight:900;
+  cursor:pointer;
+  font-family:'Orbitron';
+}
 .buy{background:#00c853;color:#000}
 .recv{background:#2979ff;color:#000}
-.overdue{background:rgba(255,23,68,.18)}
-.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff}
 
-/* ✅ Mantém a mudança de cor do Finalizado */
-.badge.finalizado{
-  background:linear-gradient(90deg,#9e9e9e,#616161);
+.badge{
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:900;
+  background:#9e9e9e;
   color:#000;
 }
 </style>
@@ -47,28 +106,31 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
 </header>
 
 <div class="wrap">
-  <div class="card">
-    <div class="filters">
-      <button class="fbtn active" onclick="setFilter('all', this)">Todos</button>
-      <button class="fbtn" onclick="setFilter('today', this)">Hoje</button>
-      <button class="fbtn" onclick="setFilter('week', this)">Semana</button>
-      <button class="fbtn" onclick="setFilter('overdue', this)">Atrasados</button>
-    </div>
+<div class="card">
 
-    <table>
-      <thead>
-        <tr>
-          <th>Solicitante</th>
-          <th>Item</th>
-          <th>Fornecedor</th>
-          <th>Valor</th>
-          <th>Previsão</th>
-          <th>Ação</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
+  <!-- ✅ FILTROS POR STATUS -->
+  <div class="filters">
+    <button class="fbtn active" onclick="setFilter('all',this)">Todos</button>
+    <button class="fbtn" onclick="setFilter('authorized',this)">Comprar</button>
+    <button class="fbtn" onclick="setFilter('purchased',this)">Entrada</button>
+    <button class="fbtn" onclick="setFilter('received',this)">Finalizado</button>
   </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Solicitante</th>
+        <th>Item</th>
+        <th>Fornecedor</th>
+        <th>Valor</th>
+        <th>Previsão</th>
+        <th>Ação</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+</div>
 </div>
 
 <script>
@@ -88,18 +150,6 @@ function setFilter(f,btn){
   render();
 }
 
-function isToday(ms){
-  if(!ms) return false;
-  const d=new Date(ms), n=new Date();
-  return d.toDateString()===n.toDateString();
-}
-function isWeek(ms){
-  if(!ms) return false;
-  const d=new Date(ms), n=new Date();
-  const diff=(d-n)/(1000*60*60*24);
-  return diff>=0 && diff<=7;
-}
-
 db.ref("purchaseRequests").on("value",snap=>{
   data=Object.entries(snap.val()||{}).map(([id,r])=>({id,...r}));
   render();
@@ -109,73 +159,59 @@ function render(){
   const tbody=document.getElementById("tbody");
   tbody.innerHTML="";
   data.forEach(r=>{
-    const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
-    let show=true;
-    if(filter==="today") show=isToday(r.expectedDelivery);
-    if(filter==="week") show=isWeek(r.expectedDelivery);
-    if(filter==="overdue") show=overdue;
-    if(!show) return;
+    if(filter!=="all" && r.status!==filter) return;
 
     const tr=document.createElement("tr");
-    if(overdue) tr.classList.add("overdue");
-
     tr.innerHTML=`
-      <td>${(r.requestedBy||r.member||"-")}</td>
+      <td>${r.requestedBy||"-"}</td>
 
-      <!-- ✅ NOVO: Item editável -->
       <td>
-        <input value="${escapeAttr(r.item||"")}"
-               onblur="updText('${r.id}','item',this.value)">
+        <input value="${esc(r.item||"")}"
+          onblur="upd('${r.id}','item',this.value)">
       </td>
 
       <td>
-        <input value="${escapeAttr((r.supplier&&r.supplier.name)||"")}"
-               onblur="upd('${r.id}','supplier/name',this.value)">
+        <input value="${esc(r.supplier?.name||"")}"
+          onblur="updNested('${r.id}','supplier/name',this.value)">
       </td>
 
       <td>
         <div class="money">
           <span>R$</span>
-          <input type="number" step="0.01" value="${(r.total ?? "")}" onblur="updNum('${r.id}','total',this.value)">
+          <input type="number" value="${r.total||""}"
+            onblur="updNum('${r.id}','total',this.value)">
         </div>
       </td>
 
       <td>
-        <input type="datetime-local" value="${r.expectedDelivery?new Date(r.expectedDelivery).toISOString().slice(0,16):""}"
-               onblur="updDate('${r.id}','expectedDelivery',this.value)">
+        <input type="date"
+          value="${r.expectedDelivery?new Date(r.expectedDelivery).toISOString().slice(0,10):""}"
+          onblur="updDate('${r.id}','expectedDelivery',this.value)">
       </td>
 
       <td>
         ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
         ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
-        ${r.status==="received"?`<span class="badge finalizado">Finalizado</span>`:""}
+        ${r.status==="received"?`<span class="badge">Finalizado</span>`:""}
       </td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-function upd(id,path,val){
-  const o={}; let ref=o; const p=path.split("/");
-  p.slice(0,-1).forEach(k=>ref=ref[k]=ref[k]||{});
-  ref[p[p.length-1]]=val;
+function upd(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:(v||"").trim()}); }
+function updNested(id,path,val){
+  const o={},p=path.split("/");
+  let r=o;
+  p.slice(0,-1).forEach(k=>r=r[k]=r[k]||{});
+  r[p[p.length-1]]=val;
   db.ref("purchaseRequests/"+id).update(o);
 }
-
-function updText(id,key,val){
-  // salva texto (com trim pra evitar "   ")
-  db.ref("purchaseRequests/"+id).update({[key]:(val||"").trim()});
-}
-
 function updNum(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:Number(v||0)}); }
-function updDate(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]: v ? new Date(v).getTime() : null}); }
-function buy(id){ db.ref("purchaseRequests/"+id).update({status:"purchased",purchasedAt:Date.now()}); }
-function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received",receivedAt:Date.now()}); }
-
-// evita quebrar o HTML quando tiver aspas no texto
-function escapeAttr(s){
-  return String(s).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-}
+function updDate(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:v?new Date(v).getTime():null}); }
+function buy(id){ db.ref("purchaseRequests/"+id).update({status:"purchased"}); }
+function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received"}); }
+function esc(s){return String(s).replaceAll('"','&quot;')}
 </script>
 </body>
 </html>
