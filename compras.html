@@ -37,6 +37,9 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
   background:linear-gradient(90deg,#9e9e9e,#616161);
   color:#000;
 }
+
+  .cellStack{display:flex;flex-direction:column;gap:8px;}
+  .supContact{font-size:14px;}
 </style>
 </head>
 
@@ -105,9 +108,40 @@ db.ref("purchaseRequests").on("value",snap=>{
   render();
 });
 
+let suppliersIndex = {};
+  function rebuildSuppliersIndex(list){
+    suppliersIndex = {};
+    const names = [];
+    (list||[]).forEach(r=>{
+      const name = ((r.supplier && r.supplier.name) || "").trim();
+      if(!name) return;
+      const contact = ((r.supplier && (r.supplier.contact || r.supplier.phone || r.supplier.whatsapp)) || "").trim();
+      const key = name.toLowerCase();
+      if(contact && !suppliersIndex[key]) suppliersIndex[key] = contact;
+      if(!names.some(n=>n.toLowerCase()===key)) names.push(name);
+    });
+    const dl = document.getElementById('suppliersList');
+    if(dl){
+      dl.innerHTML = names.sort((a,b)=>a.localeCompare(b)).map(n=>`<option value="${escapeAttr(n)}"></option>`).join('');
+    }
+  }
+
+  function onSupplierInput(id, el){
+    const name = (el.value||"").trim();
+    if(!name) return;
+    const key = name.toLowerCase();
+    const contact = suppliersIndex[key];
+    const contactEl = el.closest('td')?.querySelector('.supContact');
+    if(contactEl && contact && !contactEl.value.trim()){
+      contactEl.value = contact;
+      upd(id,'supplier/contact',contact);
+    }
+  }
+
 function render(){
   const tbody=document.getElementById("tbody");
   tbody.innerHTML="";
+  rebuildSuppliersIndex(data);
   data.forEach(r=>{
     const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
     let show=true;
@@ -127,8 +161,13 @@ function render(){
       </td>
 
       <td>
-        <input value="${escapeAttr((r.supplier&&r.supplier.name)||"")}"
-               onblur="upd('${r.id}','supplier/name',this.value)">
+        <div class="cellStack">
+          <input class="rowInput" list="suppliersList" value="${escapeAttr((r.supplier&&r.supplier.name)||"")}"
+                 oninput="onSupplierInput('${r.id}', this)"
+                 onblur="upd('${r.id}','supplier/name',this.value)">
+          <input class="rowInput supContact" placeholder="Contato do fornecedor" value="${escapeAttr((r.supplier&&r.supplier.contact)||"")}"
+                 onblur="upd('${r.id}','supplier/contact',this.value)">
+        </div>
       </td>
 
       <td>
