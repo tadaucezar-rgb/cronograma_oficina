@@ -31,7 +31,7 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
 .recv{background:#2979ff;color:#000}
 .overdue{background:rgba(255,23,68,.18)}
 .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff}
-.badge.finalizado{background:#6b5b95;color:#fff;border:1px solid rgba(255,255,255,.18)}
+.badge.finalizado{background:#7c4dff;color:#fff;}
 </style>
 </head>
 
@@ -44,10 +44,10 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
 <div class="wrap">
   <div class="card">
     <div class="filters">
-      <button id="filterAll" class="active">Todos</button>
-      <button id="filterAuthorized">Comprar</button>
-      <button id="filterPurchased">Entrada</button>
-      <button id="filterReceived">Finalizado</button>
+      <button class="fbtn active" onclick="setFilter('all',this)">Todos</button>
+      <button class="fbtn" onclick="setFilter('finalizado',this)">Finalizado</button>
+      <button class="fbtn" onclick="setFilter('comprar',this)">Comprar</button>
+      <button class="fbtn" onclick="setFilter('entrada',this)">Entrada</button>
     </div>
 
     <table>
@@ -83,28 +83,41 @@ function setFilter(f,btn){
   render();
 }
 
+function isToday(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  return d.toDateString()===n.toDateString();
+}
+function isWeek(ms){
+  if(!ms) return false;
+  const d=new Date(ms), n=new Date();
+  const diff=(d-n)/(1000*60*60*24);
+  return diff>=0 && diff<=7;
+}
+
 db.ref("purchaseRequests").on("value",snap=>{
   data=Object.entries(snap.val()||{}).map(([id,r])=>({id,...r}));
   render();
 });
 
-function esc(s){
-  return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-                 .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-}
 function render(){
   const tbody=document.getElementById("tbody");
   tbody.innerHTML="";
   data.forEach(r=>{
+    const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
     let show=true;
-    if(filter!=="all") show=(r.status===filter);
+    if(filter==="comprar") show=r.status==="authorized";
+    if(filter==="entrada") show=r.status==="purchased";
+    if(filter==="finalizado") show=r.status==="received";
     if(!show) return;
 
     const tr=document.createElement("tr");
+    if(overdue) tr.classList.add("overdue");
+
     tr.innerHTML=`
-      <td>${esc(r.requestedBy||r.member||"-")}</td>
-      <td><input value="${esc(r.item||"")}" onblur="upd('${r.id}','item',this.value)"></td>
-      <td><input value="${esc((r.supplier&&r.supplier.name)||"")}" onblur="upd('${r.id}','supplier/name',this.value)"></td>
+      <td>${(r.requestedBy||r.member||"-")}</td>
+      <td><input value="${esc(r.item||"")}" onblur="upd(\'${r.id}\',\'item\',this.value)"></td>
+      <td><input value="${esc((r.supplier&&r.supplier.name)||\"\")}" onblur="upd(\'${r.id}\',\'supplier/name\',this.value)"></td>
       <td>
         <div class="money">
           <span>R$</span>
@@ -124,7 +137,6 @@ function render(){
     tbody.appendChild(tr);
   });
 }
-
 
 function upd(id,path,val){
   const o={}; let ref=o; const p=path.split("/");
