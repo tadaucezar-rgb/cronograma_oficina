@@ -62,7 +62,10 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
       <thead>
         <tr>
           <th>Solicitante</th>
+          <th>Data solicitação</th>
           <th>Item</th>
+          <th>Qtd</th>
+          <th>Unidade</th>
           <th>Fornecedor</th>
           <th>Valor</th>
           <th>Previsão</th>
@@ -153,11 +156,25 @@ function render(){
 
     tr.innerHTML=`
       <td>${(r.requestedBy||r.member||"-")}</td>
+      <td>${fmtDT(r.requestedAt)}</td>
 
       <!-- ✅ NOVO: Item editável -->
       <td>
         <input value="${escapeAttr(r.item||"")}"
                onblur="updText('${r.id}','item',this.value)">
+      </td>
+
+      <!-- Qtd -->
+      <td>
+        <input type="number" min="0" step="1"
+               value="${escapeAttr((r.qty ?? '') + '')}"
+               onblur="updNum('${r.id}','qty',this.value)">
+      </td>
+
+      <!-- Unidade -->
+      <td>
+        <input value="${escapeAttr(r.unit||"")}"
+               onblur="updText('${r.id}','unit',this.value)">
       </td>
 
       <td>
@@ -213,6 +230,15 @@ function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received",rece
 function escapeAttr(s){
   return String(s).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 }
+function fmtDT(ts){
+  if(!ts) return "-";
+  const d = (typeof ts === "number") ? new Date(ts) : new Date(ts);
+  if(isNaN(d.getTime())) return "-";
+  const data = d.toLocaleDateString("pt-BR");
+  const hora = d.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+  return `${data} ${hora}`;
+}
+
 </script>
 </body>
 </html>
