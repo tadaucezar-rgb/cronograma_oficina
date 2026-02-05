@@ -31,7 +31,7 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
 .recv{background:#2979ff;color:#000}
 .overdue{background:rgba(255,23,68,.18)}
 .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff}
-.badge.finalizado{background:#7c4dff;color:#fff;}
+.badge.finalizado{background:linear-gradient(90deg,#7b2ff7,#b04bff);color:#fff;border:1px solid rgba(176,75,255,.35)}
 </style>
 </head>
 
@@ -44,11 +44,11 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
 <div class="wrap">
   <div class="card">
     <div class="filters">
-      <button class="fbtn active" onclick="setFilter('all',this)">Todos</button>
-      <button class="fbtn" onclick="setFilter('finalizado',this)">Finalizado</button>
-      <button class="fbtn" onclick="setFilter('comprar',this)">Comprar</button>
-      <button class="fbtn" onclick="setFilter('entrada',this)">Entrada</button>
-    </div>
+    <button class="pill active" id="f_all" onclick="setFilter('all')">Todos</button>
+    <button class="pill" id="f_buy" onclick="setFilter('buy')">Comprar</button>
+    <button class="pill" id="f_entry" onclick="setFilter('entry')">Entrada</button>
+    <button class="pill" id="f_done" onclick="setFilter('done')">Finalizado</button>
+  </div>
 
     <table>
       <thead>
@@ -67,6 +67,8 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
 </div>
 
 <script>
+function escAttr(v){return String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
 const firebaseConfig={
   apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
   databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com"
@@ -76,10 +78,13 @@ const db=firebase.database();
 
 let data=[], filter="all";
 
-function setFilter(f,btn){
-  filter=f;
-  document.querySelectorAll(".fbtn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
+function setFilter(f){
+  filter = f;
+  const ids = ['f_all','f_buy','f_entry','f_done'];
+  ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('active'); });
+  const map = {all:'f_all', buy:'f_buy', entry:'f_entry', done:'f_done'};
+  const act = document.getElementById(map[f] || 'f_all');
+  if(act) act.classList.add('active');
   render();
 }
 
@@ -101,42 +106,59 @@ db.ref("purchaseRequests").on("value",snap=>{
 });
 
 function render(){
-  const tbody=document.getElementById("tbody");
-  tbody.innerHTML="";
-  data.forEach(r=>{
-    const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
-    let show=true;
-    if(filter==="comprar") show=r.status==="authorized";
-    if(filter==="entrada") show=r.status==="purchased";
-    if(filter==="finalizado") show=r.status==="received";
-    if(!show) return;
+  const tbody = document.querySelector('#tbl tbody');
+  if(!tbody) return;
 
-    const tr=document.createElement("tr");
-    if(overdue) tr.classList.add("overdue");
+  const list = reqs.filter(r=>{
+    const st = String(r.status || 'authorized').toLowerCase();
+    if(filter==='buy') return st==='authorized';
+    if(filter==='entry') return st==='purchased';
+    if(filter==='done') return st==='received';
+    return true;
+  });
 
-    tr.innerHTML=`
-      <td>${(r.requestedBy||r.member||"-")}</td>
-      <td><input value="${esc(r.item||"")}" onblur="upd(\'${r.id}\',\'item\',this.value)"></td>
-      <td><input value="${esc((r.supplier&&r.supplier.name)||\"\")}" onblur="upd(\'${r.id}\',\'supplier/name\',this.value)"></td>
-      <td>
-        <div class="money">
-          <span>R$</span>
-          <input type="number" step="0.01" value="${(r.total ?? "")}" onblur="updNum('${r.id}','total',this.value)">
-        </div>
-      </td>
-      <td>
-        <input type="datetime-local" value="${r.expectedDelivery?new Date(r.expectedDelivery).toISOString().slice(0,16):""}"
-               onblur="updDate('${r.id}','expectedDelivery',this.value)">
-      </td>
-      <td>
-        ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
-        ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
-        ${r.status==="received"?`<span class="badge finalizado">Finalizado</span>`:""}
-      </td>
+  tbody.innerHTML = '';
+  if(list.length===0){
+    const tr=document.createElement('tr');
+    tr.innerHTML = '<td colspan="7" class="muted">Nenhum registro</td>';
+    tbody.appendChild(tr);
+    return;
+  }
+
+  list.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+  list.forEach(r=>{
+    const st = String(r.status || 'authorized').toLowerCase();
+    const solicitante = r.requestedBy || r.member || '-';
+    const dtVal = r.expectedDelivery ? new Date(r.expectedDelivery).toISOString().slice(0,16) : '';
+    const action = (st==='received')
+      ? `<span class="badge finalizado">Finalizado</span>`
+      : (st==='purchased')
+        ? `<button class="btn entrada" onclick="recv('${r.id}')">Entrada</button>`
+        : `<button class="btn comprar" onclick="buy('${r.id}')">Comprar</button>`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escAttr(solicitante)}</td>
+      <td><input class="inp iteminp" value="${escAttr(r.item||'')}" placeholder="Item" data-id="${r.id}"></td>
+      <td><input class="inp" value="${escAttr(r.supplier||'')}" placeholder="Fornecedor" onblur="upd('${r.id}','supplier',this.value.trim())"></td>
+      <td><div class="money"><span>R$</span><input class="inp" type="number" step="0.01" value="${escAttr(r.total||'')}" placeholder="0,00" onblur="updNum('${r.id}','total',this.value)"></div></td>
+      <td><input class="inp" type="datetime-local" value="${escAttr(dtVal)}" onblur="updDate('${r.id}','expectedDelivery',this.value)"></td>
+      <td>${action}</td>
     `;
     tbody.appendChild(tr);
   });
+
+  // editar item
+  document.querySelectorAll('.iteminp').forEach(inp=>{
+    inp.onchange = ()=>{
+      const id = inp.getAttribute('data-id');
+      if(!id) return;
+      upd(id,'item',(inp.value||'').trim());
+    };
+  });
 }
+
 
 function upd(id,path,val){
   const o={}; let ref=o; const p=path.split("/");
