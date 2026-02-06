@@ -134,11 +134,12 @@
       <table style="margin-top:10px;">
         <thead>
           <tr>
-            <th style="width:18%;">Solicitante</th>
-            <th style="width:28%;">Item</th>
+            <th style="width:16%;">Solicitante</th>
+            <th style="width:26%;">Item</th>
+            <th style="width:18%;">Data solicitação</th>
             <th style="width:12%;">Qtd</th>
-            <th style="width:18%;">Centro</th>
-            <th style="width:24%;">Ações</th>
+            <th style="width:14%;">Centro</th>
+            <th style="width:14%;">Ações</th>
           </tr>
         </thead>
         <tbody id="tbAuth"></tbody>
@@ -234,6 +235,17 @@ function fmt(ms){
   if(!ms) return "-";
   return new Date(ms).toLocaleString("pt-BR");
 }
+function toDatetimeLocal(ms){
+  if(!ms) return "";
+  const d = new Date(ms);
+  const pad = n => String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fromDatetimeLocal(v){
+  if(!v) return null;
+  const ms = Date.parse(v);
+  return Number.isFinite(ms) ? ms : null;
+}
 
 /* ===== State ===== */
 let rows = [];
@@ -258,7 +270,7 @@ function renderAuth(){
 
   if(!pend.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="5" class="muted">Nenhuma autorização pendente.</td>`;
+    tr.innerHTML = `<td colspan="6" class="muted">Nenhuma autorização pendente.</td>`;
     tb.appendChild(tr);
     return;
   }
@@ -271,6 +283,11 @@ function renderAuth(){
         <b>${esc(r.item||"-")}</b>
         <div class="muted" style="margin-top:6px;">Solicitado em: ${fmt(r.requestedAt)}</div>
       </td>
+      <td>
+        <input type="datetime-local"
+               value="${toDatetimeLocal(r.requestedAt)}"
+               onchange="updateRequestedAt('${r.id}', this.value)" />
+      </td>
       <td>${r.qty ?? "-" } ${esc(r.unit||"")}</td>
       <td>${esc(r.cost||"Sem centro")}</td>
       <td style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -282,6 +299,11 @@ function renderAuth(){
   });
 }
 
+function updateRequestedAt(id, v){
+  const ms = fromDatetimeLocal((v||"").trim());
+  if(ms === null){ alert("Data inválida."); return; }
+  db.ref("purchaseRequests/"+id).update({requestedAt: ms});
+}
 function authorize(id){
   db.ref("purchaseRequests/"+id).update({status:"authorized", authorizedAt: Date.now()});
 }
