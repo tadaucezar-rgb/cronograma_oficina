@@ -636,6 +636,7 @@ function addTask(){
     owner,
     desc,
     status: "a fazer",
+    priority: priority,
     dueAt: dueAt || null,
     createdAt: Date.now()
   });
@@ -654,6 +655,11 @@ function delTask(id){
   db.ref("tasks/"+id).remove();
 }
 
+
+function setTaskPriority(id, priority){
+  db.ref("tasks/"+id).update({ priority });
+}
+
 function renderTasks(){
   const tb = document.getElementById("tbTasks");
   tb.innerHTML="";
@@ -670,10 +676,13 @@ function renderTasks(){
       </td>
       <td>${esc(t.owner||"-")}</td>
       <td>${t.dueAt ? fmtDateTime(t.dueAt) : "-"}</td>
-      <td><span class="pill">${esc(t.status||"-")}</span></td>
+      <td><span class="pill">${esc(t.status||"-")} • ${esc(t.priority||"BAIXA")}</span></td>
       <td style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btnGhost" onclick="setTaskStatus('${t.id}','a fazer')">A fazer</button>
         <button class="btnGhost" onclick="setTaskStatus('${t.id}','em andamento')">Em andamento</button>
+        <button class="btnGhost" onclick="setTaskPriority('${t.id}','BAIXA')">Baixa</button>
+        <button class="btnGhost" onclick="setTaskPriority('${t.id}','MEDIA')">Média</button>
+        <button class="btnGhost" onclick="setTaskPriority('${t.id}','ALTA')">Alta</button>
         <button class="btn" onclick="setTaskStatus('${t.id}','concluída')">Concluída</button>
         <button class="btnDanger" onclick="delTask('${t.id}')">Apagar</button>
       </td>
