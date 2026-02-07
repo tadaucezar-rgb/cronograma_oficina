@@ -235,10 +235,36 @@ function prioClass(p){
   return "p-low";
 }
 
+/* ✅ FIX: agora pega responsável em vários campos (sem alterar mais nada) */
 function getTaskPeople(t){
-  if(Array.isArray(t.people) && t.people.length) return t.people;
-  if(typeof t.person==="string" && t.person.trim()) return [t.person.trim()];
-  return ["Sem Responsável"];
+  const out = [];
+  const add = (v)=>{
+    if(!v) return;
+    if(Array.isArray(v)){ v.forEach(add); return; }
+    if(typeof v === "string"){
+      v.split(/[,;/|]+/).map(s=>s.trim()).filter(Boolean).forEach(x=>out.push(x));
+      return;
+    }
+    if(typeof v === "object"){
+      if(v.nome) out.push(String(v.nome).trim());
+      if(v.name) out.push(String(v.name).trim());
+    }
+  };
+
+  add(t.people);
+  add(t.person);
+  add(t.responsavel);
+  add(t["responsável"]);
+  add(t.responsavelNome);
+  add(t.assignedTo);
+  add(t.assignee);
+  add(t.owner);
+  add(t.usuario);
+  add(t.member);
+  add(t.membro);
+
+  const uniq = Array.from(new Set(out.map(s=>String(s).trim()).filter(Boolean)));
+  return uniq.length ? uniq : ["Sem Responsável"];
 }
 
 function parseDTLocalToMs(v){
@@ -345,25 +371,30 @@ db.ref("tasks").on("value", snap=>{
 /* Datas + regressivo */
 let lastDates = [];
 
+/* ✅ FIX: parseYMD agora entende também DD/MM/YYYY HH:MM[:SS] (com vírgula opcional) */
 function parseYMD(s){
-  // Aceita: YYYY-MM-DD, DD/MM/YYYY, YYYY/MM/DD, ISO (com ou sem hora)
+  // Aceita: YYYY-MM-DD, DD/MM/YYYY, YYYY/MM/DD, ISO, e DD/MM/YYYY HH:MM[:SS]
   if(!s) return null;
   if(typeof s === "number") return new Date(s);
   if(typeof s !== "string") return null;
   const str = String(s).trim();
   if(!str) return null;
 
+  // DD/MM/YYYY HH:MM[:SS] (com espaço ou vírgula)
+  let m = /^(\d{2})\/(\d{2})\/(\d{4})[,\s]+(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(str);
+  if(m){
+    const ss = m[6] ? Number(m[6]) : 0;
+    return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]), Number(m[4]), Number(m[5]), ss, 0);
+  }
+
   // ISO / Date parse (ex: 2026-02-05T12:34:00Z)
-  if(str.includes("T") || str.includes(":")){
+  if(str.includes("T")){
     const dIso = new Date(str);
-    if(!isNaN(dIso.getTime())){
-      // Se vier com hora, usa a própria hora
-      return dIso;
-    }
+    if(!isNaN(dIso.getTime())) return dIso;
   }
 
   // YYYY-MM-DD
-  let m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
+  m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
   if(m){
     return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 23,59,59,999);
   }
@@ -383,6 +414,7 @@ function parseYMD(s){
   if(!isNaN(d.getTime())) return d;
   return null;
 }
+
 function formatCountdown(target){
   const now=new Date();
   const diffMs = target.getTime() - now.getTime();
