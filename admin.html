@@ -636,7 +636,9 @@ function addTask(){
     owner,
     desc,
     status: "a fazer",
-    priority: priority,
+    // Prioridade não é escolhida no formulário (ajuste depois nos botões do item).
+    // Mantém padrão para evitar ReferenceError e não quebrar o botão "Adicionar".
+    priority: "BAIXA",
     dueAt: dueAt || null,
     createdAt: Date.now()
   });
