@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -170,6 +169,9 @@
     color:#fff;
     opacity:.9;
   }
+
+  .task-text{min-width:0;display:flex;flex-direction:column;gap:2px}
+  .task-desc{font-size:.72rem;opacity:.7;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
 </head>
 
@@ -237,9 +239,15 @@ function prioClass(p){
 }
 
 function getTaskPeople(t){
-  if(Array.isArray(t.people) && t.people.length) return t.people;
-  if(typeof t.person==="string" && t.person.trim()) return [t.person.trim()];
-  return ["Sem Responsável"];
+  if(!t) return [];
+  // New schema (admin): owner string
+  if(typeof t.owner === 'string' && t.owner.trim()) return [t.owner.trim()];
+  if(typeof t.responsavel === 'string' && t.responsavel.trim()) return [t.responsavel.trim()];
+  if(typeof t.responsavelNome === 'string' && t.responsavelNome.trim()) return [t.responsavelNome.trim()];
+  // Older schema: people array or person string
+  if(Array.isArray(t.people) && t.people.length) return t.people.filter(Boolean).map(x=>String(x).trim()).filter(Boolean);
+  if(typeof t.person === 'string' && t.person.trim()) return [t.person.trim()];
+  return [];
 }
 
 function parseDTLocalToMs(v){
@@ -329,13 +337,18 @@ db.ref("tasks").on("value", snap=>{
         const row = document.createElement("div");
         row.className = `task ${urg}`.trim();
         row.innerHTML = `
-          <div class="task-left">
-            <div class="task-name">${t.name || ""}</div>
-            ${cd ? `<div class="task-cd">${cd}</div>` : ``}
+        <div class="task-left">
+          <div class="task-text">
+            <div class="task-name">${escapeHtml(t.title || t.name || '—')}</div>
+            ${t.desc ? `<div class="task-desc">${escapeHtml(t.desc)}</div>` : ``}
           </div>
-          <div class="badge ${status}">${statusLabel(status)}</div>
-          <div class="badge ${prioClass(prio)}">${priorityLabel(prio)}</div>
-        `;
+          <span class="task-cd">${cd}</span>
+        </div>
+        <div class="task-right">
+          <span class="badge ${statusCls}">${statusLabel}</span>
+          <span class="badge pri ${priCls}">${priLabel}</span>
+        </div>
+      `;
         card.appendChild(row);
       });
 
@@ -369,12 +382,12 @@ function renderDates(){
   const ul=document.getElementById("dates");
   ul.innerHTML="";
   lastDates.forEach(d=>{
-    const dt=parseYMD(d.date);
+    const dt = (typeof d.when === 'number' ? new Date(d.when) : (d.whenMs ? new Date(d.whenMs) : parseYMD(d.date)));
     const cd = dt ? formatCountdown(dt) : "--";
     const li=document.createElement("li");
     li.innerHTML=`
       <strong>${d.title||""}</strong><br>
-      ${d.date||""}
+      ${d.date || (typeof d.when === 'number' ? new Date(d.when).toLocaleString('pt-BR') : '')}
       <div class="countdown">${cd}</div>
     `;
     ul.appendChild(li);
