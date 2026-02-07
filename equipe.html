@@ -309,7 +309,7 @@
     </select>
 
     
-    <button class=\"btn btn-green\" id=\"btnReqPick\" style=\"margin-top:10px;\">Requisição</button>
+    <button class="btn btn-green" id="btnReqPick" style="margin-top:10px;">Requisição</button>
 <button class="btn btn-green" id="btnEntrar">Entrar</button>
 
     <div class="hint">
@@ -402,34 +402,10 @@
     if(!m) return null;
     return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]), 0, 0).getTime();
   }
-  function parseYMDToMs(s){
-      if(s===null||s===undefined) return null;
-      if(typeof s==="number") return s;
-      s = String(s).trim();
-      if(!s) return null;
-
-      let m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}))?/);
-      if(m){
-        const y=+m[1], mo=+m[2]-1, d=+m[3];
-        const hh=m[4]!==undefined ? +m[4] : 0;
-        const mm=m[5]!==undefined ? +m[5] : 0;
-        const dt = new Date(y, mo, d, hh, mm, 0, 0);
-        const t = dt.getTime();
-        return isNaN(t) ? null : t;
-      }
-
-      m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
-      if(m){
-        const d=+m[1], mo=+m[2]-1, y=+m[3];
-        const hh=m[4]!==undefined ? +m[4] : 0;
-        const mm=m[5]!==undefined ? +m[5] : 0;
-        const dt = new Date(y, mo, d, hh, mm, 0, 0);
-        const t = dt.getTime();
-        return isNaN(t) ? null : t;
-      }
-
-      const t = Date.parse(s);
-      return isNaN(t) ? null : t;
+  function parseYMDToMs(ymd){
+    const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd||"");
+    if(!m) return null;
+    return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0,0,0,0).getTime();
   }
   function formatBRDateTime(ms){
     const d=new Date(ms);
@@ -478,25 +454,10 @@
   }
 
   function getTaskPeople(t){
-      if(!t) return [];
-      let p = t.people ?? t.responsaveis ?? t.responsáveis ?? t.responsaveisNomes ?? t.responsible ?? t.responsavel ?? t.responsável ?? t.person ?? t.owner ?? t.assignee;
-
-      if(typeof p === "string"){
-        return p.split(",").map(x=>x.trim()).filter(Boolean);
-      }
-      
-    function getTaskName(t){
-      if(!t) return "";
-      return (t.name ?? t.title ?? t.task ?? t.tarefa ?? t.descricao ?? t.descrição ?? t.description ?? "").toString();
-    }
-if(Array.isArray(p)){
-        return p.map(x=>String(x||"").trim()).filter(Boolean);
-      }
-      if(p && typeof p === "object"){
-        return Object.keys(p).map(x=>String(x||"").trim()).filter(Boolean);
-      }
-      return [];
-    }
+    if (Array.isArray(t.people) && t.people.length) return t.people;
+    if (typeof t.person === "string" && t.person.trim()) return [t.person.trim()];
+    return [];
+  }
 
   function qs(){
     const p = new URLSearchParams(window.location.search);
@@ -702,7 +663,7 @@ if(Array.isArray(p)){
 
         card.innerHTML = `
           <div class="card-top">
-            <div class="task-name">${getTaskName(t)}</div>
+            <div class="task-name">${t.name || ""}</div>
             <div class="badges">
               <span class="badge ${statusBadgeClass(status)}">${statusLabel(status)}</span>
               <span class="badge ${prioClass(prio)}">${prioLabel(prio)}</span>
