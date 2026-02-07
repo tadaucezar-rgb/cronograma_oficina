@@ -309,7 +309,7 @@
     </select>
 
     
-    <button class="btn btn-green" id="btnReqPick" style="margin-top:10px;">Requisição</button>
+    <button class=\"btn btn-green\" id=\"btnReqPick\" style=\"margin-top:10px;\">Requisição</button>
 <button class="btn btn-green" id="btnEntrar">Entrar</button>
 
     <div class="hint">
@@ -454,10 +454,13 @@
   }
 
   function getTaskPeople(t){
-    if (Array.isArray(t.people) && t.people.length) return t.people;
-    if (typeof t.person === "string" && t.person.trim()) return [t.person.trim()];
-    return [];
-  }
+  if(!t) return [];
+  if(typeof t.owner === 'string' && t.owner.trim()) return [t.owner.trim()];
+  if(typeof t.responsavel === 'string' && t.responsavel.trim()) return [t.responsavel.trim()];
+  if(Array.isArray(t.people) && t.people.length) return t.people.filter(Boolean).map(x=>String(x).trim()).filter(Boolean);
+  if(typeof t.person === 'string' && t.person.trim()) return [t.person.trim()];
+  return [];
+}
 
   function qs(){
     const p = new URLSearchParams(window.location.search);
