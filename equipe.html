@@ -430,9 +430,6 @@
 
       const t = Date.parse(s);
       return isNaN(t) ? null : t;
-    })-(\d{2})-(\d{2})$/.exec(ymd||"");
-    if(!m) return null;
-    return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0,0,0,0).getTime();
   }
   function formatBRDateTime(ms){
     const d=new Date(ms);
