@@ -247,6 +247,14 @@
           <select id="tOwner"></select>
         </div>
         <div>
+          <label>Prioridade</label>
+          <select id="tPriority">
+            <option value="BAIXA">BAIXA</option>
+            <option value="MÉDIA" selected>MÉDIA</option>
+            <option value="ALTA">ALTA</option>
+          </select>
+        </div>
+        <div>
           <label>Prazo (data)</label>
           <input id="tDueDate" type="date" />
         </div>
@@ -636,9 +644,7 @@ function addTask(){
     owner,
     desc,
     status: "a fazer",
-    // Prioridade não é escolhida no formulário (ajuste depois nos botões do item).
-    // Mantém padrão para evitar ReferenceError e não quebrar o botão "Adicionar".
-    priority: "BAIXA",
+      priority: priority,
     dueAt: dueAt || null,
     createdAt: Date.now()
   });
@@ -658,10 +664,10 @@ function delTask(id){
 }
 
 
-function setTaskPriority(id, priority){
-  db.ref("tasks/"+id).update({ priority });
+function setTaskPriority(taskId, priority){
+  if(!taskId) return;
+  db.ref('tasks/' + taskId + '/priority').set(priority);
 }
-
 function renderTasks(){
   const tb = document.getElementById("tbTasks");
   tb.innerHTML="";
@@ -678,13 +684,10 @@ function renderTasks(){
       </td>
       <td>${esc(t.owner||"-")}</td>
       <td>${t.dueAt ? fmtDateTime(t.dueAt) : "-"}</td>
-      <td><span class="pill">${esc(t.status||"-")} • ${esc(t.priority||"BAIXA")}</span></td>
+      <td><span class="pill">${esc(t.status||"-")}</span></td>
       <td style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btnGhost" onclick="setTaskStatus('${t.id}','a fazer')">A fazer</button>
         <button class="btnGhost" onclick="setTaskStatus('${t.id}','em andamento')">Em andamento</button>
-        <button class="btnGhost" onclick="setTaskPriority('${t.id}','BAIXA')">Baixa</button>
-        <button class="btnGhost" onclick="setTaskPriority('${t.id}','MEDIA')">Média</button>
-        <button class="btnGhost" onclick="setTaskPriority('${t.id}','ALTA')">Alta</button>
         <button class="btn" onclick="setTaskStatus('${t.id}','concluída')">Concluída</button>
         <button class="btnDanger" onclick="delTask('${t.id}')">Apagar</button>
       </td>
