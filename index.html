@@ -238,6 +238,16 @@ function prioClass(p){
   return "p-low";
 }
 
+function escapeHtml(s){
+  return String(s ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+
 function getTaskPeople(t){
   if(!t) return [];
   // New schema (admin): owner string
@@ -332,6 +342,11 @@ db.ref("tasks").on("value", snap=>{
         const prio = t.priority || "low";
         const dueAt = getDueAt(t);
         const cd = dueAt ? countdownShort(dueAt) : "";
+
+        const statusCls = status; // css classes match status values
+        const priCls = prioClass(prio);
+        const stLabel = statusLabel(status);
+        const priLabel = priorityLabel(prio);
         const urg = urgencyClass(dueAt);
 
         const row = document.createElement("div");
@@ -345,7 +360,7 @@ db.ref("tasks").on("value", snap=>{
           <span class="task-cd">${cd}</span>
         </div>
         <div class="task-right">
-          <span class="badge ${statusCls}">${statusLabel}</span>
+          <span class="badge ${statusCls}">${stLabel}</span>
           <span class="badge pri ${priCls}">${priLabel}</span>
         </div>
       `;
