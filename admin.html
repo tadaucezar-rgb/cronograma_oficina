@@ -633,6 +633,7 @@ function addTask(){
   const owner = (document.getElementById("tOwner").value||"").trim();
   const dueDate = document.getElementById("tDueDate").value;
   const dueTime = document.getElementById("tDueTime").value;
+  const priority = (document.getElementById("tPriority")?.value || "BAIXA").trim();
   const desc = (document.getElementById("tDesc").value||"").trim();
 
   if(!title){ alert("Título obrigatório"); return; }
@@ -644,7 +645,7 @@ function addTask(){
     owner,
     desc,
     status: "a fazer",
-      priority: priority,
+    priority: priority,
     dueAt: dueAt || null,
     createdAt: Date.now()
   });
@@ -653,6 +654,9 @@ function addTask(){
   document.getElementById("tDesc").value="";
   document.getElementById("tDueDate").value="";
   document.getElementById("tDueTime").value="";
+  document.getElementById("tPriority").value="BAIXA";
+}
+  document.getElementById("tPriority").value="BAIXA";
 }
 
 function setTaskStatus(id, status){
