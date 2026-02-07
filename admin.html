@@ -656,8 +656,6 @@ function addTask(){
   document.getElementById("tDueTime").value="";
   document.getElementById("tPriority").value="BAIXA";
 }
-  document.getElementById("tPriority").value="BAIXA";
-}
 
 function setTaskStatus(id, status){
   db.ref("tasks/"+id).update({ status });
