@@ -79,6 +79,7 @@
       border: none;
     }
 
+
     .wrap{
       max-width: 760px;
       margin: 0 auto;
@@ -246,7 +247,7 @@
       color: rgba(255,255,255,.65);
       margin-top:8px;
     }
-
+  
     /* === Compras / Requisições === */
     .p-card{
       background: var(--bgcard);
@@ -307,8 +308,9 @@
       <option value="">Carregando nomes...</option>
     </select>
 
-    <button class="btn btn-green" id="btnReqPick" style="margin-top:10px;">Requisição</button>
-    <button class="btn btn-green" id="btnEntrar">Entrar</button>
+    
+    <button class=\"btn btn-green\" id=\"btnReqPick\" style=\"margin-top:10px;\">Requisição</button>
+<button class="btn btn-green" id="btnEntrar">Entrar</button>
 
     <div class="hint">
       • Se você abriu pelo QR Code, o nome já pode vir selecionado.<br>
@@ -322,16 +324,16 @@
     <div class="empty" id="empty" style="display:none;">Nenhuma tarefa atribuída a você.</div>
     <div class="small" id="foot"></div>
   </div>
+    <div class="panel" id="panelCompras" style="margin-top:14px;">
+      <h2>Minhas requisições</h2>
+      <div class="small" style="margin-top:-6px;opacity:.85;">
+        Acompanhe aqui o <b>status</b>, a <b>previsão de entrega</b> e quando <b>chegou</b>.
+      </div>
 
-  <div class="panel" id="panelCompras" style="margin-top:14px;">
-    <h2>Minhas requisições</h2>
-    <div class="small" style="margin-top:-6px;opacity:.85;">
-      Acompanhe aqui o <b>status</b>, a <b>previsão de entrega</b> e quando <b>chegou</b>.
+      <div class="cards" id="cardsCompras"></div>
+      <div class="empty" id="emptyCompras" style="display:none;">Nenhuma requisição encontrada para você.</div>
     </div>
 
-    <div class="cards" id="cardsCompras"></div>
-    <div class="empty" id="emptyCompras" style="display:none;">Nenhuma requisição encontrada para você.</div>
-  </div>
 
 </div>
 
@@ -364,6 +366,7 @@
 
   const cardsCompras = document.getElementById("cardsCompras");
   const emptyCompras = document.getElementById("emptyCompras");
+
 
   function norm(s){ return (s || "").trim().toLowerCase(); }
 
@@ -405,7 +408,6 @@
     return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0,0,0,0).getTime();
   }
   function formatBRDateTime(ms){
-    if(!ms) return "-";
     const d=new Date(ms);
     return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   }
@@ -451,35 +453,24 @@
     return {text:`Prazo: ${base}`, badge:"", card:""};
   }
 
-  /* ✅ FIX: mesma lógica do index — pega responsável em vários campos */
   function getTaskPeople(t){
-    const out = [];
-    const add = (v)=>{
-      if(!v) return;
-      if(Array.isArray(v)){ v.forEach(add); return; }
-      if(typeof v === "string"){
-        v.split(/[,;/|]+/).map(s=>s.trim()).filter(Boolean).forEach(x=>out.push(x));
-        return;
-      }
-      if(typeof v === "object"){
-        if(v.nome) out.push(String(v.nome).trim());
-        if(v.name) out.push(String(v.name).trim());
-      }
-    };
+    if (Array.isArray(t.people) && t.people.length) return t.people;
+    if (typeof t.person === "string" && t.person.trim()) return [t.person.trim()];
+    return [];
+  }
 
-    add(t.people);
-    add(t.person);
-    add(t.responsavel);
-    add(t["responsável"]);
-    add(t.responsavelNome);
-    add(t.assignedTo);
-    add(t.assignee);
-    add(t.owner);
-    add(t.usuario);
-    add(t.member);
-    add(t.membro);
-
-    return Array.from(new Set(out.map(s=>String(s).trim()).filter(Boolean)));
+  function getTaskTitle(t){
+    // Compat: diferentes chaves dependendo da versão/gravação
+    return (
+      t.name ||
+      t.tarefa ||
+      t.title ||
+      t.task ||
+      t.descricao ||
+      t.description ||
+      t.item ||
+      ""
+    );
   }
 
   function qs(){
@@ -491,13 +482,16 @@
   function getSessionName(){ return localStorage.getItem("tmg_member_name") || ""; }
   function clearSession(){ localStorage.removeItem("tmg_member_name"); }
 
+
   function openRequisicaoFor(name){
     const n = (name || "").trim();
     const target = n ? ("requisicao.html?u=" + encodeURIComponent(n)) : "requisicao.html";
+    // no celular é melhor abrir na mesma aba
     window.location.href = target;
   }
 
   function getCurrentName(){
+    // prioridade: activeName -> sessão -> seleção atual
     const s = (activeName || "").trim() || (getSessionName() || "").trim() || (selPeople.value || "").trim();
     return s;
   }
@@ -519,6 +513,8 @@
     }
   }
 
+
+  // ===== Compras / Requisições (status + previsão + entrada) =====
   function prStatusLabel(s){
     if(s==="requested") return "Solicitado";
     if(s==="authorized") return "Autorizado";
@@ -570,7 +566,7 @@
           <div><span class="p-label">Solicitado em:</span> <b>${formatBRDateTime(prGetRequestedAt(r))}</b></div>
           <div><span class="p-label">Solicitado por:</span> <b>${escapeHtml(prGetMember(r))}</b></div>
 
-          <div><span class="p-label">Previsão de entrega:</span> <b>${formatBRDateTime(r.expectedDelivery)}</b></div>
+                    <div><span class="p-label">Previsão de entrega:</span> <b>${formatBRDateTime(r.expectedDelivery)}</b></div>
           <div><span class="p-label">Entrada (chegou):</span> <b>${formatBRDateTime(r.receivedAt)}</b></div>
         </div>
       `;
@@ -579,6 +575,7 @@
   }
 
   function watchPurchasesFor(name){
+    // remove listener anterior
     db.ref("purchaseRequests").off();
 
     const me = norm(name);
@@ -634,8 +631,11 @@
     panelTasks.style.display = "block";
     who.textContent = "Você: " + name;
 
+    // acompanhar compras/requisições do membro
     watchPurchasesFor(name);
 
+
+    // evita acumular listeners ao trocar
     db.ref("tasks").off();
 
     db.ref("tasks").on("value", snap=>{
@@ -677,7 +677,7 @@
 
         card.innerHTML = `
           <div class="card-top">
-            <div class="task-name">${t.name || ""}</div>
+            <div class="task-name">${escapeHtml(getTaskTitle(t))}</div>
             <div class="badges">
               <span class="badge ${statusBadgeClass(status)}">${statusLabel(status)}</span>
               <span class="badge ${prioClass(prio)}">${prioLabel(prio)}</span>
@@ -750,6 +750,7 @@
     }
   };
 
+  // Atalhos de requisição
   wireReqButtons();
 
   function escapeHtml(s){
