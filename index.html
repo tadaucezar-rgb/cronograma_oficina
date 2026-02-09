@@ -221,16 +221,18 @@ setInterval(()=>{
 },1000);
 
 function statusLabel(s){
-  if(s==="todo") return "A Fazer";
-  if(s==="doing") return "Em Andamento";
-  if(s==="pending") return "Aguardando";
-  if(s==="done") return "Concluída";
-  return s || "";
+  const v = normStatus(s);
+  if(v==="todo") return "A fazer";
+  if(v==="doing") return "Em andamento";
+  if(v==="pending") return "Aguardando";
+  if(v==="done") return "Concluída";
+  return s||"";
 }
 function priorityLabel(p){
-  if(p==="high") return "Alta";
-  if(p==="med") return "Média";
-  return "Baixa";
+  const v = normPriority(p);
+  if(v==="high") return "ALTA";
+  if(v==="med") return "MÉDIA";
+  return "BAIXA";
 }
 function prioClass(p){
   if(p==="high") return "p-high";
@@ -416,6 +418,25 @@ db.ref("dates").on("value", snap=>{
   renderDates();
 });
 setInterval(()=>renderDates(), 60*1000);
+
+// Normalizadores (compatibilidade: aceita PT-BR e códigos internos)
+function normStatus(s){
+  const v=(s??"").toString().trim().toLowerCase();
+  if(v==="todo"||v==="a fazer"||v==="afazer"||v==="a_fazer") return "todo";
+  if(v==="doing"||v==="em andamento"||v==="andamento") return "doing";
+  if(v==="pending"||v==="aguardando"||v==="aguardando aprovação"||v==="aguardando aprovacao") return "pending";
+  if(v==="done"||v==="concluída"||v==="concluida") return "done";
+  return v||"todo";
+}
+function normPriority(p){
+  const s=(p??"").toString().trim().toLowerCase();
+  if(s==="high"||s==="alta") return "high";
+  if(s==="med"||s==="medium"||s==="média"||s==="media") return "med";
+  if(s==="low"||s==="baixa") return "low";
+  return "low";
+}
+
+
 </script>
 </body>
 </html>
