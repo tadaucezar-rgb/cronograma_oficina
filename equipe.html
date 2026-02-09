@@ -454,13 +454,10 @@
   }
 
   function getTaskPeople(t){
-  if(!t) return [];
-  if(typeof t.owner === 'string' && t.owner.trim()) return [t.owner.trim()];
-  if(typeof t.responsavel === 'string' && t.responsavel.trim()) return [t.responsavel.trim()];
-  if(Array.isArray(t.people) && t.people.length) return t.people.filter(Boolean).map(x=>String(x).trim()).filter(Boolean);
-  if(typeof t.person === 'string' && t.person.trim()) return [t.person.trim()];
-  return [];
-}
+    if (Array.isArray(t.people) && t.people.length) return t.people;
+    if (typeof t.person === "string" && t.person.trim()) return [t.person.trim()];
+    return [];
+  }
 
   function qs(){
     const p = new URLSearchParams(window.location.search);
@@ -666,7 +663,7 @@
 
         card.innerHTML = `
           <div class="card-top">
-            <div class="task-name">${t.name || ""}</div>
+            <div class="task-name">${escapeHtml(getTaskName(t))}</div>
             <div class="badges">
               <span class="badge ${statusBadgeClass(status)}">${statusLabel(status)}</span>
               <span class="badge ${prioClass(prio)}">${prioLabel(prio)}</span>
@@ -742,7 +739,13 @@
   // Atalhos de requisição
   wireReqButtons();
 
-  function escapeHtml(s){
+  
+    function getTaskName(t){
+      const v = (t?.name ?? t?.title ?? t?.titulo ?? t?.título ?? t?.taskName ?? t?.task_name ?? t?.nomeTarefa ?? t?.nome_tarefa ?? t?.task ?? t?.tarefa ?? t?.nome ?? t?.descricao ?? t?.descrição ?? "");
+      return (v ?? "").toString().trim();
+    }
+
+function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, (m)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   }
 </script>
