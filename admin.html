@@ -249,9 +249,9 @@
         <div>
           <label>Prioridade</label>
           <select id="tPriority">
-            <option value="BAIXA">BAIXA</option>
-            <option value="MÉDIA" selected>MÉDIA</option>
-            <option value="ALTA">ALTA</option>
+            <option value="low" selected>BAIXA</option>
+            <option value="med">MÉDIA</option>
+            <option value="high">ALTA</option>
           </select>
         </div>
         <div>
@@ -425,6 +425,20 @@ function toBool(v){ return String(v)==="true"; }
 function fmtDateTime(ms){
   if(!ms) return "-";
   return new Date(Number(ms)).toLocaleString("pt-BR");
+}
+
+
+// Normalizadores (compatibilidade: aceita "BAIXA/MÉDIA/ALTA" e também "low/med/high")
+function normPriority(p){
+  const s=(p??"").toString().trim().toLowerCase();
+  if(s==="alta"||s==="high") return "high";
+  if(s==="média"||s==="media"||s==="média "||s==="med"||s==="medium") return "med";
+  if(s==="baixa"||s==="low") return "low";
+  return "low";
+}
+function prioLabel(p){
+  const v=normPriority(p);
+  return v==="high" ? "ALTA" : (v==="med" ? "MÉDIA" : "BAIXA");
 }
 function dueToMs(dateStr, timeStr){
   if(!dateStr) return null;
@@ -668,7 +682,7 @@ function delTask(id){
 
 function setTaskPriority(taskId, priority){
   if(!taskId) return;
-  db.ref('tasks/' + taskId + '/priority').set(priority);
+  db.ref('tasks/' + taskId + '/priority').set(normPriority(priority));
 }
 function renderTasks(){
   const tb = document.getElementById("tbTasks");
@@ -686,11 +700,15 @@ function renderTasks(){
       </td>
       <td>${esc(t.owner||"-")}</td>
       <td>${t.dueAt ? fmtDateTime(t.dueAt) : "-"}</td>
-      <td><span class="pill">${esc(t.status||"-")}</span></td>
+      <td><span class="pill">${esc(t.status||"-")} · ${prioLabel(t.priority)}</span></td>
       <td style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btnGhost" onclick="setTaskStatus('${t.id}','a fazer')">A fazer</button>
         <button class="btnGhost" onclick="setTaskStatus('${t.id}','em andamento')">Em andamento</button>
         <button class="btn" onclick="setTaskStatus('${t.id}','concluída')">Concluída</button>
+
+        <button class="btnGhost" onclick="setTaskPriority('${t.id}','low')">Baixa</button>
+        <button class="btnGhost" onclick="setTaskPriority('${t.id}','med')">Média</button>
+        <button class="btnGhost" onclick="setTaskPriority('${t.id}','high')">Alta</button>
         <button class="btnDanger" onclick="delTask('${t.id}')">Apagar</button>
       </td>
     `;
