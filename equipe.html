@@ -389,6 +389,25 @@
     if(p==="med") return "Média";
     return "Baixa";
   }
+  function normalizePriority(v){
+    if(v==null) return "low";
+    const s = String(v).trim().toLowerCase();
+    if(["high","alta","a","h"].includes(s)) return "high";
+    if(["med","media","média","medium","m"].includes(s)) return "med";
+    if(["low","baixa","b","l"].includes(s)) return "low";
+    // some older values might come like "ALTA " or "Prioridade: ALTA"
+    if(s.includes("alta")) return "high";
+    if(s.includes("média") || s.includes("media")) return "med";
+    if(s.includes("baixa")) return "low";
+    return "low";
+  }
+  function getTaskPriority(t){
+    return normalizePriority(t?.priority ?? t?.prioridade ?? t?.prio ?? t?.prior ?? t?.urgencia);
+  }
+  function getTaskName(t){
+    return (t?.name ?? t?.title ?? t?.titulo ?? t?.tarefa ?? t?.task ?? t?.nome ?? "").toString();
+  }
+
   function prioClass(p){
     if(p==="high") return "p-high";
     if(p==="med") return "p-med";
@@ -454,8 +473,28 @@
   }
 
   function getTaskPeople(t){
-    if (Array.isArray(t.people) && t.people.length) return t.people;
-    if (typeof t.person === "string" && t.person.trim()) return [t.person.trim()];
+    // Compat: formatos antigos e novos (admin grava como "owner")
+    if (Array.isArray(t.people) && t.people.length) return t.people.filter(Boolean).map(x=>String(x).trim()).filter(Boolean);
+    if (Array.isArray(t.responsaveis) && t.responsaveis.length) return t.responsaveis.filter(Boolean).map(x=>String(x).trim()).filter(Boolean);
+    if (Array.isArray(t["responsáveis"]) && t["responsáveis"].length) return t["responsáveis"].filter(Boolean).map(x=>String(x).trim()).filter(Boolean);
+
+    const cand =
+      (typeof t.owner === "string" && t.owner) ||
+      (typeof t.responsavel === "string" && t.responsavel) ||
+      (typeof t["responsável"] === "string" && t["responsável"]) ||
+      (typeof t.responsible === "string" && t.responsible) ||
+      (typeof t.assignee === "string" && t.assignee) ||
+      (typeof t.person === "string" && t.person);
+
+    if (cand && String(cand).trim()) return [String(cand).trim()];
+
+    // alguns dados podem vir como { owner: {name:"..."} }
+    const objCand =
+      (t.owner && typeof t.owner === "object" && (t.owner.name || t.owner.nome)) ||
+      (t.responsavel && typeof t.responsavel === "object" && (t.responsavel.name || t.responsavel.nome));
+
+    if (objCand && String(objCand).trim()) return [String(objCand).trim()];
+
     return [];
   }
 
@@ -639,8 +678,8 @@
         const sb = statusOrder[b.status] || 9;
         if (sa !== sb) return sa - sb;
 
-        const pa = prioOrder[a.priority] || 9;
-        const pb = prioOrder[b.priority] || 9;
+        const pa = prioOrder[getTaskPriority(a)] || 9;
+        const pb = prioOrder[getTaskPriority(b)] || 9;
         if (pa !== pb) return pa - pb;
 
         const da = getDueMs(a) ?? 9e18;
@@ -655,7 +694,7 @@
 
       mine.forEach(t=>{
         const status = t.status || "todo";
-        const prio = t.priority || "low";
+        const prio = getTaskPriority(t);
         const di = dueInfo(t);
 
         const card = document.createElement("div");
@@ -663,7 +702,7 @@
 
         card.innerHTML = `
           <div class="card-top">
-            <div class="task-name">${escapeHtml(getTaskName(t))}</div>
+            <div class="task-name">${getTaskName(t)}</div>
             <div class="badges">
               <span class="badge ${statusBadgeClass(status)}">${statusLabel(status)}</span>
               <span class="badge ${prioClass(prio)}">${prioLabel(prio)}</span>
@@ -739,13 +778,7 @@
   // Atalhos de requisição
   wireReqButtons();
 
-  
-    function getTaskName(t){
-      const v = (t?.name ?? t?.title ?? t?.titulo ?? t?.título ?? t?.taskName ?? t?.task_name ?? t?.nomeTarefa ?? t?.nome_tarefa ?? t?.task ?? t?.tarefa ?? t?.nome ?? t?.descricao ?? t?.descrição ?? "");
-      return (v ?? "").toString().trim();
-    }
-
-function escapeHtml(s){
+  function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, (m)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   }
 </script>
