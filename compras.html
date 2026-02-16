@@ -213,10 +213,25 @@ function render(){
       </td>
 
       <td>
-        ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
-        ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
-        ${r.status==="received"?`<span class="badge finalizado">Finalizado</span>`:""}
-      </td>
+  ${
+    (r.status==="authorized" || r.status==="approved" || r.status==="aprovado")
+      ? `<button class="buy" onclick="buy('${r.id}')">Comprar</button>`
+      : ""
+  }
+
+  ${
+    (r.status==="purchased" || r.status==="comprado")
+      ? `<button class="recv" onclick="recv('${r.id}')">Entrada</button>`
+      : ""
+  }
+
+  ${
+    (r.status==="received" || r.status==="finalizado")
+      ? `<span class="badge finalizado">Finalizado</span>`
+      : ""
+  }
+</td>
+
     `;
     tbody.appendChild(tr);
   });
