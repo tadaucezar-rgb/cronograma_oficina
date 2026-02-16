@@ -222,11 +222,12 @@ function render(){
   });
 }
 
-function upd(id,path,val){
-  const o={}; let ref=o; const p=path.split("/");
-  p.slice(0,-1).forEach(k=>ref=ref[k]=ref[k]||{});
-  ref[p[p.length-1]]=val;
-  db.ref("purchaseRequests/"+id).update(o);
+function upd(id, path, val){
+  // Firebase "update" é shallow; para não sobrescrever objetos (ex: supplier),
+  // atualize usando caminho "a/b" como chave.
+  const payload = {};
+  payload[path] = val;
+  db.ref("purchaseRequests/" + id).update(payload);
 }
 
 function updText(id,key,val){
