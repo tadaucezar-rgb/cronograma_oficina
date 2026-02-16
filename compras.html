@@ -61,15 +61,16 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
 
     <table>
 <colgroup>
-        <col style="width:9%">
-        <col style="width:9%">
-        <col style="width:21%">
-        <col style="width:6%">
-        <col style="width:6%">
-        <col style="width:17%">
-        <col style="width:12%">
-        <col style="width:12%">
         <col style="width:8%">
+        <col style="width:8%">
+        <col style="width:20%">
+        <col style="width:5%">
+        <col style="width:5%">
+        <col style="width:14%">
+        <col style="width:12%">
+        <col style="width:10%">
+        <col style="width:12%">
+        <col style="width:6%">
       </colgroup>
 
       <thead>
@@ -80,6 +81,7 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
           <th>Qtd</th>
           <th>Unidade</th>
           <th>Fornecedor</th>
+          <th>CNPJ Compra</th>
           <th>Valor</th>
           <th>Previsão</th>
           <th>Ação</th>
@@ -197,6 +199,15 @@ function render(){
                  onblur="upd('${r.id}','supplier/name',this.value)">
           <input class="rowInput supContact" placeholder="Contato do fornecedor" value="${escapeAttr((r.supplier&&r.supplier.contact)||"")}"
                  onblur="upd('${r.id}','supplier/contact',this.value)">
+        </div>
+</td>
+
+      <td>
+        <div class="cellStack">
+          <input class="rowInput" placeholder="Nome (CNPJ compra)" value="${escapeAttr((r.buyer&&r.buyer.name)||"")}"
+                 onblur="upd('${r.id}','buyer/name',this.value)">
+          <input class="rowInput" placeholder="CNPJ" value="${escapeAttr((r.buyer&&r.buyer.cnpj)||"")}"
+                 onblur="upd('${r.id}','buyer/cnpj',this.value)">
         </div>
       </td>
 
