@@ -98,6 +98,18 @@
     border:2px solid rgba(255,23,68,.35);
     box-shadow:0 0 26px rgba(255,23,68,.18);
   }
+
+.inlineEdit{
+  width: 100%;
+  min-width: 160px;
+}
+.okFlash{
+  box-shadow: 0 0 0 2px rgba(0,255,120,.35) inset;
+}
+.errFlash{
+  box-shadow: 0 0 0 2px rgba(255,60,60,.35) inset;
+}
+
 </style>
 </head>
 
@@ -162,6 +174,7 @@
         </thead>
         <tbody id="tbTrack"></tbody>
       </table>
+      <datalist id="centrosList"></datalist>
     </div>
 
     <!-- DANGER -->
@@ -289,7 +302,7 @@ function renderAuth(){
                onchange="updateRequestedAt('${r.id}', this.value)" />
       </td>
       <td>${r.qty ?? "-" } ${esc(r.unit||"")}</td>
-      <td>${esc(r.cost||"Sem centro")}</td>
+      <td><input list="centrosList" class="inlineEdit" data-id="${id}" value="${esc(r.cost||"")}" placeholder="Centro" onblur="updateCentro(this)" /></td>
       <td style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn" onclick="authorize('${r.id}')">Autorizar</button>
         <button class="btnDanger" onclick="reject('${r.id}')">Rejeitar</button>
@@ -313,6 +326,39 @@ function reject(id){
 }
 
 /* ===== Render: Track ===== */
+
+function updateCentro(el){
+  try{
+    const id = el?.dataset?.id;
+    if(!id) return;
+    const value = (el.value||"").trim();
+    // atualiza somente o centro de custos
+    db.ref("purchaseRequests/"+id).update({ cost: value || null });
+    // feedback visual rápido
+    el.classList.add("okFlash");
+    setTimeout(()=>el.classList.remove("okFlash"), 600);
+  }catch(err){
+    console.error(err);
+    try{ el.classList.add("errFlash"); setTimeout(()=>el.classList.remove("errFlash"), 1200);}catch(_){}
+  }
+}
+
+function refreshCentrosList(reqs){
+  try{
+    const dl = document.getElementById("centrosList");
+    if(!dl) return;
+    const set = new Set();
+    Object.values(reqs||{}).forEach(r=>{
+      const c = (r?.cost||"").trim();
+      if(c) set.add(c);
+    });
+    const items = Array.from(set).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    dl.innerHTML = items.map(v=>`<option value="${esc(v)}"></option>`).join("");
+  }catch(err){
+    console.error(err);
+  }
+}
+
 function renderTrack(){
   const tb = document.getElementById("tbTrack");
   tb.innerHTML = "";
@@ -329,6 +375,7 @@ function renderTrack(){
   }
 
   list.forEach(r=>{
+    const id = r.id;
     const status = r.status || "-";
     const stLabel = (status==="authorized") ? "Autorizado"
                   : (status==="purchased") ? "Comprado"
@@ -342,7 +389,7 @@ function renderTrack(){
     tr.innerHTML = `
       <td>${esc(r.requestedBy||r.member||"-")}</td>
       <td><b>${esc(r.item||"-")}</b></td>
-      <td>${esc(r.cost||"Sem centro")}</td>
+      <td><input list="centrosList" class="inlineEdit" data-id="${id}" value="${esc(r.cost||"")}" placeholder="Centro" onblur="updateCentro(this)" /></td>
       <td>${r.expectedDelivery ? fmt(r.expectedDelivery) : "-"}</td>
       <td><b>${stLabel}</b>${isOverdue ? `<span class="overdue-tag">ATRASADO</span>` : ``}</td>
     `;
