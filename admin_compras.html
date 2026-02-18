@@ -302,7 +302,7 @@ function renderAuth(){
                onchange="updateRequestedAt('${r.id}', this.value)" />
       </td>
       <td>${r.qty ?? "-" } ${esc(r.unit||"")}</td>
-      <td><input list="centrosList" class="inlineEdit" data-id="${id}" value="${esc(r.cost||"")}" placeholder="Centro" onblur="updateCentro(this)" /></td>
+      <td><input list="centrosList" class="inlineEdit" data-id="${r.id}" value="${esc(r.cost||"")}" placeholder="Centro" onblur="updateCentro(this)" /></td>
       <td style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn" onclick="authorize('${r.id}')">Autorizar</button>
         <button class="btnDanger" onclick="reject('${r.id}')">Rejeitar</button>
@@ -389,7 +389,7 @@ function renderTrack(){
     tr.innerHTML = `
       <td>${esc(r.requestedBy||r.member||"-")}</td>
       <td><b>${esc(r.item||"-")}</b></td>
-      <td><input list="centrosList" class="inlineEdit" data-id="${id}" value="${esc(r.cost||"")}" placeholder="Centro" onblur="updateCentro(this)" /></td>
+      <td><input list="centrosList" class="inlineEdit" data-id="${r.id}" value="${esc(r.cost||"")}" placeholder="Centro" onblur="updateCentro(this)" /></td>
       <td>${r.expectedDelivery ? fmt(r.expectedDelivery) : "-"}</td>
       <td><b>${stLabel}</b>${isOverdue ? `<span class="overdue-tag">ATRASADO</span>` : ``}</td>
     `;
