@@ -14,13 +14,13 @@
 body{margin:0;font-family:'Orbitron',Arial,sans-serif;background:radial-gradient(circle at top,#0a0a0a,#000);color:#00e5ff}
 header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(90deg,#bdbdbd,#e0e0e0,#bdbdbd);color:#000;font-weight:900}
 header img{height:36px}
-.wrap{padding:14px;max-width:1400px;margin:auto}
+.wrap{padding:14px;max-width:1800px;margin:auto}
 .card{background:rgba(0,0,0,.78);border-radius:18px;padding:16px;border:2px solid rgba(0,229,255,.22);box-shadow:0 0 26px rgba(0,229,255,.22)}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .fbtn{padding:6px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-weight:800;cursor:pointer}
 .fbtn.active{background:linear-gradient(90deg,#00c853,#64dd17);color:#000}
 table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.82rem}
-    td:last-child{white-space:nowrap}
+td:last-child{white-space:nowrap}
 th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.15);vertical-align:top}
 th{text-transform:uppercase;font-size:.7rem}
 .money{display:flex;align-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;overflow:hidden}
@@ -32,15 +32,14 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
 .recv{background:#2979ff;color:#000;display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box}
 .overdue{background:rgba(255,23,68,.18)}
 .badge{display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box;padding:6px 10px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff}
-
-/* ✅ Mantém a mudança de cor do Finalizado */
 .badge.finalizado{
   background:linear-gradient(90deg,#9e9e9e,#616161);
   color:#000;
 }
-
-  .cellStack{display:flex;flex-direction:column;gap:8px;}
-  .supContact{font-size:14px;}
+.cellStack{display:flex;flex-direction:column;gap:8px;}
+.supContact{font-size:14px;}
+.searchBar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px 0;}
+textarea.obsField{width:100%;min-height:72px;resize:vertical;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:'Orbitron',Arial,sans-serif;}
 </style>
 </head>
 
@@ -59,17 +58,28 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
       <button class="fbtn" onclick="setFilter('received',this)">Finalizado</button>
     </div>
 
+    <div class="searchBar">
+      <input id="searchItem" placeholder="Pesquisar item..." oninput="render()">
+      <input id="searchSupplier" placeholder="Pesquisar fornecedor..." oninput="render()">
+    </div>
+
+    <datalist id="suppliersList"></datalist>
+    <datalist id="buyersList"></datalist>
+    <datalist id="centersList"></datalist>
+
     <table>
-<colgroup>
+      <colgroup>
+        <col style="width:7%">
         <col style="width:8%">
-        <col style="width:8%">
-        <col style="width:20%">
+        <col style="width:16%">
         <col style="width:5%">
         <col style="width:5%">
-        <col style="width:14%">
-        <col style="width:12%">
         <col style="width:10%">
         <col style="width:12%">
+        <col style="width:12%">
+        <col style="width:10%">
+        <col style="width:11%">
+        <col style="width:10%">
         <col style="width:6%">
       </colgroup>
 
@@ -80,10 +90,12 @@ button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';fo
           <th>Item</th>
           <th>Qtd</th>
           <th>Unidade</th>
+          <th>Centro</th>
           <th>Fornecedor</th>
           <th>CNPJ Compra</th>
           <th>Valor</th>
           <th>Previsão</th>
+          <th>Observações</th>
           <th>Ação</th>
         </tr>
       </thead>
@@ -126,44 +138,98 @@ db.ref("purchaseRequests").on("value",snap=>{
   render();
 });
 
-let suppliersIndex = {};
-  function rebuildSuppliersIndex(list){
-    suppliersIndex = {};
-    const names = [];
-    (list||[]).forEach(r=>{
-      const name = ((r.supplier && r.supplier.name) || "").trim();
-      if(!name) return;
-      const contact = ((r.supplier && (r.supplier.contact || r.supplier.phone || r.supplier.whatsapp)) || "").trim();
-      const key = name.toLowerCase();
-      if(contact && !suppliersIndex[key]) suppliersIndex[key] = contact;
-      if(!names.some(n=>n.toLowerCase()===key)) names.push(name);
-    });
-    const dl = document.getElementById('suppliersList');
-    if(dl){
-      dl.innerHTML = names.sort((a,b)=>a.localeCompare(b)).map(n=>`<option value="${escapeAttr(n)}"></option>`).join('');
-    }
-  }
+let buyersIndex = {};
+let centersIndex = [];
 
-  function onSupplierInput(id, el){
-    const name = (el.value||"").trim();
+function rebuildBuyersIndex(list){
+  buyersIndex = {};
+  const names = [];
+  (list||[]).forEach(r=>{
+    const name = ((r.buyer && r.buyer.name) || "").trim();
     if(!name) return;
+    const cnpj = ((r.buyer && r.buyer.cnpj) || "").trim();
     const key = name.toLowerCase();
-    const contact = suppliersIndex[key];
-    const contactEl = el.closest('td')?.querySelector('.supContact');
-    if(contactEl && contact && !contactEl.value.trim()){
-      contactEl.value = contact;
-      upd(id,'supplier/contact',contact);
-    }
+    if(cnpj && !buyersIndex[key]) buyersIndex[key] = cnpj;
+    if(!names.some(n=>n.toLowerCase()===key)) names.push(name);
+  });
+  const dl = document.getElementById('buyersList');
+  if(dl){
+    dl.innerHTML = names.sort((a,b)=>a.localeCompare(b)).map(n=>`<option value="${escapeAttr(n)}"></option>`).join('');
   }
+}
+
+function rebuildCentersIndex(list){
+  centersIndex = [];
+  (list||[]).forEach(r=>{
+    const center = ((r.costCenter || r.cost || r.center || "")).trim();
+    if(center && !centersIndex.some(c=>c.toLowerCase()===center.toLowerCase())){
+      centersIndex.push(center);
+    }
+  });
+  const dl = document.getElementById('centersList');
+  if(dl){
+    dl.innerHTML = centersIndex.sort((a,b)=>a.localeCompare(b)).map(c=>`<option value="${escapeAttr(c)}"></option>`).join('');
+  }
+}
+
+function onBuyerInput(id, el){
+  const name = (el.value||"").trim();
+  if(!name) return;
+  const key = name.toLowerCase();
+  const cnpj = buyersIndex[key];
+  const cnpjEl = el.closest('td')?.querySelector('.buyerCnpj');
+  if(cnpjEl && cnpj && !cnpjEl.value.trim()){
+    cnpjEl.value = cnpj;
+    upd(id,'buyer/cnpj',cnpj);
+  }
+}
+
+let suppliersIndex = {};
+function rebuildSuppliersIndex(list){
+  suppliersIndex = {};
+  const names = [];
+  (list||[]).forEach(r=>{
+    const name = ((r.supplier && r.supplier.name) || "").trim();
+    if(!name) return;
+    const contact = ((r.supplier && (r.supplier.contact || r.supplier.phone || r.supplier.whatsapp)) || "").trim();
+    const key = name.toLowerCase();
+    if(contact && !suppliersIndex[key]) suppliersIndex[key] = contact;
+    if(!names.some(n=>n.toLowerCase()===key)) names.push(name);
+  });
+  const dl = document.getElementById('suppliersList');
+  if(dl){
+    dl.innerHTML = names.sort((a,b)=>a.localeCompare(b)).map(n=>`<option value="${escapeAttr(n)}"></option>`).join('');
+  }
+}
+
+function onSupplierInput(id, el){
+  const name = (el.value||"").trim();
+  if(!name) return;
+  const key = name.toLowerCase();
+  const contact = suppliersIndex[key];
+  const contactEl = el.closest('td')?.querySelector('.supContact');
+  if(contactEl && contact && !contactEl.value.trim()){
+    contactEl.value = contact;
+    upd(id,'supplier/contact',contact);
+  }
+}
 
 function render(){
   const tbody=document.getElementById("tbody");
   tbody.innerHTML="";
   rebuildSuppliersIndex(data);
+  rebuildBuyersIndex(data);
+  rebuildCentersIndex(data);
+
+  const termItem = (document.getElementById('searchItem')?.value || '').trim().toLowerCase();
+  const termSupplier = (document.getElementById('searchSupplier')?.value || '').trim().toLowerCase();
+
   data.forEach(r=>{
     const overdue=r.expectedDelivery && r.expectedDelivery<Date.now() && r.status!=="received";
     let show=true;
     if(filter!=='all') show=(r.status===filter);
+    if(termItem && !String(r.item||"").toLowerCase().includes(termItem)) show = false;
+    if(termSupplier && !String((r.supplier&&r.supplier.name)||"").toLowerCase().includes(termSupplier)) show = false;
     if(!show) return;
 
     const tr=document.createElement("tr");
@@ -173,23 +239,25 @@ function render(){
       <td>${(r.requestedBy||r.member||"-")}</td>
       <td>${fmtDT(r.requestedAt)}</td>
 
-      <!-- ✅ NOVO: Item editável -->
       <td>
         <input value="${escapeAttr(r.item||"")}"
                onblur="updText('${r.id}','item',this.value)">
       </td>
 
-      <!-- Qtd -->
       <td>
         <input type="number" min="0" step="1"
                value="${escapeAttr((r.qty ?? '') + '')}"
                onblur="updNum('${r.id}','qty',this.value)">
       </td>
 
-      <!-- Unidade -->
       <td>
         <input value="${escapeAttr(r.unit||"")}"
                onblur="updText('${r.id}','unit',this.value)">
+      </td>
+
+      <td>
+        <input class="rowInput" list="centersList" value="${escapeAttr(r.costCenter || r.cost || r.center || "")}"
+               onblur="updText('${r.id}','costCenter',this.value)">
       </td>
 
       <td>
@@ -200,13 +268,14 @@ function render(){
           <input class="rowInput supContact" placeholder="Contato do fornecedor" value="${escapeAttr((r.supplier&&r.supplier.contact)||"")}"
                  onblur="upd('${r.id}','supplier/contact',this.value)">
         </div>
-</td>
+      </td>
 
       <td>
         <div class="cellStack">
-          <input class="rowInput" placeholder="Nome (CNPJ compra)" value="${escapeAttr((r.buyer&&r.buyer.name)||"")}"
+          <input class="rowInput" list="buyersList" placeholder="Nome (CNPJ compra)" value="${escapeAttr((r.buyer&&r.buyer.name)||"")}"
+                 oninput="onBuyerInput('${r.id}', this)"
                  onblur="upd('${r.id}','buyer/name',this.value)">
-          <input class="rowInput" placeholder="CNPJ" value="${escapeAttr((r.buyer&&r.buyer.cnpj)||"")}"
+          <input class="rowInput buyerCnpj" placeholder="CNPJ" value="${escapeAttr((r.buyer&&r.buyer.cnpj)||"")}"
                  onblur="upd('${r.id}','buyer/cnpj',this.value)">
         </div>
       </td>
@@ -224,6 +293,10 @@ function render(){
       </td>
 
       <td>
+        <textarea class="obsField" placeholder="Observações da requisição" onblur="updText('${r.id}','notes',this.value)">${escapeAttr(r.notes || r.observacoes || r.obs || "")}</textarea>
+      </td>
+
+      <td>
         ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
         ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
         ${r.status==="received"?`<span class="badge finalizado">Finalizado</span>`:""}
@@ -234,15 +307,12 @@ function render(){
 }
 
 function upd(id, path, val){
-  // Firebase "update" é shallow; para não sobrescrever objetos (ex: supplier),
-  // atualize usando caminho "a/b" como chave.
   const payload = {};
   payload[path] = val;
   db.ref("purchaseRequests/" + id).update(payload);
 }
 
 function updText(id,key,val){
-  // salva texto (com trim pra evitar "   ")
   db.ref("purchaseRequests/"+id).update({[key]:(val||"").trim()});
 }
 
@@ -251,7 +321,6 @@ function updDate(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]: v ? new Da
 function buy(id){ db.ref("purchaseRequests/"+id).update({status:"purchased",purchasedAt:Date.now()}); }
 function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received",receivedAt:Date.now()}); }
 
-// evita quebrar o HTML quando tiver aspas no texto
 function escapeAttr(s){
   return String(s).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 }
@@ -263,7 +332,6 @@ function fmtDT(ts){
   const hora = d.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
   return `${data} ${hora}`;
 }
-
 </script>
 </body>
 </html>
