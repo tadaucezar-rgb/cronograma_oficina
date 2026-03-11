@@ -99,17 +99,16 @@
     box-shadow:0 0 26px rgba(255,23,68,.18);
   }
 
-.inlineEdit{
-  width: 100%;
-  min-width: 160px;
-}
-.okFlash{
-  box-shadow: 0 0 0 2px rgba(0,255,120,.35) inset;
-}
-.errFlash{
-  box-shadow: 0 0 0 2px rgba(255,60,60,.35) inset;
-}
-
+  .inlineEdit{
+    width:100%;
+    min-width:160px;
+  }
+  .okFlash{
+    box-shadow:0 0 0 2px rgba(0,255,120,.35) inset;
+  }
+  .errFlash{
+    box-shadow:0 0 0 2px rgba(255,60,60,.35) inset;
+  }
 </style>
 </head>
 
@@ -119,7 +118,6 @@
   <div>Admin Compras</div>
 </header>
 
-<!-- PIN -->
 <div class="wrap" id="pinScreen">
   <div class="card pinCard">
     <h2>PIN</h2>
@@ -130,7 +128,6 @@
   </div>
 </div>
 
-<!-- APP -->
 <div class="wrap" id="app" style="display:none;">
   <div class="card">
     <div class="tabs">
@@ -139,37 +136,36 @@
       <button class="tab" onclick="showTab('danger', this)">Zerar histórico</button>
     </div>
 
-    <!-- AUTH -->
     <div id="tab_auth">
       <h2>Autorizações pendentes</h2>
       <div class="muted">Aqui você autoriza solicitações feitas pela equipe.</div>
       <table style="margin-top:10px;">
         <thead>
           <tr>
-            <th style="width:16%;">Solicitante</th>
-            <th style="width:26%;">Item</th>
+            <th style="width:14%;">Solicitante</th>
+            <th style="width:24%;">Item</th>
             <th style="width:18%;">Data solicitação</th>
-            <th style="width:12%;">Qtd</th>
+            <th style="width:10%;">Qtd</th>
             <th style="width:14%;">Centro</th>
-            <th style="width:14%;">Ações</th>
+            <th style="width:20%;">Ações</th>
           </tr>
         </thead>
         <tbody id="tbAuth"></tbody>
       </table>
     </div>
 
-    <!-- TRACK -->
     <div id="tab_track" style="display:none;">
       <h2>Acompanhamento</h2>
       <div class="muted">Mostra autorizados/comprados/recebidos. Atrasados ficam destacados.</div>
       <table style="margin-top:10px;">
         <thead>
           <tr>
-            <th style="width:18%;">Solicitante</th>
-            <th style="width:24%;">Item</th>
+            <th style="width:16%;">Solicitante</th>
+            <th style="width:23%;">Item</th>
             <th style="width:18%;">Centro</th>
-            <th style="width:20%;">Previsão</th>
-            <th style="width:20%;">Status</th>
+            <th style="width:18%;">Previsão</th>
+            <th style="width:15%;">Status</th>
+            <th style="width:10%;">Ações</th>
           </tr>
         </thead>
         <tbody id="tbTrack"></tbody>
@@ -177,7 +173,6 @@
       <datalist id="centrosList"></datalist>
     </div>
 
-    <!-- DANGER -->
     <div id="tab_danger" style="display:none;">
       <h2>Zerar histórico de compras</h2>
       <div class="card dangerBox">
@@ -207,8 +202,8 @@
 </div>
 
 <script>
-/* ===== PIN ===== */
 const PIN = "1234";
+
 function unlock(){
   const v = (document.getElementById("pin").value||"").trim();
   if(v !== PIN){ alert("PIN incorreto"); return; }
@@ -217,8 +212,7 @@ function unlock(){
   boot();
 }
 
-/* ===== Firebase ===== */
-const firebaseConfig={
+const firebaseConfig = {
   apiKey:"AIzaSyBPz4aSee-kQY5hwlyzEw_4Jv3gGKL9iHY",
   authDomain:"tmg-painel.firebaseapp.com",
   databaseURL:"https://tmg-painel-default-rtdb.firebaseio.com",
@@ -230,7 +224,6 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* ===== Tabs ===== */
 function showTab(key, btn){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   if(btn) btn.classList.add("active");
@@ -244,36 +237,37 @@ function esc(s){
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[m]));
 }
+
 function fmt(ms){
   if(!ms) return "-";
   return new Date(ms).toLocaleString("pt-BR");
 }
+
 function toDatetimeLocal(ms){
   if(!ms) return "";
   const d = new Date(ms);
   const pad = n => String(n).padStart(2,"0");
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
 function fromDatetimeLocal(v){
   if(!v) return null;
   const ms = Date.parse(v);
   return Number.isFinite(ms) ? ms : null;
 }
 
-/* ===== State ===== */
 let rows = [];
 
-/* ===== Boot ===== */
 function boot(){
   db.ref("purchaseRequests").on("value", snap=>{
     const data = snap.val() || {};
     rows = Object.entries(data).map(([id,r])=>({id, ...(r||{})}));
+    refreshCentrosList(data);
     renderAuth();
     renderTrack();
   });
 }
 
-/* ===== Render: Auth ===== */
 function renderAuth(){
   const tb = document.getElementById("tbAuth");
   tb.innerHTML = "";
@@ -301,11 +295,12 @@ function renderAuth(){
                value="${toDatetimeLocal(r.requestedAt)}"
                onchange="updateRequestedAt('${r.id}', this.value)" />
       </td>
-      <td>${r.qty ?? "-" } ${esc(r.unit||"")}</td>
+      <td>${r.qty ?? "-"} ${esc(r.unit||"")}</td>
       <td><input list="centrosList" class="inlineEdit" data-id="${r.id}" value="${esc(r.cost||"")}" placeholder="Centro" onblur="updateCentro(this)" /></td>
       <td style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn" onclick="authorize('${r.id}')">Autorizar</button>
         <button class="btnDanger" onclick="reject('${r.id}')">Rejeitar</button>
+        <button class="btnDanger" onclick="deleteRequest('${r.id}')">Excluir</button>
       </td>
     `;
     tb.appendChild(tr);
@@ -317,29 +312,30 @@ function updateRequestedAt(id, v){
   if(ms === null){ alert("Data inválida."); return; }
   db.ref("purchaseRequests/"+id).update({requestedAt: ms});
 }
+
 function authorize(id){
   db.ref("purchaseRequests/"+id).update({status:"authorized", authorizedAt: Date.now()});
 }
+
 function reject(id){
   if(!confirm("Rejeitar esta solicitação?")) return;
   db.ref("purchaseRequests/"+id).update({status:"rejected", rejectedAt: Date.now()});
 }
-
-/* ===== Render: Track ===== */
 
 function updateCentro(el){
   try{
     const id = el?.dataset?.id;
     if(!id) return;
     const value = (el.value||"").trim();
-    // atualiza somente o centro de custos
     db.ref("purchaseRequests/"+id).update({ cost: value || null });
-    // feedback visual rápido
     el.classList.add("okFlash");
     setTimeout(()=>el.classList.remove("okFlash"), 600);
   }catch(err){
     console.error(err);
-    try{ el.classList.add("errFlash"); setTimeout(()=>el.classList.remove("errFlash"), 1200);}catch(_){}
+    try{
+      el.classList.add("errFlash");
+      setTimeout(()=>el.classList.remove("errFlash"), 1200);
+    }catch(_){}
   }
 }
 
@@ -369,13 +365,12 @@ function renderTrack(){
 
   if(!list.length){
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="5" class="muted">Sem itens em acompanhamento.</td>`;
+    tr.innerHTML = `<td colspan="6" class="muted">Sem itens em acompanhamento.</td>`;
     tb.appendChild(tr);
     return;
   }
 
   list.forEach(r=>{
-    const id = r.id;
     const status = r.status || "-";
     const stLabel = (status==="authorized") ? "Autorizado"
                   : (status==="purchased") ? "Comprado"
@@ -392,12 +387,18 @@ function renderTrack(){
       <td><input list="centrosList" class="inlineEdit" data-id="${r.id}" value="${esc(r.cost||"")}" placeholder="Centro" onblur="updateCentro(this)" /></td>
       <td>${r.expectedDelivery ? fmt(r.expectedDelivery) : "-"}</td>
       <td><b>${stLabel}</b>${isOverdue ? `<span class="overdue-tag">ATRASADO</span>` : ``}</td>
+      <td><button class="btnDanger" onclick="deleteRequest('${r.id}')">Excluir</button></td>
     `;
     tb.appendChild(tr);
   });
 }
 
-/* ===== WIPE ===== */
+function deleteRequest(id){
+  if(!confirm("Excluir esta requisição? Essa ação não pode ser desfeita.")) return;
+  db.ref("purchaseRequests/"+id).remove()
+    .catch(e=>alert("Erro ao excluir: " + (e?.message||e)));
+}
+
 function wipePurchases(){
   const t = (document.getElementById("wipeText").value||"").trim().toUpperCase();
   const p = (document.getElementById("wipePin").value||"").trim();
