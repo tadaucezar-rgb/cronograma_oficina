@@ -30,6 +30,7 @@ input,select{width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255
 button{padding:8px 12px;border-radius:12px;border:none;font-family:'Orbitron';font-weight:900;cursor:pointer}
 .buy{background:#00c853;color:#000;display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box}
 .recv{background:#2979ff;color:#000;display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box}
+.backBtn{background:#ff9800;color:#000;display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box;margin-top:6px}
 .overdue{background:rgba(255,23,68,.18)}
 .badge{display:block;width:100%;text-align:center;white-space:nowrap;box-sizing:border-box;padding:6px 10px;border-radius:999px;font-weight:900;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff}
 .badge.finalizado{
@@ -298,8 +299,8 @@ function render(){
 
       <td>
         ${r.status==="authorized"?`<button class="buy" onclick="buy('${r.id}')">Comprar</button>`:""}
-        ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button>`:""}
-        ${r.status==="received"?`<span class="badge finalizado">Finalizado</span>`:""}
+        ${r.status==="purchased"?`<button class="recv" onclick="recv('${r.id}')">Entrada</button><button class="backBtn" onclick="goBack('${r.id}','authorized')">Voltar</button>`:""}
+        ${r.status==="received"?`<span class="badge finalizado">Finalizado</span><button class="backBtn" onclick="goBack('${r.id}','purchased')">Voltar</button>`:""}
       </td>
     `;
     tbody.appendChild(tr);
@@ -320,6 +321,17 @@ function updNum(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]:Number(v||0)
 function updDate(id,k,v){ db.ref("purchaseRequests/"+id).update({[k]: v ? new Date(v).getTime() : null}); }
 function buy(id){ db.ref("purchaseRequests/"+id).update({status:"purchased",purchasedAt:Date.now()}); }
 function recv(id){ db.ref("purchaseRequests/"+id).update({status:"received",receivedAt:Date.now()}); }
+function goBack(id,targetStatus){
+  if(!confirm("Voltar o status desta compra?")) return;
+  const payload = {status: targetStatus};
+  if(targetStatus==="authorized"){
+    payload.receivedAt = null;
+  }
+  if(targetStatus==="purchased"){
+    payload.receivedAt = null;
+  }
+  db.ref("purchaseRequests/"+id).update(payload);
+}
 
 function escapeAttr(s){
   return String(s).replaceAll("&","&amp;").replaceAll('"',"&quot;").replaceAll("<","&lt;").replaceAll(">","&gt;");
